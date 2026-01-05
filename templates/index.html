@@ -12,22 +12,98 @@
 
 <body>
   <div class="dashboard-container">
-    <div id="chart-container"></div>
+    <div id="controls-section">
+      <div class="controls">
+        <input type="number" id="base-strike" placeholder="Base Strike">
+        <button onclick="updateStrikes()">Update Dashboard</button>
 
-    <div class="controls">
-      <input type="number" id="base-strike" placeholder="Enter Base Strike (e.g. 25000)">
-      <button onclick="updateStrikes()">Update Dashboard</button>
-      <div id="strike-selection"></div>
+        <div id="strike-selection">
+          <table class="strike-table">
+            <thead>
+              <tr>
+                <th>CE LTP</th>
+                <th>STRIKE</th>
+                <th>PE LTP</th>
+                <th>CHG %</th>
+                <th>SEL</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td id="ce-1">0.00</td>
+                <td><b>24000</b></td>
+                <td id="pe-1">0.00</td>
+                <td class="up">+0.5%</td>
+                <td><input type="checkbox"></td>
+              </tr>
+              <tr>
+                <td id="ce-2">0.00</td>
+                <td><b>24050</b></td>
+                <td id="pe-2">0.00</td>
+                <td class="down">-0.2%</td>
+                <td><input type="checkbox"></td>
+              </tr>
+              <tr>
+                <td id="ce-3">0.00</td>
+                <td><b>24100</b></td>
+                <td id="pe-3">0.00</td>
+                <td class="up">+1.1%</td>
+                <td><input type="checkbox"></td>
+              </tr>
+              <tr>
+                <td id="ce-4">0.00</td>
+                <td><b>24150</b></td>
+                <td id="pe-4">0.00</td>
+                <td class="up">+0.8%</td>
+                <td><input type="checkbox"></td>
+              </tr>
+              <tr>
+                <td id="ce-5">0.00</td>
+                <td><b>24200</b></td>
+                <td id="pe-5">0.00</td>
+                <td class="down">-0.4%</td>
+                <td><input type="checkbox"></td>
+              </tr>
+              <tr>
+                <td id="ce-6">0.00</td>
+                <td><b>24250</b></td>
+                <td id="pe-6">0.00</td>
+                <td class="up">+0.2%</td>
+                <td><input type="checkbox"></td>
+              </tr>
+              <tr>
+                <td id="ce-7">0.00</td>
+                <td><b>24300</b></td>
+                <td id="pe-7">0.00</td>
+                <td class="down">-1.5%</td>
+                <td><input type="checkbox"></td>
+              </tr>
+              <tr>
+                <td id="ce-8">0.00</td>
+                <td><b>24350</b></td>
+                <td id="pe-8">0.00</td>
+                <td class="up">+0.3%</td>
+                <td><input type="checkbox"></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
-      <div class="action-buttons">
-        <button class="fire-btn" onclick="fireOrders()">FIRE</button>
-        <button class="close-btn" onclick="closeAll()">CLOSE ALL</button>
-        <button class="hedge-btn" onclick="fireHedge()">HEDGE</button>
+        <div class="action-buttons">
+          <button class="fire-btn" onclick="fireOrders()">FIRE</button>
+          <button class="close-btn" onclick="closeAll()">CLOSE ALL</button>
+          <button class="hedge-btn" onclick="fireHedge()">HEDGE</button>
+        </div>
+
+        <div id="mtm-display">MTM: <span id="mtm-value">0.00</span></div>
       </div>
     </div>
 
-    <div id="mtm-display">Current MTM: <span id="mtm-value">0.00</span></div>
+    <div id="chart-section">
+      <div id="chart-container"></div>
+    </div>
   </div>
+
   <script src="/static/dashboard.js"></script>
 </body>
 

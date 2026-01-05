@@ -1,6 +1,13 @@
-const chart = LightweightCharts.createChart(document.getElementById('chart-container'), {
-  width: 800, height: 400,
-  layout: { backgroundColor: '#ffffff', textColor: '#000000' }
+const chartElement = document.getElementById('chart-container');
+
+const chart = LightweightCharts.createChart(chartElement, {
+  width: chartElement.offsetWidth, // This will correctly pick up the "remaining" width
+  height: chartElement.offsetHeight,
+  layout: {
+    background: { color: '#131722' },
+    textColor: '#d1d4dc',
+  },
+  // ... other options
 });
 
 const mainLine = chart.addSeries(LightweightCharts.LineSeries, { color: 'purple' }); // Previous Day Close
@@ -13,4 +20,5 @@ socket.onmessage = function(event) {
   // Update chart and LTP values in the table
   currentLine.update({ time: data.time, value: data.ltp });
 };
+
 

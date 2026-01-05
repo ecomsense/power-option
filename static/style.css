@@ -1,0 +1,95 @@
+
+
+/* Ensure the body doesn't have scrollbars */
+body {
+  margin: 0;
+  padding: 10px; /* Small padding so the 4px border isn't touching the screen edge */
+  background-color: #0b0e14;
+  height: 100vh;
+  box-sizing: border-box;
+}
+
+/* 1) The SPA Wrapper */
+.dashboard-container {
+  display: flex;             /* Side-by-side layout */
+  flex-direction: row;       
+  width: 100%;
+  height: 100%;             /* Fills the body height */
+  border: 4px solid #363c4e; /* The requested 4px border */
+  border-radius: 8px;        /* Optional: slightly rounded corners for a modern feel */
+  background-color: #1e222d;
+  overflow: hidden;          /* Keeps everything inside the border */
+  box-sizing: border-box;
+}
+
+/* 2) Controls Section (First in HTML = Left Side) */
+.controls {
+  width: 400px;
+  min-width: 400px;         /* Prevents it from being squashed */
+  max-width: 400px;
+  height: 100%;
+  padding: 20px;
+  background-color: #1e222d;
+  border-right: 2px solid #363c4e; /* Separator line between tools and chart */
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  overflow-y: auto;          /* Scrollable if you add many strike buttons */
+}
+/* Update this section in your style.css */
+#chart-section {
+  flex-grow: 1;      /* Fill remaining width */
+  height: 100%;      /* Fill container height */
+  display: flex;     /* Ensure inner container behaves */
+}
+
+#chart-container {
+  width: 100%;       /* Fill parent width */
+  height: 100%;      /* Fill parent height */
+  background-color: #131722;
+}
+
+/* --- UI Elements Styling --- */
+
+.controls input {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 15px;
+  background: #2a2e39;
+  border: 1px solid #434651;
+  color: #d1d4dc;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.action-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.fire-btn { 
+  grid-column: span 2; 
+  background-color: #26a69a; 
+  padding: 15px; 
+}
+
+.close-btn { background-color: #ef5350; padding: 12px; }
+.hedge-btn { background-color: #2962ff; padding: 12px; }
+
+.action-buttons button {
+  border: none;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+#mtm-display {
+  margin-top: auto; /* Pushes MTM value to the bottom of the sidebar */
+  padding: 15px;
+  background: #131722;
+  text-align: center;
+  border-radius: 4px;
+}
