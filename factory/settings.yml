@@ -1,0 +1,19 @@
+log:
+  show: True
+  level: 30
+program:
+  start: "9:30"
+  stop: "15:00"
+trade:
+  start: "9:30"
+  stop: "15:00"
+signals:
+  exchange: BSE   # excel contain SR from this file
+strategy:
+  type: 0     # both side = 0, call only = 1, put only = -1
+  base: SENSEX
+  stop_loss: 60
+  target: 100
+  quantity: 20
+  slippage: 0.5   # 2 for SENSEX and 0.5 for others
+live: 1
