@@ -7,6 +7,7 @@ from toolkit.logger import Logger
 O_FUTL = Fileutils()
 S_DATA = "../data/"
 S_LOG = S_DATA + "log.txt"
+S_SYM = "../factory/symbols.yml"
 
 if not O_FUTL.is_file_exists(S_LOG):
     """
@@ -64,22 +65,22 @@ def read_yml():
     try:
         O_CNFG = yml_to_obj()
         O_SETG = yml_to_obj("settings.yml")
-        D_SYMBOL = yml_to_obj("symbols.yml")
     except Exception as e:
         print(e)
         print_exc()
         __import__("sys").exit(1)
     else:
-        return O_CNFG, O_SETG, D_SYMBOL
+        return O_CNFG, O_SETG
 
 
-O_CNFG, O_SETG, D_SYMBOL = read_yml()
+O_CNFG, O_SETG = read_yml()
 print("broker credentials" + "\n" + "*****************")
 pprint(O_CNFG)
 
 print("settings " + "\n" + "*****************")
 pprint(O_SETG)
 
+D_SYMBOL = O_FUTL.get_lst_fm_yml(S_SYM)
 print("symbols " + "\n" + "*****************")
 pprint(D_SYMBOL)
 

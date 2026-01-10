@@ -4,7 +4,7 @@ from typing import Any, Dict, List
 
 import pandas as pd
 
-from constants import O_FUTL, S_DATA, logging
+from constants import O_FUTL, S_DATA, logging, D_SYMBOL
 
 
 def get_symbols(exchange: str) -> Dict[str, Dict[str, Any]]:
@@ -38,7 +38,7 @@ def get_symbols(exchange: str) -> Dict[str, Dict[str, Any]]:
 def dump():
     try:
         # what exchange and its symbols should be dumped
-        sym_from_yml = O_FUTL.get_lst_fm_yml(S_DATA + "symbols.yml")
+        sym_from_yml = D_SYMBOL
         exchanges = sym_from_yml.pop("exchanges", None)
         # iterate each exchange
         for exchange in exchanges:

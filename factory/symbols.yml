@@ -8,7 +8,7 @@ NSE:
   diff: 100
   depth: 20
   exchange: NFO
-  expiry: "24807"
+  expiry: "26JAN"
   instrument_token: 260105
   tradingsymbol: NIFTY BANK
 BSE:

@@ -1,15 +1,41 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 import uvicorn
 
-app = FastAPI()
+
+from constants import O_SETG, logging
+from symbols import dump
+from utils import dict_from_yml
+from api import Helper
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    try:
+        # download necessary masters
+        dump()
+        # Unpack settings into instance attributes
+        symbol_settings = dict_from_yml("base", O_SETG["base"])
+        print(symbol_settings)
+
+        # Store the authenticated API instance in app.state
+        # This performs the "login once" action
+        app.state.api = Helper.api()
+
+        logging.info("Login Successful - HAPPY TRADING")
+        yield
+    except Exception as e:
+        logging.error(f"Startup login Error {e}")
+        yield
+
+
+app = FastAPI(lifespan=lifespan)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
-
-# Mount static files and templates
-app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 class ConnectionManager:
