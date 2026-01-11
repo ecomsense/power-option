@@ -1,0 +1,5 @@
+broker: bypass
+bypass:
+  userid: your_zerodha_id
+  password: your_zerodha_password
+  totp: generate_2fa_and_copy_the_string_here

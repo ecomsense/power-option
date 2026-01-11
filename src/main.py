@@ -1,6 +1,6 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
@@ -8,7 +8,7 @@ import uvicorn
 
 
 from constants import O_SETG, logging
-from symbols import dump
+from symbols import dump, Symbols
 from utils import dict_from_yml
 from api import Helper
 
@@ -19,9 +19,11 @@ async def lifespan(app: FastAPI):
         # download necessary masters
         dump()
         # Unpack settings into instance attributes
-        symbol_settings = dict_from_yml("base", O_SETG["base"])
-        print(symbol_settings)
+        symbol_settings = dict_from_yml("name", O_SETG["base"])
+        default_symbol = Symbols(**symbol_settings)
 
+        filtered = default_symbol.new_chain(59251, full_chain=True)
+        print(filtered)
         # Store the authenticated API instance in app.state
         # This performs the "login once" action
         app.state.api = Helper.api()
