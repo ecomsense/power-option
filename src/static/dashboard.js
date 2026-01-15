@@ -69,6 +69,7 @@ function renderDashboard(rows, mainLine, currentLine) {
   rows.forEach(row => {
     html += `
             <tr>
+                <td class="${getColorClass(row.total_diff)}">${row.total_diff.toFixed(2)}</td>
                 <td class="${getColorClass(row.ce_diff)}">${row.ce_diff_pct}</td>
                 <td class="${getColorClass(row.ce_diff)}">${row.ce_diff.toFixed(2)}</td>
                 <td>${row.curr_ce.toFixed(2)}</td>
@@ -79,7 +80,6 @@ function renderDashboard(rows, mainLine, currentLine) {
                 <td>${row.curr_pe.toFixed(2)}</td>
                 <td class="${getColorClass(row.pe_diff)}">${row.pe_diff.toFixed(2)}</td>
                 <td class="${getColorClass(row.pe_diff)}">${row.pe_diff_pct}</td>
-                <td class="${getColorClass(row.total_diff)}">${row.total_diff.toFixed(2)}</td>
                 <td class="${getColorClass(row.total_diff)}">${((row.total_diff / (row.prev_ce + row.prev_pe)) * 100).toFixed(2)}%</td>
             </tr>
         `;

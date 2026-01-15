@@ -62,6 +62,7 @@ async def mock_market_feed(websocket: WebSocket):
 
                 updates.append(
                     {
+                        "total_diff": round(ce_diff + pe_diff, 2),
                         "ce_strike": item["ce_strike"],
                         "pe_strike": item["pe_strike"],
                         "curr_ce": curr_ce,
@@ -72,7 +73,6 @@ async def mock_market_feed(websocket: WebSocket):
                         "prev_pe": item["prev_pe"],
                         "pe_diff": pe_diff,
                         "pe_diff_pct": f"{round((pe_diff / item['prev_pe']) * 100, 2)}%",
-                        "total_diff": round(ce_diff + pe_diff, 2),
                         "total_diff_pct": f"{round(((ce_diff + pe_diff) / (item['prev_ce'] + item['prev_pe'])) * 100, 2)}%",
                     }
                 )
