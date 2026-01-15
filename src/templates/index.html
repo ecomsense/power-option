@@ -6,7 +6,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="/static/style.css">
-  <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+  <script
+    src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.development.js"></script>
   <link rel="icon" href="data:;base64,ivBORw0KGgo=">
 </head>
 
@@ -14,80 +15,73 @@
   <div class="dashboard-container">
     <div id="controls-section">
       <div class="controls">
-        <input type="number" id="base-strike" placeholder="Base Strike">
-        <button onclick="updateStrikes()">Update Dashboard</button>
 
-        <div id="strike-selection">
-          <table class="strike-table">
+        <div class="top-control-bar">
+
+          <select id="symbol-select">
+
+            <option value="NIFTY">NIFTY</option>
+
+            <option value="BANKNIFTY">BANKNIFTY</option>
+
+            <option value="SENSEX">SENSEX</option>
+
+            <option value="FINNIFTY">FINNIFTY</option>
+
+          </select>
+
+
+
+          <input type="number" id="base-strike" placeholder="Base Strike" value="26100">
+
+
+
+          <input type="number" id="num-strikes" placeholder="No. of Strikes" value="10" min="1" step="1">
+
+
+
+          <button id="update-btn" onclick="updateStrikes()">Update</button>
+
+        </div>
+
+        <div class="table-section">
+          <table id="optionChainTable">
             <thead>
-              <tr>
-                <th>CE LTP</th>
-                <th>STRIKE</th>
-                <th>PE LTP</th>
-                <th>CHG %</th>
-                <th>SEL</th>
+              <tr class="header-row">
+                <th>CE Diff(%)</th>
+                <th>CE Diff</th>
+                <th>Curr CE</th>
+                <th>Prev CE</th>
+                <th>CE Strike</th>
+                <th>PE Strike</th>
+                <th>Prev PE</th>
+                <th>Curr PE</th>
+                <th>PE Diff</th>
+                <th>PE Diff(%)</th>
+                <th>Total Diff</th>
+                <th>Total Diff(%)</th>
               </tr>
             </thead>
-            <tbody>
-              <tr>
-                <td id="ce-1">0.00</td>
-                <td><b>24000</b></td>
-                <td id="pe-1">0.00</td>
-                <td class="up">+0.5%</td>
-                <td><input type="checkbox"></td>
-              </tr>
-              <tr>
-                <td id="ce-2">0.00</td>
-                <td><b>24050</b></td>
-                <td id="pe-2">0.00</td>
-                <td class="down">-0.2%</td>
-                <td><input type="checkbox"></td>
-              </tr>
-              <tr>
-                <td id="ce-3">0.00</td>
-                <td><b>24100</b></td>
-                <td id="pe-3">0.00</td>
-                <td class="up">+1.1%</td>
-                <td><input type="checkbox"></td>
-              </tr>
-              <tr>
-                <td id="ce-4">0.00</td>
-                <td><b>24150</b></td>
-                <td id="pe-4">0.00</td>
-                <td class="up">+0.8%</td>
-                <td><input type="checkbox"></td>
-              </tr>
-              <tr>
-                <td id="ce-5">0.00</td>
-                <td><b>24200</b></td>
-                <td id="pe-5">0.00</td>
-                <td class="down">-0.4%</td>
-                <td><input type="checkbox"></td>
-              </tr>
-              <tr>
-                <td id="ce-6">0.00</td>
-                <td><b>24250</b></td>
-                <td id="pe-6">0.00</td>
-                <td class="up">+0.2%</td>
-                <td><input type="checkbox"></td>
-              </tr>
-              <tr>
-                <td id="ce-7">0.00</td>
-                <td><b>24300</b></td>
-                <td id="pe-7">0.00</td>
-                <td class="down">-1.5%</td>
-                <td><input type="checkbox"></td>
-              </tr>
-              <tr>
-                <td id="ce-8">0.00</td>
-                <td><b>24350</b></td>
-                <td id="pe-8">0.00</td>
-                <td class="up">+0.3%</td>
-                <td><input type="checkbox"></td>
-              </tr>
+            <tbody id="chainBody">
             </tbody>
+            <tfoot>
+              <tr id="totalRow" class="footer-row">
+                <td id="total-ce-diff-pct">--</td>
+                <td id="total-ce-diff">--</td>
+                <td id="total-curr-ce">--</td>
+                <td id="total-prev-ce">--</td>
+                <td colspan="2">TOTAL</td>
+                <td id="total-prev-pe">--</td>
+                <td id="total-curr-pe">--</td>
+                <td id="total-pe-diff">--</td>
+                <td id="total-pe-diff-pct">--</td>
+                <td id="total-diff">--</td>
+                <td id="total-diff-pct">--</td>
+              </tr>
+            </tfoot>
           </table>
         </div>
+
 
         <div class="action-buttons">
           <button class="fire-btn" onclick="fireOrders()">FIRE</button>
@@ -102,6 +96,138 @@
     <div id="chart-section">
       <div id="chart-container"></div>
     </div>
+  </div>
+  div class="table-section">
+  <script src="/static/dashboard.js"></script>
+  thead>
+  <tr class="header-row">
+    <th>CE Diff(%)</th>
+    <th>CE Diff</th>
+    <th>Curr CE</th>
+    <th>Prev CE</th>
+    <th>CE Strike</th>
+    <th>PE Strike</th>
+    <th>Prev PE</th>
+    <th>Curr PE</th>
+    <th>PE Diff</th>
+    <th>PE Diff(%)</th>
+    <th>Total Diff</th>
+    <th>Total Diff(%)</th>
+  </tr>
+  </thead>
+  <tbody id="chainBody">>
+    <table id="optionChainTable">
+      <thead>
+        tr id="totalRow" class="footer-row">
+        <td id="total-ce-diff-pct">--</td>
+        <td id="total-ce-diff">--</td>
+        <td id="total-curr-ce">--</td>
+        <td id="total-prev-ce">--</td>
+        <td colspan="2">TOTAL</td>
+        <td id="total-prev-pe">--</td>
+        <td id="total-curr-pe">--</td>
+        <td id="total-pe-diff">--</td>
+        <td id="total-pe-diff-pct">--</td>
+        <td id="total-diff">--</td>
+        <td id="total-diff-pct">--</td>
+        </tr>
+        </tfoot>
+    </table>
+    </div>
+    ="hedge-btn" onclick="fireHedge()">HEDGE</button>
+    </div>
+    <td id="total-ce-diff-pct">--</td>
+    <div id="mtm-display">MTM: <span id="mtm-value">0.00</span></div>
+    </div>body id="chainBody">
+  </tbody>
+  </div>
+  </div>
+  <td id="total-pe-diff-pct">--</td>
+  <div id="mtm-display">MTM: <span id="mtm-value">0.00</span></div>
+  </div>
+  </div> <button class="hedge-btn" onclick="fireHedge()">HEDGE</button>
+  </tfoot>
+  <div id="chart-section">
+    <div id="chart-container"></div>
+  </div>lass="action-buttons">
+  <button class="fire-btn" onclick="fireOrders()">FIRE</button>
+  <button class="close-btn" onclick="closeAll()">CLOSE ALL</button>
+  <button class="hedge-btn" onclick="fireHedge()">HEDGE</button>
+  </div>
+
+  <div id="mtm-display">MTM: <span id="mtm-value">0.00</span></div>
+  </div>
+  </div>
+
+  <div id="chart-section">
+    <div id="chart-container"></div>
+  </div>
+  </div>
+  div class="table-section">
+  <script src="/static/dashboard.js"></script>
+  thead>
+  <tr class="header-row">
+    <th>CE Diff(%)</th>
+    <th>CE Diff</th>
+    <th>Curr CE</th>
+    <th>Prev CE</th>
+    <th>CE Strike</th>
+    <th>PE Strike</th>
+    <th>Prev PE</th>
+    <th>Curr PE</th>
+    <th>PE Diff</th>
+    <th>PE Diff(%)</th>
+    <th>Total Diff</th>
+    <th>Total Diff(%)</th>
+  </tr>
+  </thead>
+  <tbody id="chainBody">>
+    <table id="optionChainTable">
+      <thead>
+        tr id="totalRow" class="footer-row">
+        <td id="total-ce-diff-pct">--</td>
+        <td id="total-ce-diff">--</td>
+        <td id="total-curr-ce">--</td>
+        <td id="total-prev-ce">--</td>
+        <td colspan="2">TOTAL</td>
+        <td id="total-prev-pe">--</td>
+        <td id="total-curr-pe">--</td>
+        <td id="total-pe-diff">--</td>
+        <td id="total-pe-diff-pct">--</td>
+        <td id="total-diff">--</td>
+        <td id="total-diff-pct">--</td>
+        </tr>
+        </tfoot>
+    </table>
+    </div>
+    ="hedge-btn" onclick="fireHedge()">HEDGE</button>
+    </div>
+    <td id="total-ce-diff-pct">--</td>
+    <div id="mtm-display">MTM: <span id="mtm-value">0.00</span></div>
+    </div>body id="chainBody">
+  </tbody>
+  </div>
+  </div>
+  <td id="total-pe-diff-pct">--</td>
+  <div id="mtm-display">MTM: <span id="mtm-value">0.00</span></div>
+  </div>
+  </div> <button class="hedge-btn" onclick="fireHedge()">HEDGE</button>
+  </tfoot>
+  <div id="chart-section">
+    <div id="chart-container"></div>
+  </div>lass="action-buttons">
+  <button class="fire-btn" onclick="fireOrders()">FIRE</button>
+  <button class="close-btn" onclick="closeAll()">CLOSE ALL</button>
+  <button class="hedge-btn" onclick="fireHedge()">HEDGE</button>
+  </div>
+
+  <div id="mtm-display">MTM: <span id="mtm-value">0.00</span></div>
+  </div>
+  </div>
+
+  <div id="chart-section">
+    <div id="chart-container"></div>
+  </div>
   </div>
 
   <script src="/static/dashboard.js"></script>

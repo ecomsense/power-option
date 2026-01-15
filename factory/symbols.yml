@@ -3,24 +3,24 @@ exchanges:
   - NSE
   - BFO
   - BSE
-NSE:
+BANKNIFTY:
   name: BANKNIFTY
   diff: 100
   depth: 20
   exchange: NFO
   instrument_token: 260105
   tradingsymbol: "NIFTY BANK"
-BSE:
+SENSEX:
   name: SENSEX
   diff: 100
   depth: 20
   exchange: BFO
   instrument_token: 265
   tradingsymbol: "SENSEX"
-NSE:
-  name: BANKNIFTY
-  diff: 100
-  depth: 20
+NIFTY:
+  name: NIFTY
+  diff: 50
+  depth: 15
   exchange: NFO
-  instrument_token: 260105
+  instrument_token: 256265
   tradingsymbol: "NIFTY 50"

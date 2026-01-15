@@ -1,11 +1,10 @@
 from contextlib import asynccontextmanager
-
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 import uvicorn
-
+import asyncio
+import random
 
 from constants import O_SETG, logging
 from symbols import dump, Symbols
@@ -16,18 +15,11 @@ from api import Helper
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     try:
-        # download necessary masters
+        # Download necessary masters
         dump()
-        # Unpack settings into instance attributes
+        # Unpack settings and login once
         symbol_settings = dict_from_yml("name", O_SETG["base"])
-        default_symbol = Symbols(**symbol_settings)
-
-        filtered = default_symbol.new_chain(59251, full_chain=True)
-        print(filtered)
-        # Store the authenticated API instance in app.state
-        # This performs the "login once" action
         app.state.api = Helper.api()
-
         logging.info("Login Successful - HAPPY TRADING")
         yield
     except Exception as e:
@@ -39,45 +31,76 @@ app = FastAPI(lifespan=lifespan)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
+# Exact data from image_4e400c.png
+STRIKE_DATA = [
+    {"ce_strike": 26100, "pe_strike": 26100, "prev_ce": 145.00, "prev_pe": 3.25},
+    {"ce_strike": 26150, "pe_strike": 26050, "prev_ce": 110.85, "prev_pe": 3.70},
+    {"ce_strike": 26200, "pe_strike": 26000, "prev_ce": 81.60, "prev_pe": 4.40},
+    {"ce_strike": 26250, "pe_strike": 25950, "prev_ce": 56.95, "prev_pe": 5.05},
+    {"ce_strike": 26300, "pe_strike": 25900, "prev_ce": 37.85, "prev_pe": 5.90},
+    {"ce_strike": 26350, "pe_strike": 25850, "prev_ce": 23.80, "prev_pe": 7.50},
+    {"ce_strike": 26400, "pe_strike": 25800, "prev_ce": 14.55, "prev_pe": 10.30},
+    {"ce_strike": 26450, "pe_strike": 25750, "prev_ce": 8.95, "prev_pe": 13.95},
+    {"ce_strike": 26500, "pe_strike": 25700, "prev_ce": 5.75, "prev_pe": 19.85},
+    {"ce_strike": 26550, "pe_strike": 25650, "prev_ce": 3.80, "prev_pe": 28.00},
+    {"ce_strike": 26600, "pe_strike": 25600, "prev_ce": 2.85, "prev_pe": 39.65},
+]
 
-class ConnectionManager:
-    def __init__(self):
-        self.active_connections: list[WebSocket] = []
 
-    async def hospitals_connect(self, websocket: WebSocket):
-        await websocket.accept()
-        self.active_connections.append(websocket)
+async def mock_market_feed(websocket: WebSocket):
+    """Sends periodic updates to the connected client"""
+    try:
+        while True:
+            updates = []
+            for item in STRIKE_DATA:
+                # Simulate price movement based on image
+                curr_ce = round(item["prev_ce"] * (1 + random.uniform(-0.15, 0.05)), 2)
+                curr_pe = round(item["prev_pe"] * (1 + random.uniform(-0.40, 0.10)), 2)
 
-    def disconnect(self, websocket: WebSocket):
-        self.active_connections.remove(websocket)
+                ce_diff = round(curr_ce - item["prev_ce"], 2)
+                pe_diff = round(curr_pe - item["prev_pe"], 2)
 
-    async def broadcast(self, message: str):
-        for connection in self.active_connections:
-            await connection.send_text(message)
-
-
-manager = ConnectionManager()
+                updates.append(
+                    {
+                        "ce_strike": item["ce_strike"],
+                        "pe_strike": item["pe_strike"],
+                        "curr_ce": curr_ce,
+                        "prev_ce": item["prev_ce"],
+                        "ce_diff": ce_diff,
+                        "ce_diff_pct": f"{round((ce_diff / item['prev_ce']) * 100, 2)}%",
+                        "curr_pe": curr_pe,
+                        "prev_pe": item["prev_pe"],
+                        "pe_diff": pe_diff,
+                        "pe_diff_pct": f"{round((pe_diff / item['prev_pe']) * 100, 2)}%",
+                        "total_diff": round(ce_diff + pe_diff, 2),
+                        "total_diff_pct": f"{round(((ce_diff + pe_diff) / (item['prev_ce'] + item['prev_pe'])) * 100, 2)}%",
+                    }
+                )
+            await websocket.send_json({"type": "UPDATE", "rows": updates})
+            await asyncio.sleep(1)  # Send data every second
+    except Exception:
+        pass  # Task will be cancelled on disconnect
 
 
 @app.get("/")
-async def get():
-    with open("templates/index.html") as f:
-        return HTMLResponse(content=f.read())
+async def get(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
 
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
-    await manager.hospitals_connect(websocket)
+    await websocket.accept()
+    # Start the data feed as a background task for this connection
+    feed_task = asyncio.create_task(mock_market_feed(websocket))
     try:
         while True:
+            # Keep connection open and listen for 'Fire' or 'Close' commands
             data = await websocket.receive_text()
-            # Logic to handle subscription to specific strikes
-            # and broadcasting market feed from 5paisa
-            await websocket.send_text(f"Msg was: {data}")
+            logging.info(f"Command received: {data}")
     except WebSocketDisconnect:
-        manager.disconnect(websocket)
+        feed_task.cancel()  # Stop the feed if client leaves
+        logging.info("Client disconnected")
 
 
 if __name__ == "__main__":
-    # Specify the file and app object as a string for 'reload' to work
     uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)

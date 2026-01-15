@@ -1,95 +1,126 @@
-
-
 /* Ensure the body doesn't have scrollbars */
 body {
   margin: 0;
-  padding: 10px; /* Small padding so the 4px border isn't touching the screen edge */
-  background-color: #0b0e14;
+  padding: 10px; 
+  background-color: #f0f2f5; 
+  color: #1a1a1b;            
   height: 100vh;
+  width: 100vw;
   box-sizing: border-box;
+  overflow: hidden; /* Prevent body scroll */
 }
 
 /* 1) The SPA Wrapper */
 .dashboard-container {
-  display: flex;             /* Side-by-side layout */
+  display: flex;             
   flex-direction: row;       
   width: 100%;
-  height: 100%;             /* Fills the body height */
-  border: 4px solid #363c4e; /* The requested 4px border */
-  border-radius: 8px;        /* Optional: slightly rounded corners for a modern feel */
-  background-color: #1e222d;
-  overflow: hidden;          /* Keeps everything inside the border */
+  height: 100%;             
+  border: 4px solid #d1d4dc; 
+  border-radius: 8px;        
+  background-color: #ffffff; 
+  overflow: hidden;          
   box-sizing: border-box;
 }
 
-/* 2) Controls Section (First in HTML = Left Side) */
+/* Sidebar now holds vertical sections, but the top bar is horizontal */
 .controls {
-  width: 400px;
-  min-width: 400px;         /* Prevents it from being squashed */
-  max-width: 400px;
+  width: 750px; /* Keep it wide for the 12 columns */
+  min-width: 750px;
   height: 100%;
-  padding: 20px;
-  background-color: #1e222d;
-  border-right: 2px solid #363c4e; /* Separator line between tools and chart */
+  padding: 15px;
+  background-color: #f8f9fa;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
-  overflow-y: auto;          /* Scrollable if you add many strike buttons */
 }
-/* Update this section in your style.css */
+
+/* Horizontal bar for the new inputs */
+.top-control-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.top-control-bar select, 
+.top-control-bar input {
+  padding: 8px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+#symbol-select { width: 120px; }
+#base-strike { width: 110px; }
+#num-strikes { width: 100px; }
+
+#update-btn {
+  background-color: #495057;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+#update-btn:hover { background-color: #343a40; }
+/* 3) Table Section - Scrollable horizontally if needed */
+.table-section {
+  flex-grow: 1;
+  overflow-x: auto; /* Horizontal scroll for table only */
+  overflow-y: auto; /* Vertical scroll for strikes */
+  margin-top: 10px;
+  border: 1px solid #dee2e6;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #ffffff;
+  font-size: 11px; /* Smaller font to fit data */
+}
+
+th {
+  background-color: #343a40; 
+  color: #ffffff;
+  padding: 8px 4px;
+  position: sticky; /* Keep headers at top */
+  top: 0;
+}
+
+/* 4) Chart Section - Fills the rest */
 #chart-section {
-  flex-grow: 1;      /* Fill remaining width */
-  height: 100%;      /* Fill container height */
-  display: flex;     /* Ensure inner container behaves */
+  flex-grow: 1;      
+  height: 100%;      
+  background-color: #ffffff;
+  position: relative;
 }
 
 #chart-container {
-  width: 100%;       /* Fill parent width */
-  height: 100%;      /* Fill parent height */
-  background-color: #131722;
+  width: 100%;       
+  height: 100%;      
 }
 
-/* --- UI Elements Styling --- */
-
-.controls input {
-  width: 100%;
-  padding: 12px;
-  margin-bottom: 15px;
-  background: #2a2e39;
-  border: 1px solid #434651;
-  color: #d1d4dc;
-  font-size: 14px;
-  box-sizing: border-box;
-}
-
+/* --- Rest of your UI styling --- */
 .action-buttons {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-top: 20px;
+  gap: 8px;
+  margin-top: 10px;
+  padding-bottom: 10px;
 }
-
-.fire-btn { 
-  grid-column: span 2; 
-  background-color: #26a69a; 
-  padding: 15px; 
-}
-
-.close-btn { background-color: #ef5350; padding: 12px; }
-.hedge-btn { background-color: #2962ff; padding: 12px; }
-
-.action-buttons button {
-  border: none;
-  color: white;
-  font-weight: bold;
-  cursor: pointer;
-  border-radius: 4px;
-}
+.fire-btn { grid-column: span 2; background-color: #00897b; padding: 12px; }
+.close-btn { background-color: #d32f2f; padding: 10px; }
+.hedge-btn { background-color: #1976d2; padding: 10px; }
 
 #mtm-display {
-  margin-top: auto; /* Pushes MTM value to the bottom of the sidebar */
-  padding: 15px;
-  background: #131722;
+  padding: 10px;
+  background: #212529;
+  color: #ffffff;
   text-align: center;
-  border-radius: 4px;
+  font-weight: bold;
 }
