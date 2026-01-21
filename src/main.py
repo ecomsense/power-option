@@ -48,38 +48,37 @@ STRIKE_DATA = [
 
 
 async def mock_market_feed(websocket: WebSocket):
-    """Sends periodic updates to the connected client"""
     try:
         while True:
             updates = []
             for item in STRIKE_DATA:
-                # Simulate price movement based on image
-                curr_ce = round(item["prev_ce"] * (1 + random.uniform(-0.15, 0.05)), 2)
-                curr_pe = round(item["prev_pe"] * (1 + random.uniform(-0.40, 0.10)), 2)
+                curr_ce = round(item["prev_ce"] * (1 + random.uniform(-0.10, 0.05)), 2)
+                curr_pe = round(item["prev_pe"] * (1 + random.uniform(-0.30, 0.10)), 2)
 
                 ce_diff = round(curr_ce - item["prev_ce"], 2)
                 pe_diff = round(curr_pe - item["prev_pe"], 2)
+                total_diff = round(ce_diff + pe_diff, 2)
 
                 updates.append(
                     {
-                        "total_diff": round(ce_diff + pe_diff, 2),
-                        "ce_strike": item["ce_strike"],
-                        "pe_strike": item["pe_strike"],
+                        "total_diff": total_diff,
+                        "ce_diff_pct": f"{round((ce_diff / item['prev_ce']) * 100, 2)}%",
+                        "ce_diff": ce_diff,
                         "curr_ce": curr_ce,
                         "prev_ce": item["prev_ce"],
-                        "ce_diff": ce_diff,
-                        "ce_diff_pct": f"{round((ce_diff / item['prev_ce']) * 100, 2)}%",
-                        "curr_pe": curr_pe,
+                        "ce_strike": item["ce_strike"],
+                        "pe_strike": item["pe_strike"],
                         "prev_pe": item["prev_pe"],
+                        "curr_pe": curr_pe,
                         "pe_diff": pe_diff,
                         "pe_diff_pct": f"{round((pe_diff / item['prev_pe']) * 100, 2)}%",
-                        "total_diff_pct": f"{round(((ce_diff + pe_diff) / (item['prev_ce'] + item['prev_pe'])) * 100, 2)}%",
+                        "total_diff_pct": f"{round((total_diff / (item['prev_ce'] + item['prev_pe'])) * 100, 2)}%",
                     }
                 )
             await websocket.send_json({"type": "UPDATE", "rows": updates})
-            await asyncio.sleep(1)  # Send data every second
+            await asyncio.sleep(1)
     except Exception:
-        pass  # Task will be cancelled on disconnect
+        pass
 
 
 @app.get("/")

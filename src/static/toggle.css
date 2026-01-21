@@ -1,0 +1,68 @@
+/* --- Sliding Toggle Switch --- */
+.toggle-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-input);
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid var(--border-input);
+}
+
+.toggle-label {
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.toggle-label.buy { color: var(--color-pos); }
+.toggle-label.sell { color: var(--color-neg); }
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 22px;
+}
+
+/* Hide default checkbox */
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* The slider track */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: var(--color-pos); /* Default Green for B */
+  transition: .4s;
+  border-radius: 22px;
+}
+
+/* The sliding circle */
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+/* When checked (Sell Mode) */
+input:checked + .slider {
+  background-color: var(--color-neg);
+}
+
+input:checked + .slider:before {
+  transform: translateX(22px);
+}
+
+/* Apply colors to table checkboxes based on container state */
+.buy-mode-active .ce-check, .buy-mode-active .pe-check { accent-color: var(--color-pos); }
+.sell-mode-active .ce-check, .sell-mode-active .pe-check { accent-color: var(--color-neg); }

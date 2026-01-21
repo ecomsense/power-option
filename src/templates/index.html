@@ -8,64 +8,72 @@
   <link rel="stylesheet" href="/static/style.css">
   <script
     src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.development.js"></script>
-  <link rel="icon" href="data:;base64,ivBORw0KGgo=">
 </head>
 
 <body>
   <div class="dashboard-container">
     <div id="controls-section">
-      <div class="controls">
-        <div class="top-control-bar">
-          <select id="symbol-select">
-            <option value="NIFTY">NIFTY</option>
-            <option value="BANKNIFTY">BANKNIFTY</option>
-            <option value="SENSEX">SENSEX</option>
-            <option value="FINNIFTY">FINNIFTY</option>
-          </select>
-          <input type="number" id="base-strike" placeholder="Base Strike" value="26100">
-          <input type="number" id="num-strikes" placeholder="No. of Strikes" value="10" min="1" step="1">
-          <button id="update-btn" class="btn" onclick="updateStrikes()">Update</button>
-          <button class="btn" onclick="orders()">Orders</button>
-          <button class="btn" onclick="positions()">Positions</button>
-          <button class="btn fire-btn" onclick="fireOrders()">Fire</button>
-          <button class="btn hedge-btn" onclick="fireHedge()">Hedge</button>
-        </div>
+      <div class="top-control-bar">
+        <select id="symbol-select">
+          <option value="NIFTY">NIFTY</option>
+          <option value="BANKNIFTY">BANKNIFTY</option>
+          <option value="SENSEX">SENSEX</option>
+          <option value="FINNIFTY">FINNIFTY</option>
+        </select>
+        <input type="number" id="base-strike" placeholder="Base Strike" value="26100">
+        <input type="number" id="num-strikes" placeholder="No. of Strikes" value="10">
+        <button class="btn" onclick="updateStrikes()">Update</button>
+        <button id="side-toggle" class="btn side-btn buy-mode" onclick="toggleSide()">BUY</button>
+        <button class="btn fire-btn" onclick="fireOrders()">Fire</button>
+        <button class="btn hedge-btn" onclick="fireHedge()">Hedge</button>
+      </div>
 
-        <div class="table-section">
-          <table id="optionChainTable">
+      <div class="tables-wrapper">
+        <div class="table-container diff-table-container">
+          <table id="diffTable">
             <thead>
-              <tr class="header-row">
+              <tr>
+                <th class="cb-cell">CE</th>
                 <th>Total Diff</th>
                 <th>CE %</th>
                 <th>CE Diff</th>
-                <th>Curr CE</th>
+                <th>CE LTP</th>
                 <th>Prev CE</th>
-                <th>CE Strike</th>
-                <th>PE Strike</th>
+                <th class="strike-cell">CE Strike</th>
+                <th class="strike-cell">PE Strike</th>
                 <th>Prev PE</th>
-                <th>Curr PE</th>
+                <th>PE LTP</th>
                 <th>PE Diff</th>
                 <th>PE %</th>
                 <th>Total %</th>
+                <th class="cb-cell">PE</th>
               </tr>
             </thead>
-            <tbody id="chainBody">
-            </tbody>
-            <tfoot>
-              <tr id="totalRow" class="footer-row">
-                <td id="total-diff">--</td>
-                <td id="total-ce-diff-pct">--</td>
-                <td id="total-ce-diff">--</td>
-                <td id="total-curr-ce">--</td>
-                <td id="total-prev-ce">--</td>
-                <td colspan="2">TOTAL</td>
-                <td id="total-prev-pe">--</td>
-                <td id="total-curr-pe">--</td>
-                <td id="total-pe-diff">--</td>
-                <td id="total-pe-diff-pct">--</td>
-                <td id="total-diff-pct">--</td>
+            <tbody id="diffBody"></tbody>
+          </table>
+        </div>
+
+        <div class="table-container ltp-table-container">
+          <table id="ltpTable">
+            <thead>
+              <tr>
+                <th class="cb-cell">CE</th>
+                <th>Total Diff</th>
+                <th>CE %</th>
+                <th>CE Diff</th>
+                <th>CE LTP</th>
+                <th>Prev CE</th>
+                <th class="strike-cell">CE Strike</th>
+                <th class="strike-cell">PE Strike</th>
+                <th>Prev PE</th>
+                <th>PE LTP</th>
+                <th>PE Diff</th>
+                <th>PE %</th>
+                <th>Total %</th>
+                <th class="cb-cell">PE</th>
               </tr>
-            </tfoot>
+            </thead>
+            <tbody id="ltpBody"></tbody>
           </table>
         </div>
       </div>
@@ -76,6 +84,21 @@
     </div>
   </div>
   <script src="/static/dashboard.js"></script>
+</body>
+
+</html>v id="chart-section">
+<div id="chart-container"></div>y>
+</table>
+</div>
+</div>
+<script src="/static/dashboard.js"></script>
+</div>
+
+<div id="chart-section">
+  <div id="chart-container"></div>
+</div>
+</div>
+<script src="/static/dashboard.js"></script>
 </body>
 
 </html>
