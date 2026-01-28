@@ -21,8 +21,8 @@
   --border-input: #434651;
   
   --btn-default: #495057;
-  --btn-fire: #9c27b0;
-  --btn-hedge: #ff9800;
+  --btn-voilet: #9c27b0;
+  --btn-orange: #ff9800;
 }
 
 /* --- 2. Base Reset --- */
@@ -58,7 +58,7 @@ body {
 }
 
 #chart-section {
-  flex: 0 0 40%; /* Chart takes bottom 40% height */
+  flex: 0 0 30%; /* Chart takes bottom 40% height */
   background-color: var(--bg-table);
   border-top: 2px solid var(--border-ui);
 }
@@ -83,12 +83,12 @@ body {
 
 /* Specified Widths */
 .diff-table-container {
-  flex: 0 0 65%;
+  flex: 0 0 60%;
   border-right: 2px solid var(--border-ui);
 }
 
 .ltp-table-container {
-  flex: 0 0 35%;
+  flex: 0 0 40%;
 }
 
 /* --- 5. Table Styling --- */
@@ -99,7 +99,7 @@ table {
 }
 
 th, td {
-  padding: 8px 4px;
+  padding: 4px 2px;
   border-bottom: 1px solid var(--border-table);
   white-space: nowrap;
   text-align: right;
@@ -135,11 +135,12 @@ th {
 }
 
 /* --- 7. Column & UI Styles --- */
-.strike-cell {
-  background-color: var(--bg-strike-highlight) !important;
-  color: var(--text-strike) !important;
-  font-weight: bold;
-  text-align: center;
+.text5 {
+  width: 5em;
+}
+
+.text2 {
+  width: 3em;
 }
 
 .cb-cell { width: 30px; text-align: center; }
@@ -173,8 +174,8 @@ th {
   background-color: var(--btn-default);
 }
 
-.fire-btn { background-color: var(--btn-fire); }
-.hedge-btn { background-color: var(--btn-hedge); }
+.violet-btn { background-color: var(--btn-voilet); }
+.orange-btn { background-color: var(--btn-orange); }
 
 /* --- 9. Custom Scrollbar --- */
 ::-webkit-scrollbar { width: 8px; height: 8px; }

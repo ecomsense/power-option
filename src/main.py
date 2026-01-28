@@ -15,9 +15,7 @@ from api import Helper
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     try:
-        # Download necessary masters
         dump()
-        # Unpack settings and login once
         symbol_settings = dict_from_yml("name", O_SETG["base"])
         app.state.api = Helper.api()
         logging.info("Login Successful - HAPPY TRADING")
@@ -31,7 +29,7 @@ app = FastAPI(lifespan=lifespan)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
-# Exact data from image_4e400c.png
+# Exact data from your original main.py
 STRIKE_DATA = [
     {"ce_strike": 26100, "pe_strike": 26100, "prev_ce": 145.00, "prev_pe": 3.25},
     {"ce_strike": 26150, "pe_strike": 26050, "prev_ce": 110.85, "prev_pe": 3.70},
@@ -52,9 +50,8 @@ async def mock_market_feed(websocket: WebSocket):
         while True:
             updates = []
             for item in STRIKE_DATA:
-                curr_ce = round(item["prev_ce"] * (1 + random.uniform(-0.10, 0.05)), 2)
-                curr_pe = round(item["prev_pe"] * (1 + random.uniform(-0.30, 0.10)), 2)
-
+                curr_ce = round(item["prev_ce"] * (1 + random.uniform(-0.05, 0.05)), 2)
+                curr_pe = round(item["prev_pe"] * (1 + random.uniform(-0.05, 0.05)), 2)
                 ce_diff = round(curr_ce - item["prev_ce"], 2)
                 pe_diff = round(curr_pe - item["prev_pe"], 2)
                 total_diff = round(ce_diff + pe_diff, 2)
@@ -75,10 +72,13 @@ async def mock_market_feed(websocket: WebSocket):
                         "total_diff_pct": f"{round((total_diff / (item['prev_ce'] + item['prev_pe'])) * 100, 2)}%",
                     }
                 )
-            await websocket.send_json({"type": "UPDATE", "rows": updates})
+            # SENDING BOTH KEYS TO FRONTEND
+            await websocket.send_json(
+                {"type": "UPDATE", "diff_rows": updates, "hedge_rows": updates}
+            )
             await asyncio.sleep(1)
-    except Exception:
-        pass
+    except Exception as e:
+        logging.error(f"Feed error: {e}")
 
 
 @app.get("/")
@@ -89,16 +89,13 @@ async def get(request: Request):
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
-    # Start the data feed as a background task for this connection
     feed_task = asyncio.create_task(mock_market_feed(websocket))
     try:
         while True:
-            # Keep connection open and listen for 'Fire' or 'Close' commands
             data = await websocket.receive_text()
             logging.info(f"Command received: {data}")
     except WebSocketDisconnect:
-        feed_task.cancel()  # Stop the feed if client leaves
-        logging.info("Client disconnected")
+        feed_task.cancel()
 
 
 if __name__ == "__main__":
