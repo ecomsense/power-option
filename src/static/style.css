@@ -38,6 +38,10 @@ body {
   color: var(--text-main);
 }
 
+a {
+  color: var(--text-white)
+}
+
 /* --- 3. Dashboard Layout --- */
 .dashboard-container {
   display: flex;
@@ -83,12 +87,12 @@ body {
 
 /* Specified Widths */
 .diff-table-container {
-  flex: 0 0 60%;
+  flex: 0 0 55%;
   border-right: 2px solid var(--border-ui);
 }
 
 .ltp-table-container {
-  flex: 0 0 40%;
+  flex: 0 0 45%;
 }
 
 /* --- 5. Table Styling --- */
