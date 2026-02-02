@@ -16,7 +16,7 @@ from api import Helper
 async def lifespan(app: FastAPI):
     try:
         dump()
-        symbol_settings = dict_from_yml("name", O_SETG["base"])
+        app.state.symbol_settings = dict_from_yml("name", O_SETG["base"])
         app.state.api = Helper.api()
         logging.info("Login Successful - HAPPY TRADING")
         yield

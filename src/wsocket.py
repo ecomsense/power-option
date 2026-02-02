@@ -66,3 +66,22 @@ class Wsocket:
 
     def on_noreconnect(self, ws):
         logging.error("Reconnect failed.")
+
+
+if __name__ == "__main__":
+    from constants import O_SETG
+    from symbols import dump, Symbols
+    from utils import dict_from_yml
+    from api import Helper
+
+    dump()
+
+    symbol_settings = dict_from_yml("name", O_SETG["base"])
+    api = Helper.api()
+    ws = Wsocket(api, [25625, 11000, 16])
+    ticks = {}
+    while not any(ticks):
+        ticks = ws.ltp()
+        __import__("time").sleep(5)
+    else:
+        print(ticks)

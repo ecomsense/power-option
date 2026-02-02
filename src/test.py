@@ -4,8 +4,11 @@ from utils import dict_from_yml
 from api import Helper
 from wsocket import Wsocket
 
+# base symbol changed
 kwargs = dict_from_yml("name", "BANKNIFTY")
 s = Symbols(**kwargs)
+
+
 filtered = s.new_chain(59251, full_chain=True)
 pprint(filtered)
 filtered = [item["instrument_token"] for item in filtered]

@@ -5,6 +5,8 @@ import pandas as pd
 
 from constants import O_FUTL, S_DATA, logging, D_SYMBOL
 
+from collections import defaultdict
+
 
 def get_symbols(exchange: str) -> dict[str, dict[str, Any]]:
     try:
@@ -166,10 +168,10 @@ class Symbols:
             print(f"Merged Build chain {merged_list}")
         return merged_list
 
-    def new_chain(self, ltp, full_chain=True):
+    def new_chain(self, ltp, full_chain=0):
         try:
             atm = self.calc_atm_from_ltp(ltp)
-            depth = self.depth if full_chain else 0
+            depth = full_chain
             symbols = self._generate_symbols(atm, depth)
             filter = self.tokens_from_symbols(symbols)
             return filter
@@ -215,6 +217,33 @@ class Symbols:
     """
 
 
+def dump_basename_from_exchange(basename, exchange):
+    symbols_from_json = O_FUTL.read_file(S_DATA + exchange + ".json")
+
+    result = defaultdict(lambda: {"CE": [], "PE": []})
+
+    for item in symbols_from_json:
+        if basename != item["name"]:
+            continue
+
+        itype = item["instrument_type"]
+        if itype not in ("CE", "PE"):
+            continue  # FUT, EQ etc not relevant here
+
+        key = f"{item['name']} ({item['expiry']})"
+        result[key][itype].append(
+            {
+                "tradingsymbol": item["tradingsymbol"],
+                "instrument_token": item["instrument_token"],
+                "strike": int(item["strike"]),
+            }
+        )
+
+    content = dict(result)
+
+    O_FUTL.write_file(S_DATA + basename + ".json", content)
+
+
 if __name__ == "__main__":
     from pprint import pprint
     from utils import dict_from_yml
@@ -223,3 +252,5 @@ if __name__ == "__main__":
     s = Symbols(**kwargs)
     filtered = s.new_chain(59251, full_chain=True)
     pprint(filtered)
+
+    dump_basename_from_exchange("BANKNIFTY", "NFO")
