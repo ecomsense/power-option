@@ -36,21 +36,51 @@ def get_symbols(exchange: str) -> dict[str, dict[str, Any]]:
         return json
 
 
-def dump():
+def dump(exchange):
     try:
         # what exchange and its symbols should be dumped
-        sym_from_yml = D_SYMBOL
-        exchanges = sym_from_yml.pop("exchanges", None)
-        # iterate each exchange
-        for exchange in exchanges:
-            exchange_file = S_DATA + exchange + ".json"
-            if O_FUTL.is_file_not_2day(exchange_file):
-                sym_from_json = get_symbols(exchange)
-                O_FUTL.write_file(exchange_file, sym_from_json)
+        exchange_file = S_DATA + exchange + ".json"
+        if O_FUTL.is_file_not_2day(exchange_file):
+            sym_from_json = get_symbols(exchange)
+            O_FUTL.write_file(exchange_file, sym_from_json)
     except Exception as e:
         print(f"dump error: {e}")
         print_exc()
 
+
+def dump_basename_from_exchange(basename, exchange):
+    path_and_file = S_DATA + exchange + ".json"
+    if O_FUTL.is_file_not_2day(path_and_file):
+        symbols_from_json = O_FUTL.read_file(path_and_file)
+        result = defaultdict(lambda: {"CE": [], "PE": []})
+
+        for item in symbols_from_json:
+            if basename != item["name"]:
+                continue
+
+            itype = item["instrument_type"]
+            if itype not in ("CE", "PE"):
+                continue  # FUT, EQ etc not relevant here
+
+            key = f"{item['name']} ({item['expiry']})"
+            result[key][itype].append(
+                {
+                    "tradingsymbol": item["tradingsymbol"],
+                    "instrument_token": item["instrument_token"],
+                    "strike": int(item["strike"]),
+                }
+            )
+
+        content = dict(result)
+        O_FUTL.write_file(S_DATA + basename + ".json", content)
+
+
+def find_tradingsymbol_from_dropdowns(base_expiry: str):
+    lst = base_expiry.split(" ")
+    basename, expiry = lst[0], lst[1]
+    symbol_json_file = S_DATA + basename + ".json"
+    content = O_FUTL.read_file(symbol_json_file)
+    print(content.keys())
 
 class Symbols:
     def __init__(self, **kwargs):
@@ -217,40 +247,30 @@ class Symbols:
     """
 
 
-def dump_basename_from_exchange(basename, exchange):
-    symbols_from_json = O_FUTL.read_file(S_DATA + exchange + ".json")
-
-    result = defaultdict(lambda: {"CE": [], "PE": []})
-
-    for item in symbols_from_json:
-        if basename != item["name"]:
-            continue
-
-        itype = item["instrument_type"]
-        if itype not in ("CE", "PE"):
-            continue  # FUT, EQ etc not relevant here
-
-        key = f"{item['name']} ({item['expiry']})"
-        result[key][itype].append(
-            {
-                "tradingsymbol": item["tradingsymbol"],
-                "instrument_token": item["instrument_token"],
-                "strike": int(item["strike"]),
-            }
-        )
-
-    content = dict(result)
-
-    O_FUTL.write_file(S_DATA + basename + ".json", content)
-
 
 if __name__ == "__main__":
     from pprint import pprint
-    from utils import dict_from_yml
+    from constants import D_SYMBOL
 
-    kwargs = dict_from_yml("name", "BANKNIFTY")
-    s = Symbols(**kwargs)
-    filtered = s.new_chain(59251, full_chain=True)
-    pprint(filtered)
 
-    dump_basename_from_exchange("BANKNIFTY", "NFO")
+    # we have a list of symbols with base name as key, and dict as symbol
+    # details
+    for kwargs in D_SYMBOL.values():
+
+        # first download the csv to json
+        dump(kwargs["exchange"])
+
+        # filter the json further by base name
+        dump_basename_from_exchange(kwargs["name"], kwargs["exchange"])
+
+        # given the basename (expiry) as the key, find the relevant dict
+        """
+        s = Symbols(**kwargs)
+        filtered = s.new_chain(59251, full_chain=True)
+        pprint(filtered)
+        """
+
+
+    #todo
+    # we need to accepts arguments from the dependant dropdown
+    find_tradingsymbol_from_dropdowns("BANKNIFTY (21-JAN)")

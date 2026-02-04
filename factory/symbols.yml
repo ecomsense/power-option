@@ -1,8 +1,3 @@
-exchanges:
-  - NFO
-  - NSE
-  - BFO
-  - BSE
 BANKNIFTY:
   name: BANKNIFTY
   diff: 100
@@ -10,6 +5,7 @@ BANKNIFTY:
   exchange: NFO
   instrument_token: 260105
   tradingsymbol: "NIFTY BANK"
+  index_exchange: NSE
 SENSEX:
   name: SENSEX
   diff: 100
@@ -17,6 +13,7 @@ SENSEX:
   exchange: BFO
   instrument_token: 265
   tradingsymbol: "SENSEX"
+  index_exchange: BSE
 NIFTY:
   name: NIFTY
   diff: 50
@@ -24,3 +21,4 @@ NIFTY:
   exchange: NFO
   instrument_token: 256265
   tradingsymbol: "NIFTY 50"
+  index_exchange: NSE
