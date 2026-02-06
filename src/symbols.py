@@ -1,14 +1,20 @@
 from traceback import print_exc
-from typing import Any  # Use list[dict] for the return type
+from typing import Any, Literal  # Use list[dict] for the return type
 
 import pandas as pd
 import pendulum as pdlm
 from constants import D_SYMBOL, O_FUTL, S_DATA, logging
 
+OptionType = Literal["CE", "PE"]
+
 
 def get_symbols(exchange: str) -> list[dict[str, Any]]:
     """
-    - download csv from broker and return as list of dicts
+    download csv from broker and return as list of dicts
+    parameters:
+        accepts exchange "NFO"
+    returns:
+        list of dictionaries containing symbol info
     """
     try:
         url = f"https://api.kite.trade/instruments/{exchange}"
@@ -49,6 +55,9 @@ def get_symbols(exchange: str) -> list[dict[str, Any]]:
 
 
 def dump(exchange: str) -> None:
+    """
+    get symbol info by exchange and write it to json in data dir
+    """
     try:
         # what exchange and its symbols should be dumped
         exchange_file = S_DATA + exchange + ".json"
@@ -100,7 +109,7 @@ def dump_basename_from_exchange(basename: str, exchange: str):
             subset.drop(columns=["instrument_type"]).to_csv(file_path, index=False)
 
 
-def find_tradingsymbol_from_dropdowns(option_type, base_expiry: str):
+def find_tradingsymbol_from_dropdowns(ce_or_pe: OptionType, base_expiry: str):
     """
     prepare the symbol data to csv, so sorting can be done easily
 
@@ -115,7 +124,7 @@ def find_tradingsymbol_from_dropdowns(option_type, base_expiry: str):
     try:
         lst = base_expiry.split(" ")
         basename, expiry = lst[0], lst[1].replace("(", "").replace(")", "")
-        csv_file = f"{S_DATA}{option_type}/{basename}.csv"
+        csv_file = f"{S_DATA}{ce_or_pe}/{basename}.csv"
         df = pd.read_csv(csv_file)
         df = df[df["expiry"] == expiry]
         return df.to_dict(orient="records")
@@ -207,8 +216,8 @@ class Symbols:
         filtered_df = df[(df["name"] == self.name) & (df["expiry"] == self.expiry_date)]
 
         merged_list = []
-        for option_type in ["CE", "PE"]:
-            option_df = filtered_df[filtered_df["instrument_type"] == option_type]
+        for ce_or_pe in ["CE", "PE"]:
+            option_df = filtered_df[filtered_df["instrument_type"] == ce_or_pe]
 
             # Sort DataFrame by strike
             option_df = option_df.sort_values(by="strike")
@@ -291,8 +300,6 @@ class Symbols:
 if __name__ == "__main__":
     from constants import D_SYMBOL
 
-    # we have a list of symbols with base name as key, and dict as symbol
-    # details
     for kwargs in D_SYMBOL.values():
         # first download the csv to json
         dump(kwargs["exchange"])
