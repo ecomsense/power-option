@@ -1,42 +1,54 @@
 from traceback import print_exc
-from typing import Any
-import pendulum as pdlm
+from typing import Any  # Use list[dict] for the return type
+
 import pandas as pd
-
-from constants import O_FUTL, S_DATA, logging, D_SYMBOL
-
-from collections import defaultdict
+import pendulum as pdlm
+from constants import D_SYMBOL, O_FUTL, S_DATA, logging
 
 
-def get_symbols(exchange: str) -> dict[str, dict[str, Any]]:
+def get_symbols(exchange: str) -> list[dict[str, Any]]:
+    """
+    - download csv from broker and return as list of dicts
+    """
     try:
-        json = {}
         url = f"https://api.kite.trade/instruments/{exchange}"
         df = pd.read_csv(url)
-        # keep only tradingsymbol and instrument_token
-        df = df[
-            [
-                "tradingsymbol",
-                "instrument_token",
-                "name",
-                "strike",
-                "instrument_type",
-                "expiry",
-                "lot_size",
-            ]
-        ]
 
-        df = df.dropna(axis=1, how="any")
-        json = df.to_dict(orient="records")
+        # 1. Select relevant columns
+        cols = [
+            "tradingsymbol",
+            "instrument_token",
+            "name",
+            "strike",
+            "instrument_type",
+            "expiry",
+            "lot_size",
+        ]
+        # Use .copy() to avoid SettingWithCopy warnings later
+        df = df[cols].copy()
+
+        # 2. Fix Types
+        # Convert strike to numeric, then int (fills NaNs with 0 or drops them)
+        df["strike"] = (
+            pd.to_numeric(df["strike"], errors="coerce").fillna(0).astype(int)
+        )
+        df["instrument_token"] = (
+            pd.to_numeric(df["instrument_token"], errors="coerce").fillna(0).astype(int)
+        )
+
+        # 3. Drop rows where essential data might be missing
+        df = df.dropna(subset=["tradingsymbol", "name"])
+
+        # Returns a list of dicts: [{"tradingsymbol": "NIFTY...", ...}, ...]
+        return df.to_dict(orient="records")
 
     except Exception as e:
-        print(e)
+        print(f"Error fetching {exchange}: {e}")
         print_exc()
-    finally:
-        return json
+        return []  # Return empty list on failure to keep the type consistent
 
 
-def dump(exchange):
+def dump(exchange: str) -> None:
     try:
         # what exchange and its symbols should be dumped
         exchange_file = S_DATA + exchange + ".json"
@@ -48,39 +60,68 @@ def dump(exchange):
         print_exc()
 
 
-def dump_basename_from_exchange(basename, exchange):
-    path_and_file = S_DATA + exchange + ".json"
-    if O_FUTL.is_file_not_2day(path_and_file):
-        symbols_from_json = O_FUTL.read_file(path_and_file)
-        result = defaultdict(lambda: {"CE": [], "PE": []})
+def dump_basename_from_exchange(basename: str, exchange: str):
+    """
+    description: convert the exchange json into basename wise csv
+    """
+    path_and_file = f"{S_DATA}{exchange}.json"
 
-        for item in symbols_from_json:
-            if basename != item["name"]:
-                continue
+    symbols_from_json = O_FUTL.read_file(path_and_file)
 
-            itype = item["instrument_type"]
-            if itype not in ("CE", "PE"):
-                continue  # FUT, EQ etc not relevant here
+    # Convert the raw JSON list to a DataFrame immediately
+    df = pd.DataFrame(symbols_from_json)
 
-            key = f"{item['name']} ({item['expiry']})"
-            result[key][itype].append(
-                {
-                    "tradingsymbol": item["tradingsymbol"],
-                    "instrument_token": item["instrument_token"],
-                    "strike": int(item["strike"]),
-                }
-            )
+    # 1. Filter by basename and instrument type
+    df = df[df["name"] == basename]
+    df = df[df["instrument_type"].isin(["CE", "PE"])]
 
-        content = dict(result)
-        O_FUTL.write_file(S_DATA + basename + ".json", content)
+    # 2. Select only the necessary columns and fix types
+    cols = [
+        "expiry",
+        "tradingsymbol",
+        "instrument_token",
+        "strike",
+        "instrument_type",
+    ]
+    df = df[cols]
+    df["strike"] = pd.to_numeric(df["strike"]).astype(int)
+
+    # 3. Process CE and PE separately
+    for option_type in ["CE", "PE"]:
+        subset = df[df["instrument_type"] == option_type].copy()
+
+        # Sort: CE Ascending, PE Descending
+        ascending = True if option_type == "CE" else False
+        subset = subset.sort_values(by="strike", ascending=ascending)
+        # Define path: data/ce/nifty.csv
+        file_path = f"{S_DATA}/{option_type}/{basename}.csv"
+        if O_FUTL.is_file_exists(file_path):
+            # Drop the instrument_type column before saving since it's redundant in the folder
+            subset.drop(columns=["instrument_type"]).to_csv(file_path, index=False)
 
 
-def find_tradingsymbol_from_dropdowns(base_expiry: str):
-    lst = base_expiry.split(" ")
-    basename, expiry = lst[0], lst[1]
-    symbol_json_file = S_DATA + basename + ".json"
-    content = O_FUTL.read_file(symbol_json_file)
-    print(content.keys())
+def find_tradingsymbol_from_dropdowns(option_type, base_expiry: str):
+    """
+    prepare the symbol data to csv, so sorting can be done easily
+
+    params:
+    option_type: "CE" or "PE"
+    base_expiry: str in date format
+
+    return:
+    list of dictionaries containing symbol info namely expiry, tradingsymbol, instrument_token, strike
+    """
+
+    try:
+        lst = base_expiry.split(" ")
+        basename, expiry = lst[0], lst[1].replace("(", "").replace(")", "")
+        csv_file = f"{S_DATA}{option_type}/{basename}.csv"
+        df = pd.read_csv(csv_file)
+        df = df[df["expiry"] == expiry]
+        return df.to_dict(orient="records")
+    except Exception as e:
+        print(e)
+
 
 class Symbols:
     def __init__(self, **kwargs):
@@ -247,16 +288,12 @@ class Symbols:
     """
 
 
-
 if __name__ == "__main__":
-    from pprint import pprint
     from constants import D_SYMBOL
-
 
     # we have a list of symbols with base name as key, and dict as symbol
     # details
     for kwargs in D_SYMBOL.values():
-
         # first download the csv to json
         dump(kwargs["exchange"])
 
@@ -270,7 +307,13 @@ if __name__ == "__main__":
         pprint(filtered)
         """
 
-
-    #todo
+    # todo
     # we need to accepts arguments from the dependant dropdown
-    find_tradingsymbol_from_dropdowns("BANKNIFTY (21-JAN)")
+    resp = find_tradingsymbol_from_dropdowns("PE", "BANKNIFTY (2026-03-30)")
+    # pprint(resp)
+
+    tokens = []
+    if resp is not None:
+        for dct in resp:
+            print(dct)
+            tokens.append(dct["instrument_token"])
