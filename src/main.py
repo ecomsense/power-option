@@ -12,23 +12,8 @@ from utils import dict_from_yml
 from api import Helper
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    try:
-        dump()
-        app.state.symbol_settings = dict_from_yml("name", O_SETG["base"])
-        app.state.api = Helper.api()
-        logging.info("Login Successful - HAPPY TRADING")
-        yield
-    except Exception as e:
-        logging.error(f"Startup login Error {e}")
-        yield
 
-
-app = FastAPI(lifespan=lifespan)
-app.mount("/static", StaticFiles(directory="static"), name="static")
-templates = Jinja2Templates(directory="templates")
-
+"""
 # Exact data from your original main.py
 STRIKE_DATA = [
     {"ce_strike": 26100, "pe_strike": 26100, "prev_ce": 145.00, "prev_pe": 3.25},
@@ -79,11 +64,13 @@ async def mock_market_feed(websocket: WebSocket):
             await asyncio.sleep(1)
     except Exception as e:
         logging.error(f"Feed error: {e}")
-
+"""
 
 @app.get("/")
 async def get(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
+
+async def subscribe(websocket: WebSocket):
 
 
 @app.websocket("/ws")
@@ -97,6 +84,22 @@ async def websocket_endpoint(websocket: WebSocket):
     except WebSocketDisconnect:
         feed_task.cancel()
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    try:
+        dump()
+        app.state.symbol_settings = dict_from_yml("name", O_SETG["base"])
+        app.state.api = Helper.api()
+        logging.info("Login Successful - HAPPY TRADING")
+        yield
+    except Exception as e:
+        logging.error(f"Startup login Error {e}")
+        yield
+
+app = FastAPI(lifespan=lifespan)
+app.mount("/static", StaticFiles(directory="static"), name="static")
+templates = Jinja2Templates(directory="templates")
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
