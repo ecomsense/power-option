@@ -8,42 +8,53 @@ let mainLine;
 let currentLine;
 let socket;
 
-document.addEventListener('DOMContentLoaded', () => {
-  const chartElement = document.getElementById('chart-container');
-  if (chartElement) {
-    chart = LightweightCharts.createChart(chartElement, {
-      width: chartElement.clientWidth,
-      height: chartElement.clientHeight,
-      layout: { background: { color: '#131722' }, textColor: '#d1d4dc' },
-      grid: { vertLines: { color: '#1e222d' }, horzLines: { color: '#1e222d' } },
-      timeScale: { timeVisible: true, secondsVisible: true },
-    });
-    mainLine = chart.addLineSeries({ color: '#9c27b0', title: 'Baseline' });
-    currentLine = chart.addLineSeries({ color: '#ff9800', title: 'Total Diff' });
-  }
-
-  socket = new WebSocket(`ws://${window.location.host}/ws`);
-  socket.onmessage = (event) => {
-    const data = JSON.parse(event.data);
-    if (data.type === "UPDATE") {
-      // FIX: Map incoming data to separate table handlers
-      renderDashboard(data.diff_rows || [], data.hedge_rows || []);
+document.addEventListener("DOMContentLoaded", () => {
+    const chartElement = document.getElementById("chart-container");
+    if (chartElement) {
+        chart = LightweightCharts.createChart(chartElement, {
+            width: chartElement.clientWidth,
+            height: chartElement.clientHeight,
+            layout: { background: { color: "#131722" }, textColor: "#d1d4dc" },
+            grid: {
+                vertLines: { color: "#1e222d" },
+                horzLines: { color: "#1e222d" },
+            },
+            timeScale: { timeVisible: true, secondsVisible: true },
+        });
+        mainLine = chart.addLineSeries({ color: "#9c27b0", title: "Baseline" });
+        currentLine = chart.addLineSeries({
+            color: "#ff9800",
+            title: "Total Diff",
+        });
     }
-  };
+
+    socket = new WebSocket(`ws://${window.location.host}/ws`);
+    socket.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        if (data.type === "UPDATE") {
+            // FIX: Map incoming data to separate table handlers
+            renderDashboard(data.diff_rows || [], data.hedge_rows || []);
+        }
+    };
 });
 
 function renderDashboard(diffRows, hedgeRows) {
-  const now = Math.floor(Date.now() / 1000);
-  
-  // --- 1. Render DIFF TABLE (14 Columns) ---
-  let diffHtml = "";
-  let sCeLtp = 0, sPrCe = 0, sPrPe = 0, sPeLtp = 0;
+    const now = Math.floor(Date.now() / 1000);
 
-  diffRows.forEach(row => {
-    sCeLtp += row.curr_ce; sPrCe += row.prev_ce;
-    sPrPe += row.prev_pe; sPeLtp += row.curr_pe;
+    // --- 1. Render DIFF TABLE (14 Columns) ---
+    let diffHtml = "";
+    let sCeLtp = 0,
+        sPrCe = 0,
+        sPrPe = 0,
+        sPeLtp = 0;
 
-    diffHtml += `
+    diffRows.forEach((row) => {
+        sCeLtp += row.curr_ce;
+        sPrCe += row.prev_ce;
+        sPrPe += row.prev_pe;
+        sPeLtp += row.curr_pe;
+
+        diffHtml += `
       <tr>
         <td class="cb-cell"><input type="checkbox"></td>
         <td class="${getColorClass(row.total_diff)}">${row.total_diff.toFixed(2)}</td>
@@ -60,25 +71,25 @@ function renderDashboard(diffRows, hedgeRows) {
         <td>${row.total_diff_pct}</td>
         <td class="cb-cell"><input type="checkbox"></td>
       </tr>`;
-  });
+    });
 
-  // Sticky Totals Row for Diff Table
-  const diffFooter = `
+    // Sticky Totals Row for Diff Table
+    const diffFooter = `
     <tr class="footer-row">
-      <td colspan="4" style="text-align:right; font-weight:bold;">TOTALS</td>
+    <td colspan="4"></td>
       <td>${sCeLtp.toFixed(2)}</td><td>${sPrCe.toFixed(2)}</td>
-      <td colspan="2"></td>
+      <td colspan="2" style="text-align:center; font-weight:bold;">TOTALS</td>
       <td>${sPrPe.toFixed(2)}</td><td>${sPeLtp.toFixed(2)}</td>
       <td colspan="4"></td>
     </tr>`;
 
-  const diffBody = document.getElementById('diffBody');
-  if (diffBody) diffBody.innerHTML = diffHtml + diffFooter;
+    const diffBody = document.getElementById("diffBody");
+    if (diffBody) diffBody.innerHTML = diffHtml + diffFooter;
 
-  // --- 2. Render HEDGE TABLE (6 Columns) ---
-  let hedgeHtml = "";
-  hedgeRows.forEach(row => {
-    hedgeHtml += `
+    // --- 2. Render HEDGE TABLE (6 Columns) ---
+    let hedgeHtml = "";
+    hedgeRows.forEach((row) => {
+        hedgeHtml += `
       <tr>
         <td class="cb-cell"><input type="checkbox"></td>
         <td>${row.curr_ce.toFixed(2)}</td>
@@ -87,32 +98,51 @@ function renderDashboard(diffRows, hedgeRows) {
         <td>${row.curr_pe.toFixed(2)}</td>
         <td class="cb-cell"><input type="checkbox"></td>
       </tr>`;
-  });
-  
-  const hedgeBody = document.getElementById('hedgeBody');
-  if (hedgeBody) hedgeBody.innerHTML = hedgeHtml;
+    });
 
-  // --- 3. Update Chart ---
-  if (currentLine) currentLine.update({ time: now, value: (sCeLtp + sPeLtp) });
-  if (mainLine) mainLine.update({ time: now, value: (sPrCe + sPrPe) });
+    const hedgeBody = document.getElementById("hedgeBody");
+    if (hedgeBody) hedgeBody.innerHTML = hedgeHtml;
+
+    // --- 3. Update Chart ---
+    if (currentLine) currentLine.update({ time: now, value: sCeLtp + sPeLtp });
+    if (mainLine) mainLine.update({ time: now, value: sPrCe + sPrPe });
 }
 
-function getColorClass(val) { return val < 0 ? "neg" : "pos"; }
+function getColorClass(val) {
+    return val < 0 ? "neg" : "pos";
+}
 
 // Logic for update buttons (Preserving unified symbol truth)
-function updateDiff() { sendSub("DIFF", "base-strike", "num-strikes", "diff-call-put"); }
-function updateHedge() { sendSub("HEDGE", "hedge-base-strike", "hedge-num-strikes", "hedge-call-put"); }
+function updateDiff() {
+    sendSub("DIFF", "base-strike", "num-strikes", "diff-call-put");
+}
+function updateHedge() {
+    sendSub(
+        "HEDGE",
+        "hedge-base-strike",
+        "hedge-num-strikes",
+        "hedge-call-put",
+    );
+}
 
 function sendSub(ns, baseId, qtyId, radioName) {
-  const sym = document.getElementById('symbol-select').value;
-  const base = document.getElementById(baseId).value;
-  const qty = document.getElementById(qtyId).value;
-  const type = document.querySelector(`input[name="${radioName}"]:checked`).value;
+    const sym = document.getElementById("symbol-select").value;
+    const base = document.getElementById(baseId).value;
+    const qty = document.getElementById(qtyId).value;
+    const type = document.querySelector(
+        `input[name="${radioName}"]:checked`,
+    ).value;
 
-  if (socket && socket.readyState === WebSocket.OPEN) {
-    socket.send(JSON.stringify({
-      action: "SUBSCRIBE", namespace: ns, symbol: sym,
-      base_strike: parseInt(base), num_strikes: parseInt(qty), option_type: type
-    }));
-  }
+    if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(
+            JSON.stringify({
+                action: "SUBSCRIBE",
+                namespace: ns,
+                symbol: sym,
+                base_strike: parseInt(base),
+                num_strikes: parseInt(qty),
+                option_type: type,
+            }),
+        );
+    }
 }

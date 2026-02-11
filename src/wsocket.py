@@ -2,13 +2,15 @@ from constants import logging
 
 
 class Wsocket:
-    tokens = []
     _ltp = {}
 
     def __init__(self, api, tokens):
-        self.api = api
+        self._subscribe = None
+        self._unsubscribe = None
+
         self.tokens = tokens
         self.kws = api.kite.kws()
+
         self.kws.on_ticks = self.on_ticks
         self.kws.on_connect = self.on_connect
         self.kws.on_close = self.on_close
@@ -20,20 +22,29 @@ class Wsocket:
         # You have to use the pre-defined callbacks to manage subscriptions.
         self.kws.connect(threaded=True)
 
-    def ltp(self, tokens=None):
-        if tokens is not None:
-            self.tokens = tokens
+    def ltp(self):
         return self._ltp
 
+    def unsubscribe(self, tokens):
+        self._unsubscribe = tokens
+
+    def subscribe(self, tokens):
+        self._subscribe = tokens
+
     def on_ticks(self, ws, ticks):
-        if self.tokens is not None:
-            ws.subscribe(self.tokens)
-            # self.tokens = False
+        # self.tokens = False
         self._ltp = {tick["instrument_token"]: tick["last_price"] for tick in ticks}
+        if self._unsubscribe:
+            ws.unsubscribe(self._unsubscribe)
+            self._unsubscribe = None
+        elif self._subscribe:
+            ws.subscribe(self._subscribe)
+            self._subscribe = None
 
     def on_connect(self, ws, response):
         if response:
             print(f"on connect: {response}")
+
         ws.subscribe(self.tokens)
         # Set RELIANCE to tick in `full` mode.
         ws.set_mode(ws.MODE_LTP, self.tokens)
@@ -41,21 +52,17 @@ class Wsocket:
     def on_close(self, ws, code, reason):
         # On connection close stop the main loop
         # Reconnection will not happen after executing `ws.stop()`
-        # ws.stop()
-        """
+        ws.stop()
         logging.error(
             "Wsocket close: {code} - {reason}".format(code=code, reason=reason)
         )
-        """
         print("wsocket closed")
 
     def on_error(self, ws, code, reason):
         # Callback when connection closed with error.
-        """
         logging.error(
             "Connection error: {code} - {reason}".format(code=code, reason=reason)
         )
-        """
         print("error in websocket")
 
     def on_reconnect(self, ws, attempts_count):
@@ -69,10 +76,10 @@ class Wsocket:
 
 
 if __name__ == "__main__":
-    from constants import O_SETG
-    from symbols import dump, Symbols
-    from utils import dict_from_yml
     from api import Helper
+    from constants import O_SETG
+    from symbols import dump
+    from utils import dict_from_yml
 
     dump()
 

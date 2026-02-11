@@ -1,20 +1,22 @@
 from traceback import print_exc
-from typing import Any, Literal  # Use list[dict] for the return type
+from typing import Any, Literal, Tuple  # Use list[dict] for the return type
 
 import pandas as pd
-import pendulum as pdlm
 from constants import D_SYMBOL, O_FUTL, S_DATA, logging
 
 OptionType = Literal["CE", "PE"]
 
 
-def get_symbols(exchange: str) -> list[dict[str, Any]]:
+def read_symbol_info_from_url(exchange: str) -> list[dict[str, Any]]:
     """
-    download csv from broker and return as list of dicts
+    1. write symbol info to json first
+    helper function to download csv from broker
+
     parameters:
         accepts exchange "NFO"
+
     returns:
-        list of dictionaries containing symbol info
+        a list of dicts: [{"tradingsymbol": "NIFTY...", ...}, ...]
     """
     try:
         url = f"https://api.kite.trade/instruments/{exchange}"
@@ -45,7 +47,6 @@ def get_symbols(exchange: str) -> list[dict[str, Any]]:
         # 3. Drop rows where essential data might be missing
         df = df.dropna(subset=["tradingsymbol", "name"])
 
-        # Returns a list of dicts: [{"tradingsymbol": "NIFTY...", ...}, ...]
         return df.to_dict(orient="records")
 
     except Exception as e:
@@ -55,30 +56,31 @@ def get_symbols(exchange: str) -> list[dict[str, Any]]:
 
 
 def dump(exchange: str) -> None:
-    """get symbol info by exchange and write it to json in data dir
+    """Helper function to get symbol info by exchange
+    and write it to json in data dir
 
     Args:
-        arg_name (type): Description.
-
-    Returns:
-        return_type: Description.
+        exchange: NFO for example.
     """
-
     try:
         # what exchange and its symbols should be dumped
         exchange_file = S_DATA + exchange + ".json"
         if O_FUTL.is_file_not_2day(exchange_file):
-            sym_from_json = get_symbols(exchange)
+            sym_from_json = read_symbol_info_from_url(exchange)
             O_FUTL.write_file(exchange_file, sym_from_json)
     except Exception as e:
         print(f"dump error: {e}")
         print_exc()
 
 
-def dump_basename_from_exchange(basename: str, exchange: str):
+def dump_basename_from_exchange(basename: str, exchange: str) -> None:
     """
-    description: convert the exchange json into basename wise csv
+    2. convert the exchange json into basename wise csv
+    Args:
+       basename : NIFTY for example
     """
+    dump(exchange)
+
     path_and_file = f"{S_DATA}{exchange}.json"
 
     symbols_from_json = O_FUTL.read_file(path_and_file)
@@ -86,11 +88,11 @@ def dump_basename_from_exchange(basename: str, exchange: str):
     # Convert the raw JSON list to a DataFrame immediately
     df = pd.DataFrame(symbols_from_json)
 
-    # 1. Filter by basename and instrument type
+    #  Filter by basename and instrument type
     df = df[df["name"] == basename]
     df = df[df["instrument_type"].isin(["CE", "PE"])]
 
-    # 2. Select only the necessary columns and fix types
+    #  Select only the necessary columns and fix types
     cols = [
         "expiry",
         "tradingsymbol",
@@ -101,13 +103,14 @@ def dump_basename_from_exchange(basename: str, exchange: str):
     df = df[cols]
     df["strike"] = pd.to_numeric(df["strike"]).astype(int)
 
-    # 3. Process CE and PE separately
+    #  Process CE and PE separately
     for option_type in ["CE", "PE"]:
         subset = df[df["instrument_type"] == option_type].copy()
 
         # Sort: CE Ascending, PE Descending
         ascending = True if option_type == "CE" else False
         subset = subset.sort_values(by="strike", ascending=ascending)
+
         # Define path: data/ce/nifty.csv
         file_path = f"{S_DATA}/{option_type}/{basename}.csv"
         if O_FUTL.is_file_exists(file_path):
@@ -115,20 +118,55 @@ def dump_basename_from_exchange(basename: str, exchange: str):
             subset.drop(columns=["instrument_type"]).to_csv(file_path, index=False)
 
 
+def find_base_expiries() -> list:
+    """3. populate unique basename (expiries) for the UI from csv
+
+    returns:
+        list of unique basename expiries BANKNIFTY (2030-11-01)
+    """
+    all_symbols = []
+    for basename in D_SYMBOL.keys():
+        file_path = f"{S_DATA}/CE/{basename}.csv"
+        df = pd.read_csv(file_path)
+        # Extract the keys from your D_SYMBOL dictionary
+        formatted = basename + " (" + df["expiry"].astype(str) + ")"
+        # Add unique values to our list
+        all_symbols.extend(formatted.unique().tolist())
+    return all_symbols
+
+
+def find_strike_from_base_expiry(base_expiry) -> dict:
+    """4. get data dependant drop downs
+
+    returns:
+        dict containing keys "CE" and "PE"
+        with values as strike prices
+    """
+    lst = base_expiry.split(" ")
+    basename, expiry = lst[0], lst[1].replace("(", "").replace(")", "")
+    dct = {}
+    for option_type in ["CE", "PE"]:
+        file_path = f"{S_DATA}/{option_type}/{basename}.csv"
+        df = pd.read_csv(file_path)
+        df = df[df["expiry"] == expiry]
+        dct[option_type] = df["strike"].to_list()
+    return dct
+
+
 def find_symbolinfo(
     ce_or_pe: OptionType, base_expiry: str, start: int, num_of_strikes: int
-):
-    """
-    prepare the symbol data to csv, so sorting can be done easily
+) -> pd.DataFrame:
+    """5. helper function to find symbol infos based on the request from UI
 
     params:
-    option_type: "CE" or "PE"
-    base_expiry: str in date format
+        option_type: "CE" or "PE"
+        base_expiry: str in date format
+        start: the starting strike price
+        num_of_strikes: count from the num of strikes from the start
 
     return:
-    list of dictionaries containing symbol info namely expiry, tradingsymbol, instrument_token, strike
+        dataframe containing symbol info namely expiry, tradingsymbol, instrument_token, strike
     """
-
     try:
         # Parsing the input
         lst = base_expiry.split(" ")
@@ -137,7 +175,6 @@ def find_symbolinfo(
         # Load the CSV
         csv_file = f"{S_DATA}{ce_or_pe}/{basename}.csv"
         df = pd.read_csv(csv_file)
-        logging.debug(df.expiry)
 
         # 1. Filter by expiry first
         df = df[df["expiry"] == expiry].reset_index(drop=True)
@@ -163,22 +200,31 @@ def find_symbolinfo(
 
 
 def find_call_and_put_from_dropdown(
-    side: str, base_expiry: str, ce_start: int, pe_start: int, num_of_strikes: int
-):
+    base_expiry: str, ce_start: int, pe_start: int, num_of_strikes: int
+) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    """6. wrapper to get symbol info dataframes
+
+    Args:
+        base_expiry: combination of base and expiry
+        ce_start: starting stike of ce
+        pe_start: starting strike of pe
+        num_of_strikes: number of strikes to retrieve
+
+    returns:
+        call and put dataframes
+    """
     df_ce = find_symbolinfo(
         ce_or_pe="CE",
         start=ce_start,
         base_expiry=base_expiry,
         num_of_strikes=num_of_strikes,
     )
-
     df_pe = find_symbolinfo(
         ce_or_pe="PE",
         start=pe_start,
         base_expiry=base_expiry,
         num_of_strikes=num_of_strikes,
     )
-
     return df_ce, df_pe
 
 
@@ -189,32 +235,25 @@ if __name__ == "__main__":
     from constants import D_SYMBOL
     from wsocket import Wsocket
 
-    SUBSCRIBED = {"left": [], "right": []}
-
-    for kwargs in D_SYMBOL.values():
-        # first download the csv to json
-        dump(kwargs["exchange"])
-
-        # filter the json further by base name
-        dump_basename_from_exchange(kwargs["name"], kwargs["exchange"])
-
+    """
     # we need to accepts arguments from the dependant dropdown
     df_ce, df_pe = find_call_and_put_from_dropdown(
-        side="left",
         base_expiry="BANKNIFTY (2026-02-24)",
         ce_start=60600,
         pe_start=60600,
         num_of_strikes=15,
     )
-
-    SUBSCRIBED["left"] = df_ce["instrument_token"].to_list()
-    SUBSCRIBED["left"].append(df_pe["instrument_token"].to_list())
-
     api = Helper.api()
-    ws = Wsocket(api, [SUBSCRIBED["left"]])
+    ws = Wsocket(api, SUBSCRIBED["left"])
     ticks = {}
     while not any(ticks):
         ticks = ws.ltp()
         __import__("time").sleep(5)
     else:
         print(ticks)
+
+    """
+
+    base_expiry = "BANKNIFTY (2026-02-24)"
+    resp = find_strike_from_base_expiry(base_expiry)
+    print(resp)

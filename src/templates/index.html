@@ -1,117 +1,145 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+    <head>
+        <title>Option Dashboard</title>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="stylesheet" href="/static/style.css" />
+        <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.development.js"></script>
+    </head>
 
-<head>
-  <title>Option Dashboard</title>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="/static/style.css">
-  <script
-    src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.development.js"></script>
-</head>
+    <body>
+        <div class="dashboard-container">
+            <div class="tables-wrapper">
+                <div class="table-container diff-table-container">
+                    <div class="top-control-bar">
+                        <select
+                            id="symbol-select"
+                            onchange="updateStrikeDropdowns()"
+                        >
+                            {% for symbol in symbols %}
+                            <option value="{{ symbol }}">{{ symbol }}</option>
+                            {% endfor %}
+                        </select>
+                        <label for="main-call-base">C</label>
+                        <select id="main-call-base" name="main-call-base">
+                            <option value="29000">29000</option>
+                            <option value="29050">29050</option>
+                        </select>
+                        <label for="main-put-base">P</label>
+                        <select id="main-put-base" name="main-call-base">
+                            <option value="29000">29000</option>
+                            <option value="29050">29050</option>
+                        </select>
+                        <input
+                            id="main-num"
+                            class="text2"
+                            type="number"
+                            placeholder="No. of Strikes"
+                            value="10"
+                        />
+                        <button class="btn" onclick="updateDiff()">
+                            update
+                        </button>
 
-<body>
-  <div class="dashboard-container">
+                        <button
+                            id="side-toggle"
+                            class="btn side-btn buy-mode"
+                            onclick="toggleSide('diff')"
+                        >
+                            B
+                        </button>
+                        <button class="btn violet-btn" onclick="diffFire()">
+                            Fire
+                        </button>
+                        <button class="btn orange-btn" onclick="diffSquare()">
+                            Square
+                        </button>
+                        <a href="/books">books</a>
+                    </div>
 
-    <div class="tables-wrapper">
+                    <table id="diffTable">
+                        <thead>
+                            <tr>
+                                <th class="cb-cell">CE</th>
+                                <th>Total Diff</th>
+                                <th>CE %</th>
+                                <th>CE Diff</th>
+                                <th>CE LTP</th>
+                                <th>Prev CE</th>
+                                <th>CE Strike</th>
+                                <th>PE Strike</th>
+                                <th>Prev PE</th>
+                                <th>PE LTP</th>
+                                <th>PE Diff</th>
+                                <th>PE %</th>
+                                <th>Total %</th>
+                                <th class="cb-cell">PE</th>
+                            </tr>
+                        </thead>
+                        <tbody id="diffBody"></tbody>
+                    </table>
+                </div>
 
-      <div class="table-container diff-table-container">
-        <div class="top-control-bar">
-          <select id="symbol-select">
-            <option value="NIFTY">NIFTY</option>
-            <option value="BANKNIFTY">BANKNIFTY</option>
-            <option value="SENSEX">SENSEX</option>
-            <option value="FINNIFTY">FINNIFTY</option>
-          </select>
+                <div class="table-container ltp-table-container">
+                    <div class="top-control-bar">
+                        <label for="hedge-call-base">C</label>
+                        <select id="hedge-call-base" name="hedge-call-base">
+                            <option value="29000">29000</option>
+                            <option value="29050">29050</option>
+                        </select>
+                        <label for="hedge-put-base">P</label>
+                        <select id="hedge-put-base" name="hedge-call-base">
+                            <option value="29000">29000</option>
+                            <option value="29050">29050</option>
+                        </select>
+                        <input
+                            id="hedge-num"
+                            class="text2"
+                            type="number"
+                            placeholder="No. of Strikes"
+                            value="10"
+                        />
+                        <button class="btn" onclick="updateDiff()">
+                            update
+                        </button>
 
-          <select id="main-call-base" name="main-call-base">
-            <option value="29000">29000</option>
-            <option value="29050">29050</option>
-          </select>
-          <input id="main-call-num" class="text2" type="number" placeholder="No. of Strikes" value="10">
-          <button class="btn" onclick="updateDiff()">calls</button>
+                        <button
+                            id="hedge-side-toggle"
+                            class="btn side-btn buy-mode"
+                            onclick="toggleSide('hedge')"
+                        >
+                            B
+                        </button>
+                        <button class="btn violet-btn" onclick="hedgeFire()">
+                            Hedge
+                        </button>
+                        <button class="btn orange-btn" onclick="hedgeSquare()">
+                            Square
+                        </button>
+                    </div>
 
-          <select id="main-put-base" name="main-call-base">
-            <option value="29000">29000</option>
-            <option value="29050">29050</option>
-          </select>
-          <input id="main-put-num" class="text2" type="number" placeholder="No. of Strikes" value="10">
-          <button class="btn" onclick="updateDiff()">puts</button>
+                    <table id="hedgeTable">
+                        <thead>
+                            <tr>
+                                <th class="cb-cell">CE</th>
+                                <th>CE LTP</th>
+                                <th>CE Strike</th>
+                                <th>PE Strike</th>
+                                <th>PE LTP</th>
+                                <th class="cb-cell">PE</th>
+                            </tr>
+                        </thead>
+                        <tbody id="hedgeBody"></tbody>
+                    </table>
+                </div>
+            </div>
 
-          <button id="side-toggle" class="btn side-btn buy-mode" onclick="toggleSide('diff')">B</button>
-          <button class="btn violet-btn" onclick="diffFire()">Fire</button>
-          <button class="btn orange-btn" onclick="diffSquare()">Square</button>
-          <a href="/books">books</a>
+            <div id="chart-section">
+                <div id="chart-container"></div>
+            </div>
         </div>
-
-        <table id="diffTable">
-          <thead>
-            <tr>
-              <th class="cb-cell">CE</th>
-              <th>Total Diff</th>
-              <th>CE %</th>
-              <th>CE Diff</th>
-              <th>CE LTP</th>
-              <th>Prev CE</th>
-              <th>CE Strike</th>
-              <th>PE Strike</th>
-              <th>Prev PE</th>
-              <th>PE LTP</th>
-              <th>PE Diff</th>
-              <th>PE %</th>
-              <th>Total %</th>
-              <th class="cb-cell">PE</th>
-            </tr>
-          </thead>
-          <tbody id="diffBody"></tbody>
-        </table>
-      </div> 
-
-      <div class="table-container ltp-table-container">
-        <div class="top-control-bar">
-
-          <select id="hedge-call-base" name="hedge-call-base">
-            <option value="29000">29000</option>
-            <option value="29050">29050</option>
-          </select>
-          <input id="hedge-call-num" class="text2" type="number" placeholder="No. of Strikes" value="10">
-          <button class="btn" onclick="updateDiff()">calls</button>
-
-          <select id="hedge-put-base" name="hedge-call-base">
-            <option value="29000">29000</option>
-            <option value="29050">29050</option>
-          </select>
-          <input id="hedge-put-num" class="text2" type="number" placeholder="No. of Strikes" value="10">
-          <button class="btn" onclick="updateDiff()">puts</button>
-
-          <button id="hedge-side-toggle" class="btn side-btn buy-mode" onclick="toggleSide('hedge')">B</button>
-          <button class="btn violet-btn" onclick="hedgeFire()">Hedge</button>
-          <button class="btn orange-btn" onclick="hedgeSquare()">Square</button>
-        </div>
-
-        <table id="hedgeTable">
-          <thead>
-            <tr>
-              <th class="cb-cell">CE</th>
-              <th>CE LTP</th>
-              <th>CE Strike</th>
-              <th>PE Strike</th>
-              <th>PE LTP</th>
-              <th class="cb-cell">PE</th>
-            </tr>
-          </thead>
-          <tbody id="hedgeBody"></tbody>
-        </table>
-      </div>
-
-    </div> 
-
-    <div id="chart-section">
-      <div id="chart-container"></div>
-    </div>
-
-  </div>
-  <script src="/static/dashboard.js"></script>
-</body>
-
+        <script src="/static/dashboard.js"></script>
+        <script src="/static/dropdown.js"></script>
+    </body>
 </html>

@@ -1,20 +1,115 @@
-from contextlib import asynccontextmanager
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
-from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
-import uvicorn
 import asyncio
 import random
+from contextlib import asynccontextmanager
 
-from constants import O_SETG, logging
-from symbols import dump, Symbols
-from utils import dict_from_yml
+import uvicorn
 from api import Helper
+from constants import D_SYMBOL, logging
+from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+from symbols import (
+    dump_basename_from_exchange,
+    find_base_expiries,
+    find_call_and_put_from_dropdown,
+    find_strike_from_base_expiry,
+)
+from wsocket import Wsocket
 
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    try:
+        for kwargs in D_SYMBOL.values():
+            # filter the json further by base nme
+            dump_basename_from_exchange(kwargs["name"], kwargs["exchange"])
 
-"""
-# Exact data from your original main.py
+        # app state of subscribed tokens
+        SUBSCRIBED = {"left": [], "right": []}
+        # we need to accepts arguments from the dependant dropdown
+        df_ce, df_pe = find_call_and_put_from_dropdown(
+            base_expiry="BANKNIFTY (2026-02-24)",
+            ce_start=60600,
+            pe_start=60600,
+            num_of_strikes=15,
+        )
+        SUBSCRIBED["left"] = df_ce["instrument_token"].to_list()
+        SUBSCRIBED["left"].extend(df_pe["instrument_token"].to_list())
+        SUBSCRIBED["right"] = SUBSCRIBED["left"]
+
+        app.state.ws = Wsocket(Helper.api(), SUBSCRIBED["left"])
+        app.state.SUBSCRIBED = SUBSCRIBED
+        ticks = {}
+        while not any(ticks):
+            ticks = app.state.ws.ltp()
+            __import__("time").sleep(5)
+        else:
+            print(ticks)
+            logging.info("Login Successful - HAPPY TRADING")
+            yield
+    except Exception as e:
+        logging.error(f"Startup login Error {e}")
+        yield
+
+
+app = FastAPI(lifespan=lifespan)
+app.mount("/static", StaticFiles(directory="static"), name="static")
+templates = Jinja2Templates(directory="templates")
+
+
+@app.get("/")
+async def get(request: Request):
+    symbols = find_base_expiries()
+    return templates.TemplateResponse(
+        "index.html", {"request": request, "symbols": symbols}
+    )
+
+
+@app.get("/get-strikes/{base_expiry}")
+async def get_strikes(base_expiry: str):
+    """strike prices dependant drop down
+    Returns a dictionary: {"ce": [list of strikes], "pe": [list of strikes]}
+    """
+    try:
+        # This function should return the dict you described
+        strikes_dict = find_strike_from_base_expiry(base_expiry)
+        return strikes_dict
+    except Exception as e:
+        logging.error(f"Error fetching strikes: {e}")
+        return {"ce": [], "pe": []}
+
+
+async def unsub_and_sub(side, base_expiry, ce_start, pe_start, num_of_strikes):
+    df_ce, df_pe = find_call_and_put_from_dropdown(
+        base_expiry=base_expiry,
+        ce_start=ce_start,
+        pe_start=pe_start,
+        num_of_strikes=num_of_strikes,
+    )
+    lst = df_ce["instrument_token"].to_list()
+    lst.extend(df_pe["instrument_token"].to_list())
+
+    stale_list = app.state.SUBSCRIBED[side]
+    other_list = app.state.SUBSCRIBED["left" if side == "right" else "left"]
+    unsubscribe = list(set(stale_list) - set(other_list))
+    app.state.ws.unsubscribe(unsubscribe)
+
+    app.state.ws.subscribe(lst)
+    app.state.SUBSCRIBED[side] = lst
+
+
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    feed_task = asyncio.create_task(mock_market_feed(websocket))
+    try:
+        while True:
+            data = await websocket.receive_text()
+            logging.info(f"Command received: {data}")
+    except WebSocketDisconnect:
+        feed_task.cancel()
+
+
 STRIKE_DATA = [
     {"ce_strike": 26100, "pe_strike": 26100, "prev_ce": 145.00, "prev_pe": 3.25},
     {"ce_strike": 26150, "pe_strike": 26050, "prev_ce": 110.85, "prev_pe": 3.70},
@@ -64,42 +159,7 @@ async def mock_market_feed(websocket: WebSocket):
             await asyncio.sleep(1)
     except Exception as e:
         logging.error(f"Feed error: {e}")
-"""
 
-@app.get("/")
-async def get(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
-
-async def subscribe(websocket: WebSocket):
-
-
-@app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
-    await websocket.accept()
-    feed_task = asyncio.create_task(mock_market_feed(websocket))
-    try:
-        while True:
-            data = await websocket.receive_text()
-            logging.info(f"Command received: {data}")
-    except WebSocketDisconnect:
-        feed_task.cancel()
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    try:
-        dump()
-        app.state.symbol_settings = dict_from_yml("name", O_SETG["base"])
-        app.state.api = Helper.api()
-        logging.info("Login Successful - HAPPY TRADING")
-        yield
-    except Exception as e:
-        logging.error(f"Startup login Error {e}")
-        yield
-
-app = FastAPI(lifespan=lifespan)
-app.mount("/static", StaticFiles(directory="static"), name="static")
-templates = Jinja2Templates(directory="templates")
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
