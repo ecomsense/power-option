@@ -146,3 +146,35 @@ function sendSub(ns, baseId, qtyId, radioName) {
         );
     }
 }
+
+/**
+ * Unified subscription updater
+ * @param {string} side - Must be 'main' or 'hedge' to match HTML IDs
+ */
+async function updateSubscription(side) {
+    // Collecting values manually using the side as the ID prefix
+    const payload = {
+        side: side,
+        base_expiry: document.getElementById("symbol-select").value,
+        ce_start: document.getElementById(`${side}-call-base`).value,
+        pe_start: document.getElementById(`${side}-put-base`).value,
+        num_of_strikes: document.getElementById(`${side}-num`).value, // Assuming same count for both
+    };
+
+    try {
+        const response = await fetch("/update-subscription", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+        });
+
+        const result = await response.json();
+        if (result.status === "success") {
+            console.log(
+                `Successfully updated ${side} ${result.tokens} tokens.`,
+            );
+        }
+    } catch (error) {
+        console.error("Subscription update failed:", error);
+    }
+}

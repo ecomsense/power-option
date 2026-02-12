@@ -22,15 +22,15 @@
                             {% endfor %}
                         </select>
                         <label for="main-call-base">C</label>
-                        <select id="main-call-base" name="main-call-base">
-                            <option value="29000">29000</option>
-                            <option value="29050">29050</option>
-                        </select>
+                        <select
+                            id="main-call-base"
+                            name="main-call-base"
+                        ></select>
                         <label for="main-put-base">P</label>
-                        <select id="main-put-base" name="main-call-base">
-                            <option value="29000">29000</option>
-                            <option value="29050">29050</option>
-                        </select>
+                        <select
+                            id="main-put-base"
+                            name="main-put-base"
+                        ></select>
                         <input
                             id="main-num"
                             class="text2"
@@ -38,7 +38,10 @@
                             placeholder="No. of Strikes"
                             value="10"
                         />
-                        <button class="btn" onclick="updateDiff()">
+                        <button
+                            class="btn"
+                            onclick="updateSubscription('main')"
+                        >
                             update
                         </button>
 
@@ -84,15 +87,15 @@
                 <div class="table-container ltp-table-container">
                     <div class="top-control-bar">
                         <label for="hedge-call-base">C</label>
-                        <select id="hedge-call-base" name="hedge-call-base">
-                            <option value="29000">29000</option>
-                            <option value="29050">29050</option>
-                        </select>
+                        <select
+                            id="hedge-call-base"
+                            name="hedge-call-base"
+                        ></select>
                         <label for="hedge-put-base">P</label>
-                        <select id="hedge-put-base" name="hedge-call-base">
-                            <option value="29000">29000</option>
-                            <option value="29050">29050</option>
-                        </select>
+                        <select
+                            id="hedge-put-base"
+                            name="hedge-put-base"
+                        ></select>
                         <input
                             id="hedge-num"
                             class="text2"
@@ -100,7 +103,10 @@
                             placeholder="No. of Strikes"
                             value="10"
                         />
-                        <button class="btn" onclick="updateDiff()">
+                        <button
+                            class="btn"
+                            onclick="updateSubscription('hedge')"
+                        >
                             update
                         </button>
 

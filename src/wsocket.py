@@ -32,8 +32,9 @@ class Wsocket:
         self._subscribe = tokens
 
     def on_ticks(self, ws, ticks):
-        # self.tokens = False
+
         self._ltp = {tick["instrument_token"]: tick["last_price"] for tick in ticks}
+        print(self._ltp)
         if self._unsubscribe:
             ws.unsubscribe(self._unsubscribe)
             self._unsubscribe = None

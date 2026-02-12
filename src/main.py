@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 import uvicorn
 from api import Helper
 from constants import D_SYMBOL, logging
-from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
+from fastapi import Body, FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from symbols import (
@@ -25,7 +25,8 @@ async def lifespan(app: FastAPI):
             dump_basename_from_exchange(kwargs["name"], kwargs["exchange"])
 
         # app state of subscribed tokens
-        SUBSCRIBED = {"left": [], "right": []}
+        SUBSCRIBED = {"main": [], "hedge": []}
+
         # we need to accepts arguments from the dependant dropdown
         df_ce, df_pe = find_call_and_put_from_dropdown(
             base_expiry="BANKNIFTY (2026-02-24)",
@@ -33,20 +34,18 @@ async def lifespan(app: FastAPI):
             pe_start=60600,
             num_of_strikes=15,
         )
-        SUBSCRIBED["left"] = df_ce["instrument_token"].to_list()
-        SUBSCRIBED["left"].extend(df_pe["instrument_token"].to_list())
-        SUBSCRIBED["right"] = SUBSCRIBED["left"]
+        SUBSCRIBED["main"] = df_ce["instrument_token"].to_list()
+        SUBSCRIBED["main"].extend(df_pe["instrument_token"].to_list())
+        SUBSCRIBED["hedge"] = SUBSCRIBED["main"]
 
-        app.state.ws = Wsocket(Helper.api(), SUBSCRIBED["left"])
+        app.state.ws = Wsocket(Helper.api(), SUBSCRIBED["main"])
         app.state.SUBSCRIBED = SUBSCRIBED
         ticks = {}
         while not any(ticks):
             ticks = app.state.ws.ltp()
             __import__("time").sleep(5)
-        else:
-            print(ticks)
-            logging.info("Login Successful - HAPPY TRADING")
-            yield
+        logging.info("Login Successful - HAPPY TRADING")
+        yield
     except Exception as e:
         logging.error(f"Startup login Error {e}")
         yield
@@ -79,23 +78,53 @@ async def get_strikes(base_expiry: str):
         return {"ce": [], "pe": []}
 
 
-async def unsub_and_sub(side, base_expiry, ce_start, pe_start, num_of_strikes):
-    df_ce, df_pe = find_call_and_put_from_dropdown(
-        base_expiry=base_expiry,
-        ce_start=ce_start,
-        pe_start=pe_start,
-        num_of_strikes=num_of_strikes,
-    )
-    lst = df_ce["instrument_token"].to_list()
-    lst.extend(df_pe["instrument_token"].to_list())
+@app.post("/update-subscription")
+async def updatesubscription(payload: dict = Body(...)):
+    """
+    unsubscribe unnessary tokens and subscribe to new ones
+    """
+    try:
+        # 1. Extract values from the JSON payload
+        side = payload.get("side")  # "main" or "hedge"
+        base_expiry = payload.get("base_expiry")
+        ce_start = int(payload.get("ce_start"))
+        pe_start = int(payload.get("pe_start"))
+        num_of_strikes = int(payload.get("num_of_strikes"))
 
-    stale_list = app.state.SUBSCRIBED[side]
-    other_list = app.state.SUBSCRIBED["left" if side == "right" else "left"]
-    unsubscribe = list(set(stale_list) - set(other_list))
-    app.state.ws.unsubscribe(unsubscribe)
+        # 2. Get tokens from your existing helper function
+        df_ce, df_pe = find_call_and_put_from_dropdown(
+            base_expiry=base_expiry,
+            ce_start=ce_start,
+            pe_start=pe_start,
+            num_of_strikes=num_of_strikes,
+        )
 
-    app.state.ws.subscribe(lst)
-    app.state.SUBSCRIBED[side] = lst
+        new_tokens = df_ce["instrument_token"].to_list()
+        new_tokens.extend(df_pe["instrument_token"].to_list())
+
+        # 3. Handle Unsubscription logic
+        # Access the tracked tokens and the websocket manager from app state
+        stale_list = app.state.SUBSCRIBED[side]
+        other_side = "hedge" if side == "main" else "main"
+        other_list = app.state.SUBSCRIBED[other_side]
+
+        # Only unsubscribe if the other side isn't using the token
+        unsubscribe = list(set(stale_list) - set(other_list))
+
+        if unsubscribe:
+            app.state.ws.unsubscribe(unsubscribe)  #
+
+        # 4. Subscribe to new tokens
+        app.state.ws.subscribe(new_tokens)  #
+
+        # 5. Update global state for next comparison
+        app.state.SUBSCRIBED[side] = new_tokens
+
+        return {"status": "success", "tokens": len(new_tokens)}
+
+    except Exception as e:
+        logging.error(f"Subscription Error: {e}")
+        return {"status": "error", "message": str(e)}
 
 
 @app.websocket("/ws")
