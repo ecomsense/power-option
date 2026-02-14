@@ -3,6 +3,7 @@ uvicorn[standard]
 jinja2
 pendulum
 pyotp
+pandas
 git+https://github.com/ecomsense/stock-brokers
 git+https://github.com/pannet1/toolkit
 git+https://github.com/pannet1/kiteext
