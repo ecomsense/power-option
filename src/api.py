@@ -33,7 +33,7 @@ def get_bypass():
     except Exception as e:
         print(f"unable to create bypass object {e}")
         remove_token(tokpath)
-        get_bypass()
+        # get_bypass()
         print_exc()
     else:
         return bypass
@@ -95,12 +95,11 @@ class Helper:
             broker_object = cls.api()
             kwargs = dict(
                 instrument_token=instrument_token,
-                from_date=pdlm.now("Asia/Kolkata")
-                .subtract(days=6)
-                .to_datetime_string(),
-                to_date=pdlm.now("Asia/Kolkata").to_datetime_string(),
-                interval="days",
+                from_date=pdlm.now("Asia/Kolkata").subtract(days=6).to_date_string(),
+                to_date=pdlm.now("Asia/Kolkata").to_date_string(),
+                interval="day",
             )
+            print(kwargs)
             lst = broker_object.historical(kwargs)
             if isinstance(lst, list) and len(lst) > 0:
                 return lst[-1].get("close", 0)
@@ -110,9 +109,9 @@ class Helper:
 
     @classmethod
     def history(cls, instrument_token):
-        cls.baseline.get(instrument_token, cls._get_history(instrument_token))
+        return cls.baseline.get(instrument_token, cls._get_history(instrument_token))
 
 
 if __name__ == "__main__":
-    resp = Helper.history(14)
+    resp = Helper.history(265)
     print(resp)
