@@ -23,6 +23,7 @@ class Wsocket:
         self.kws.connect(threaded=True)
 
     def ltp(self):
+        print(self._ltp)
         return self._ltp
 
     def unsubscribe(self, tokens):
@@ -34,7 +35,6 @@ class Wsocket:
     def on_ticks(self, ws, ticks):
 
         self._ltp = {tick["instrument_token"]: tick["last_price"] for tick in ticks}
-        print(self._ltp)
         if self._unsubscribe:
             ws.unsubscribe(self._unsubscribe)
             self._unsubscribe = None

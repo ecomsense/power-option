@@ -3,6 +3,8 @@ import random
 from contextlib import asynccontextmanager
 
 import uvicorn
+
+# Assuming these are your existing local modules
 from api import Helper
 from constants import D_SYMBOL, logging
 from fastapi import Body, FastAPI, Request, WebSocket, WebSocketDisconnect
@@ -17,37 +19,68 @@ from symbols import (
 from wsocket import Wsocket
 
 
+def update_metadata(kwargs):
+    # 3. Initial Default Subscription (e.g., BANKNIFTY)
+    df_ce, df_pe = find_call_and_put_from_dropdown(**kwargs)
+
+    # Populate initial metadata and tokens
+    # df also contains tradingsymbol, expiry
+    new_tokens = []
+    for _, row in df_ce.iterrows():
+        t = row["instrument_token"]
+        new_tokens.append(t)
+        app.state.METADATA[t] = {
+            "strike": row["strike"],
+            "type": "CE",
+            "prev": Helper.history(t),
+        }
+
+    for _, row in df_pe.iterrows():
+        t = row["instrument_token"]
+        new_tokens.append(t)
+        app.state.METADATA[t] = {
+            "strike": row["strike"],
+            "type": "PE",
+            "prev": Helper.history(t),
+        }
+    return new_tokens
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     try:
+        # 1. Initialize symbols
         for kwargs in D_SYMBOL.values():
-            # filter the json further by base nme
             dump_basename_from_exchange(kwargs["name"], kwargs["exchange"])
 
-        # app state of subscribed tokens
-        SUBSCRIBED = {"main": [], "hedge": []}
+        # 2. Setup Global State Registry
+        # METADATA stores: {token: {"strike": 26100, "type": "CE", "prev": 145.0}}
+        app.state.SUBSCRIBED = {"main": [], "hedge": []}
 
-        # we need to accepts arguments from the dependant dropdown
-        df_ce, df_pe = find_call_and_put_from_dropdown(
+        app.state.METADATA = {}
+        kwargs = dict(
             base_expiry="BANKNIFTY (2026-02-24)",
             ce_start=60600,
             pe_start=60600,
-            num_of_strikes=15,
+            num_of_strikes=10,
         )
-        SUBSCRIBED["main"] = df_ce["instrument_token"].to_list()
-        SUBSCRIBED["main"].extend(df_pe["instrument_token"].to_list())
-        SUBSCRIBED["hedge"] = SUBSCRIBED["main"]
 
-        app.state.ws = Wsocket(Helper.api(), SUBSCRIBED["main"])
-        app.state.SUBSCRIBED = SUBSCRIBED
-        ticks = {}
-        while not any(ticks):
-            ticks = app.state.ws.ltp()
-            __import__("time").sleep(5)
+        new_tokens = update_metadata(kwargs)
+        app.state.SUBSCRIBED["main"] = new_tokens
+        app.state.SUBSCRIBED["hedge"] = new_tokens
+
+        # 4. Initialize WebSocket Manager
+        # We assign it to app.state.ws so the broadcaster can find it
+        app.state.ws = Wsocket(Helper.api(), new_tokens)
+
+        # Wait for first ticks to ensure app.state.ws.ltp() isn't empty
+        while not any(app.state.ws.ltp()):
+            await asyncio.sleep(1)
+
         logging.info("Login Successful - HAPPY TRADING")
         yield
     except Exception as e:
-        logging.error(f"Startup login Error {e}")
+        logging.error(f"Startup Error: {e}")
         yield
 
 
@@ -56,54 +89,18 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
 
-@app.get("/")
-async def get(request: Request):
-    symbols = find_base_expiries()
-    return templates.TemplateResponse(
-        "index.html", {"request": request, "symbols": symbols}
-    )
-
-
-@app.get("/get-strikes/{base_expiry}")
-async def get_strikes(base_expiry: str):
-    """strike prices dependant drop down
-    Returns a dictionary: {"ce": [list of strikes], "pe": [list of strikes]}
-    """
-    try:
-        # This function should return the dict you described
-        strikes_dict = find_strike_from_base_expiry(base_expiry)
-        return strikes_dict
-    except Exception as e:
-        logging.error(f"Error fetching strikes: {e}")
-        return {"ce": [], "pe": []}
-
-
 @app.post("/update-subscription")
-async def updatesubscription(payload: dict = Body(...)):
-    """
-    unsubscribe unnessary tokens and subscribe to new ones
-    """
+async def update_subscription(payload: dict = Body(...)):
     try:
-        # 1. Extract values from the JSON payload
-        side = payload.get("side")  # "main" or "hedge"
-        base_expiry = payload.get("base_expiry")
-        ce_start = int(payload.get("ce_start"))
-        pe_start = int(payload.get("pe_start"))
-        num_of_strikes = int(payload.get("num_of_strikes"))
-
-        # 2. Get tokens from your existing helper function
-        df_ce, df_pe = find_call_and_put_from_dropdown(
-            base_expiry=base_expiry,
-            ce_start=ce_start,
-            pe_start=pe_start,
-            num_of_strikes=num_of_strikes,
+        side = payload.get("side")
+        kwargs = dict(
+            base_expiry=payload.get("base_expiry"),
+            ce_start=int(payload.get("ce_start")),
+            pe_start=int(payload.get("pe_start")),
+            num_of_strikes=int(payload.get("num_of_strikes")),
         )
-
-        new_tokens = df_ce["instrument_token"].to_list()
-        new_tokens.extend(df_pe["instrument_token"].to_list())
-
-        # 3. Handle Unsubscription logic
-        # Access the tracked tokens and the websocket manager from app state
+        new_tokens = update_metadata(kwargs)
+        # Handle Subscriptions
         stale_list = app.state.SUBSCRIBED[side]
         other_side = "hedge" if side == "main" else "main"
         other_list = app.state.SUBSCRIBED[other_side]
@@ -120,74 +117,121 @@ async def updatesubscription(payload: dict = Body(...)):
         # 5. Update global state for next comparison
         app.state.SUBSCRIBED[side] = new_tokens
 
-        return {"status": "success", "tokens": len(new_tokens)}
-
+        return {"status": "success", "side": side}
     except Exception as e:
         logging.error(f"Subscription Error: {e}")
         return {"status": "error", "message": str(e)}
 
 
+@app.get("/")
+async def get(request: Request):
+    symbols = find_base_expiries()
+    return templates.TemplateResponse(
+        "index.html", {"request": request, "symbols": symbols}
+    )
+
+
+@app.get("/get-strikes/{base_expiry}")
+async def get_strikes(base_expiry: str):
+    try:
+        return find_strike_from_base_expiry(base_expiry)
+    except Exception as e:
+        logging.error(f"Error fetching strikes: {e}")
+        return {"CE": [], "PE": []}
+
+
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
-    feed_task = asyncio.create_task(mock_market_feed(websocket))
+    # Broadcaster handles all table updates dynamically
+    feed_task = asyncio.create_task(market_broadcaster(websocket))
     try:
         while True:
-            data = await websocket.receive_text()
-            logging.info(f"Command received: {data}")
+            await websocket.receive_text()
     except WebSocketDisconnect:
         feed_task.cancel()
 
 
-STRIKE_DATA = [
-    {"ce_strike": 26100, "pe_strike": 26100, "prev_ce": 145.00, "prev_pe": 3.25},
-    {"ce_strike": 26150, "pe_strike": 26050, "prev_ce": 110.85, "prev_pe": 3.70},
-    {"ce_strike": 26200, "pe_strike": 26000, "prev_ce": 81.60, "prev_pe": 4.40},
-    {"ce_strike": 26250, "pe_strike": 25950, "prev_ce": 56.95, "prev_pe": 5.05},
-    {"ce_strike": 26300, "pe_strike": 25900, "prev_ce": 37.85, "prev_pe": 5.90},
-    {"ce_strike": 26350, "pe_strike": 25850, "prev_ce": 23.80, "prev_pe": 7.50},
-    {"ce_strike": 26400, "pe_strike": 25800, "prev_ce": 14.55, "prev_pe": 10.30},
-    {"ce_strike": 26450, "pe_strike": 25750, "prev_ce": 8.95, "prev_pe": 13.95},
-    {"ce_strike": 26500, "pe_strike": 25700, "prev_ce": 5.75, "prev_pe": 19.85},
-    {"ce_strike": 26550, "pe_strike": 25650, "prev_ce": 3.80, "prev_pe": 28.00},
-    {"ce_strike": 26600, "pe_strike": 25600, "prev_ce": 2.85, "prev_pe": 39.65},
-]
-
-
-async def mock_market_feed(websocket: WebSocket):
+async def market_broadcaster(websocket: WebSocket):
+    """
+    Look up tokens from SUBSCRIBED, find their LTP from app.state.ws,
+    and send paired row data to the UI.
+    """
     try:
         while True:
-            updates = []
-            for item in STRIKE_DATA:
-                curr_ce = round(item["prev_ce"] * (1 + random.uniform(-0.05, 0.05)), 2)
-                curr_pe = round(item["prev_pe"] * (1 + random.uniform(-0.05, 0.05)), 2)
-                ce_diff = round(curr_ce - item["prev_ce"], 2)
-                pe_diff = round(curr_pe - item["prev_pe"], 2)
-                total_diff = round(ce_diff + pe_diff, 2)
+            # Safely get current LTP cache
+            ticks = app.state.ws.ltp() if hasattr(app.state, "ws") else {}
 
-                updates.append(
-                    {
-                        "total_diff": total_diff,
-                        "ce_diff_pct": f"{round((ce_diff / item['prev_ce']) * 100, 2)}%",
-                        "ce_diff": ce_diff,
-                        "curr_ce": curr_ce,
-                        "prev_ce": item["prev_ce"],
-                        "ce_strike": item["ce_strike"],
-                        "pe_strike": item["pe_strike"],
-                        "prev_pe": item["prev_pe"],
-                        "curr_pe": curr_pe,
-                        "pe_diff": pe_diff,
-                        "pe_diff_pct": f"{round((pe_diff / item['prev_pe']) * 100, 2)}%",
-                        "total_diff_pct": f"{round((total_diff / (item['prev_ce'] + item['prev_pe'])) * 100, 2)}%",
-                    }
-                )
-            # SENDING BOTH KEYS TO FRONTEND
-            await websocket.send_json(
-                {"type": "UPDATE", "diff_rows": updates, "hedge_rows": updates}
-            )
+            payload = {
+                "type": "UPDATE",
+                "diff_rows": assemble_table_rows("main", ticks),
+                "hedge_rows": assemble_table_rows("hedge", ticks),
+            }
+
+            await websocket.send_json(payload)
             await asyncio.sleep(1)
     except Exception as e:
-        logging.error(f"Feed error: {e}")
+        logging.error(f"Broadcaster Error: {e}")
+
+
+def assemble_table_rows(side, ticks):
+    """
+    Pairs CE and PE tokens correctly.
+    Assumes the tokens list is: [CE1, CE2... PE1, PE2...]
+    """
+    rows = []
+    tokens = app.state.SUBSCRIBED.get(side, [])
+
+    if not tokens:
+        return rows
+
+    # Calculate the midpoint (half are CE, half are PE)
+    half = len(tokens) // 2
+
+    for i in range(half):
+        ce_t = tokens[i]  # CE token
+        pe_t = tokens[i + half]  # Corresponding PE token
+
+        ce_m = app.state.METADATA.get(ce_t)
+        pe_m = app.state.METADATA.get(pe_t)
+
+        if not ce_m or not pe_m:
+            continue
+
+        # 1. Fetch live LTP from the ws.ltp() dictionary
+        # Fallback to metadata 'prev' if the token hasn't ticked yet
+        c_ce = ticks.get(ce_t, ce_m["prev"])
+        c_pe = ticks.get(pe_t, pe_m["prev"])
+
+        # 2. Calculate Diffs
+        ce_diff = round(c_ce - ce_m["prev"], 2)
+        pe_diff = round(c_pe - pe_m["prev"], 2)
+        total_diff = round(ce_diff + pe_diff, 2)
+
+        # 3. Build row for the frontend renderDashboard()
+        rows.append(
+            {
+                "ce_strike": ce_m["strike"],
+                "pe_strike": pe_m["strike"],
+                "curr_ce": c_ce,
+                "curr_pe": c_pe,
+                "prev_ce": ce_m["prev"],
+                "prev_pe": pe_m["prev"],
+                "ce_diff": ce_diff,
+                "pe_diff": pe_diff,
+                "total_diff": total_diff,
+                "ce_diff_pct": f"{round((ce_diff / ce_m['prev']) * 100, 2)}%"
+                if ce_m["prev"]
+                else "0%",
+                "pe_diff_pct": f"{round((pe_diff / pe_m['prev']) * 100, 2)}%"
+                if pe_m["prev"]
+                else "0%",
+                "total_diff_pct": f"{round((total_diff / (ce_m['prev'] + pe_m['prev'])) * 100, 2)}%"
+                if (ce_m["prev"] + pe_m["prev"])
+                else "0%",
+            }
+        )
+    return rows
 
 
 if __name__ == "__main__":

@@ -99,10 +99,10 @@ class Helper:
                 to_date=pdlm.now("Asia/Kolkata").to_date_string(),
                 interval="day",
             )
-            print(kwargs)
             lst = broker_object.historical(kwargs)
             if isinstance(lst, list) and len(lst) > 0:
-                return lst[-1].get("close", 0)
+                cls.baseline[instrument_token] = lst[-1].get("close", 0)
+                return cls.baseline[instrument_token]
             return 0
         except Exception as e:
             print(f"{e} exception while getting history")
@@ -113,5 +113,5 @@ class Helper:
 
 
 if __name__ == "__main__":
-    resp = Helper.history(265)
+    resp = Helper.history(15420930)
     print(resp)

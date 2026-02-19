@@ -185,7 +185,7 @@ def find_symbolinfo(
 
         if not matching_indices:
             print(f"Strike {start} not found for {expiry}")
-            return df.dataframe()
+            return pd.DataFrame()
 
         start_idx = matching_indices[0]
 
@@ -196,7 +196,7 @@ def find_symbolinfo(
         return df_sliced
     except Exception as e:
         print(f"Error in find trading symbol: {e}")
-        return df.dataframe()
+        return pd.DataFrame()
 
 
 def find_call_and_put_from_dropdown(
