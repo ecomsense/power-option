@@ -33,8 +33,12 @@ class Wsocket:
         self._subscribe = tokens
 
     def on_ticks(self, ws, ticks):
+        # Create a dictionary of just the new data
+        new_data = {tick["instrument_token"]: tick["last_price"] for tick in ticks}
 
-        self._ltp = {tick["instrument_token"]: tick["last_price"] for tick in ticks}
+        # Merge new_data into the existing persistent cache
+        # This preserves old tokens that didn't tick in this specific second
+        self._ltp = self._ltp | new_data
         if self._unsubscribe:
             ws.unsubscribe(self._unsubscribe)
             self._unsubscribe = None

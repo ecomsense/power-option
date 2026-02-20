@@ -1,5 +1,4 @@
 import asyncio
-import random
 from contextlib import asynccontextmanager
 
 import uvicorn
@@ -95,8 +94,8 @@ async def update_subscription(payload: dict = Body(...)):
         side = payload.get("side")
         kwargs = dict(
             base_expiry=payload.get("base_expiry"),
-            ce_start=int(payload.get("ce_start")),
-            pe_start=int(payload.get("pe_start")),
+            ce_start=int(payload.get("ce_start"), 0),
+            pe_start=int(payload.get("pe_start"), 0),
             num_of_strikes=int(payload.get("num_of_strikes")),
         )
         new_tokens = update_metadata(kwargs)
