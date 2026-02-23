@@ -1,6 +1,7 @@
 from os import path
 from pprint import pprint
 from traceback import print_exc
+
 from toolkit.fileutils import Fileutils
 from toolkit.logger import Logger
 
@@ -19,6 +20,10 @@ if not O_FUTL.is_file_exists(S_LOG):
     """
     print("creating data dir")
     O_FUTL.add_path(S_LOG)
+    ce_path = S_DATA + "CE/ce.txt"
+    O_FUTL.is_mk_filepath(ce_path)
+    pe_path = S_DATA + "PE/pe.txt"
+    O_FUTL.is_mk_filepath(pe_path)
 elif O_FUTL.is_file_not_2day(S_LOG):
     O_FUTL.nuke_file(S_LOG)
 

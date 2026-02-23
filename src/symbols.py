@@ -50,7 +50,7 @@ def read_symbol_info_from_url(exchange: str) -> list[dict[str, Any]]:
         return df.to_dict(orient="records")
 
     except Exception as e:
-        print(f"Error fetching {exchange}: {e}")
+        logging.error(f"Error fetching {exchange}: {e}")
         print_exc()
         return []  # Return empty list on failure to keep the type consistent
 
@@ -65,11 +65,12 @@ def dump(exchange: str) -> None:
     try:
         # what exchange and its symbols should be dumped
         exchange_file = S_DATA + exchange + ".json"
+
         if O_FUTL.is_file_not_2day(exchange_file):
             sym_from_json = read_symbol_info_from_url(exchange)
             O_FUTL.write_file(exchange_file, sym_from_json)
     except Exception as e:
-        print(f"dump error: {e}")
+        logging.error(f"dump error: {e}")
         print_exc()
 
 
@@ -79,43 +80,51 @@ def dump_basename_from_exchange(basename: str, exchange: str) -> None:
     Args:
        basename : NIFTY for example
     """
-    dump(exchange)
+    try:
+        dump(exchange)
 
-    path_and_file = f"{S_DATA}{exchange}.json"
+        # what exchange and its symbols should be dumped
+        exchange_file = S_DATA + exchange + ".json"
 
-    symbols_from_json = O_FUTL.read_file(path_and_file)
+        symbols_from_json = O_FUTL.read_file(exchange_file)
 
-    # Convert the raw JSON list to a DataFrame immediately
-    df = pd.DataFrame(symbols_from_json)
+        # Convert the raw JSON list to a DataFrame immediately
+        df = pd.DataFrame(symbols_from_json)
 
-    #  Filter by basename and instrument type
-    df = df[df["name"] == basename]
-    df = df[df["instrument_type"].isin(["CE", "PE"])]
+        #  Filter by basename and instrument type
+        df = df[df["name"] == basename]
+        df = df[df["instrument_type"].isin(["CE", "PE"])]
 
-    #  Select only the necessary columns and fix types
-    cols = [
-        "expiry",
-        "tradingsymbol",
-        "instrument_token",
-        "strike",
-        "instrument_type",
-    ]
-    df = df[cols]
-    df["strike"] = pd.to_numeric(df["strike"]).astype(int)
+        #  Select only the necessary columns and fix types
+        cols = [
+            "expiry",
+            "tradingsymbol",
+            "instrument_token",
+            "strike",
+            "instrument_type",
+        ]
+        df = df[cols]
+        df["strike"] = pd.to_numeric(df["strike"]).astype(int)
 
-    #  Process CE and PE separately
-    for option_type in ["CE", "PE"]:
-        subset = df[df["instrument_type"] == option_type].copy()
+        #  Process CE and PE separately
+        for option_type in ["CE", "PE"]:
+            subset = df[df["instrument_type"] == option_type].copy()
 
-        # Sort: CE Ascending, PE Descending
-        ascending = True if option_type == "CE" else False
-        subset = subset.sort_values(by="strike", ascending=ascending)
+            # Sort: CE Ascending, PE Descending
+            ascending = True if option_type == "CE" else False
+            subset = subset.sort_values(by="strike", ascending=ascending)
 
-        # Define path: data/ce/nifty.csv
-        file_path = f"{S_DATA}/{option_type}/{basename}.csv"
-        if O_FUTL.is_file_exists(file_path):
-            # Drop the instrument_type column before saving since it's redundant in the folder
-            subset.drop(columns=["instrument_type"]).to_csv(file_path, index=False)
+            # Define path: data/ce/nifty.csv
+            file_path = f"{S_DATA}/{option_type}/{basename}.csv"
+            while not O_FUTL.is_file_exists(file_path):
+                logging.info(f"waiting for the {file_path} to write")
+                __import__("time").sleep(1)
+            else:
+                # Drop the instrument_type column before saving since it's redundant in the folder
+                subset.drop(columns=["instrument_type"]).to_csv(file_path, index=False)
+    except Exception as e:
+        logging.error(f"{e} while dumping basename from exchange")
+        print_exc()
 
 
 def find_base_expiries() -> list:
@@ -124,15 +133,19 @@ def find_base_expiries() -> list:
     returns:
         list of unique basename expiries BANKNIFTY (2030-11-01)
     """
-    all_symbols = []
-    for basename in D_SYMBOL.keys():
-        file_path = f"{S_DATA}/CE/{basename}.csv"
-        df = pd.read_csv(file_path)
-        # Extract the keys from your D_SYMBOL dictionary
-        formatted = basename + " (" + df["expiry"].astype(str) + ")"
-        # Add unique values to our list
-        all_symbols.extend(formatted.unique().tolist())
-    return all_symbols
+    try:
+        all_symbols = []
+        for basename in D_SYMBOL.keys():
+            file_path = f"{S_DATA}/CE/{basename}.csv"
+            df = pd.read_csv(file_path)
+            # Extract the keys from your D_SYMBOL dictionary
+            formatted = basename + " (" + df["expiry"].astype(str) + ")"
+            # Add unique values to our list
+            all_symbols.extend(formatted.unique().tolist())
+        return all_symbols
+    except Exception as e:
+        logging.error(f"{e} while")
+        print_exc()
 
 
 def find_strike_from_base_expiry(base_expiry) -> dict:
@@ -142,15 +155,19 @@ def find_strike_from_base_expiry(base_expiry) -> dict:
         dict containing keys "CE" and "PE"
         with values as strike prices
     """
-    lst = base_expiry.split(" ")
-    basename, expiry = lst[0], lst[1].replace("(", "").replace(")", "")
-    dct = {}
-    for option_type in ["CE", "PE"]:
-        file_path = f"{S_DATA}/{option_type}/{basename}.csv"
-        df = pd.read_csv(file_path)
-        df = df[df["expiry"] == expiry]
-        dct[option_type] = df["strike"].to_list()
-    return dct
+    try:
+        lst = base_expiry.split(" ")
+        basename, expiry = lst[0], lst[1].replace("(", "").replace(")", "")
+        dct = {}
+        for option_type in ["CE", "PE"]:
+            file_path = f"{S_DATA}/{option_type}/{basename}.csv"
+            df = pd.read_csv(file_path)
+            df = df[df["expiry"] == expiry]
+            dct[option_type] = df["strike"].to_list()
+        return dct
+    except Exception as e:
+        logging.error(f"{e} while")
+        print_exc()
 
 
 def find_symbolinfo(
@@ -195,7 +212,8 @@ def find_symbolinfo(
 
         return df_sliced
     except Exception as e:
-        print(f"Error in find trading symbol: {e}")
+        logging.error(f"{e}rror in find trading symbol")
+        print_exc()
         return pd.DataFrame()
 
 
@@ -213,19 +231,23 @@ def find_call_and_put_from_dropdown(
     returns:
         call and put dataframes
     """
-    df_ce = find_symbolinfo(
-        ce_or_pe="CE",
-        start=ce_start,
-        base_expiry=base_expiry,
-        num_of_strikes=num_of_strikes,
-    )
-    df_pe = find_symbolinfo(
-        ce_or_pe="PE",
-        start=pe_start,
-        base_expiry=base_expiry,
-        num_of_strikes=num_of_strikes,
-    )
-    return df_ce, df_pe
+    try:
+        df_ce = find_symbolinfo(
+            ce_or_pe="CE",
+            start=ce_start,
+            base_expiry=base_expiry,
+            num_of_strikes=num_of_strikes,
+        )
+        df_pe = find_symbolinfo(
+            ce_or_pe="PE",
+            start=pe_start,
+            base_expiry=base_expiry,
+            num_of_strikes=num_of_strikes,
+        )
+        return df_ce, df_pe
+    except Exception as e:
+        logging.error(f"{e} while")
+        print_exc()
 
 
 if __name__ == "__main__":

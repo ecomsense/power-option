@@ -48,6 +48,7 @@ def update_metadata(kwargs):
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     try:
+        await asyncio.sleep(10)
         # 1. Initialize symbols
         for kwargs in D_SYMBOL.values():
             dump_basename_from_exchange(kwargs["name"], kwargs["exchange"])
@@ -234,4 +235,14 @@ def assemble_table_rows(side, ticks):
 
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
+    try:
+        # reload=False is better for production/stable testing to avoid double-triggers
+        uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=False)
+    except KeyboardInterrupt:
+        # This catch happens when you press Ctrl+C
+        logging.info("Power-Option Server stopped by user (Ctrl+C).")
+    except Exception as e:
+        # Use an f-string or comma to properly log the error object
+        logging.error(f"Error in main: {e}")
+    finally:
+        logging.info("Cleaning up resources... Shutdown complete.")
