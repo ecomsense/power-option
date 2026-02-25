@@ -220,15 +220,17 @@ def assemble_table_rows(side, ticks):
                 "ce_diff": ce_diff,
                 "pe_diff": pe_diff,
                 "total_diff": total_diff,
-                "ce_diff_pct": f"{round((ce_diff / ce_m['prev']) * 100, 2)}%"
+                "ce_diff_pct": round((ce_diff / ce_m["prev"]) * 100, 2)
                 if ce_m["prev"]
-                else "0%",
-                "pe_diff_pct": f"{round((pe_diff / pe_m['prev']) * 100, 2)}%"
+                else 0,
+                "pe_diff_pct": round((pe_diff / pe_m["prev"]) * 100, 2)
                 if pe_m["prev"]
-                else "0%",
-                "total_diff_pct": f"{round((total_diff / (ce_m['prev'] + pe_m['prev'])) * 100, 2)}%"
+                else 0,
+                "total_diff_pct": round(
+                    (total_diff / (ce_m["prev"] + pe_m["prev"])) * 100, 2
+                )
                 if (ce_m["prev"] + pe_m["prev"])
-                else "0%",
+                else 0,
             }
         )
     return rows
@@ -237,7 +239,7 @@ def assemble_table_rows(side, ticks):
 if __name__ == "__main__":
     try:
         # reload=False is better for production/stable testing to avoid double-triggers
-        uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=False)
+        uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
     except KeyboardInterrupt:
         # This catch happens when you press Ctrl+C
         logging.info("Power-Option Server stopped by user (Ctrl+C).")

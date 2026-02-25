@@ -58,17 +58,17 @@ function renderDashboard(diffRows, hedgeRows) {
       <tr>
         <td class="cb-cell"><input type="checkbox"></td>
         <td class="${getColorClass(row.total_diff)}">${row.total_diff.toFixed(2)}</td>
-        <td>${row.ce_diff_pct}</td>
-        <td>${row.ce_diff.toFixed(2)}</td>
+        <td class="${getColorClass(row.ce_diff_pct)}">${row.ce_diff_pct.toFixed(2)}</td>
+        <td class="${getColorClass(row.ce_diff)}">${row.ce_diff.toFixed(2)}</td>
         <td>${row.curr_ce.toFixed(2)}</td>
         <td>${row.prev_ce.toFixed(2)}</td>
         <td>${row.ce_strike}</td>
         <td>${row.pe_strike}</td>
         <td>${row.prev_pe.toFixed(2)}</td>
         <td>${row.curr_pe.toFixed(2)}</td>
-        <td>${row.pe_diff.toFixed(2)}</td>
-        <td>${row.pe_diff_pct}</td>
-        <td>${row.total_diff_pct}</td>
+        <td class="${getColorClass(row.pe_diff)}">${row.pe_diff.toFixed(2)}</td>
+        <td class="${getColorClass(row.pe_diff_pct)}">${row.pe_diff_pct.toFixed(2)}</td>
+        <td class="${getColorClass(row.total_diff_pct)}">${row.total_diff_pct}</td>
         <td class="cb-cell"><input type="checkbox"></td>
       </tr>`;
     });
@@ -170,9 +170,7 @@ async function updateSubscription(side) {
 
         const result = await response.json();
         if (result.status === "success") {
-            console.log(
-                `Successfully updated ${side} ${result.tokens} tokens.`,
-            );
+            console.log(`Successfully updated ${side} tokens.`);
         }
     } catch (error) {
         console.error("Subscription update failed:", error);

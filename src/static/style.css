@@ -1,214 +1,233 @@
 /* --- 1. CSS Variables (Theming) --- */
 :root {
-  --bg-main: #0b0e14;
-  --bg-dashboard: #1e222d;
-  --bg-table: #131722;
-  --bg-header: #2a2e39;
-  --bg-input: #2a2e39;
-  --bg-strike-highlight: #1e222d;
+    --bg-main: #0b0e14;
+    --bg-dashboard: #1e222d;
+    --bg-table: #131722;
+    --bg-header: #2a2e39;
+    --bg-input: #2a2e39;
+    --bg-strike-highlight: #1e222d;
 
-  --text-main: #d1d4dc;
-  --text-muted: #848e9c;
-  --text-strike: #ff9800;
-  --text-white: #ffffff;
-  
-  --color-pos: #26a69a;
-  --color-neg: #ef5350;
-  
-  --border-outer: #363c4e; 
-  --border-table: #1e222d;
-  --border-ui: #363c4e;
-  --border-input: #434651;
-  
-  --btn-default: #495057;
-  --btn-voilet: #9c27b0;
-  --btn-orange: #ff9800;
+    --text-main: #d1d4dc;
+    --text-muted: #848e9c;
+    --text-strike: #ff9800;
+    --text-white: #ffffff;
+
+    --color-pos: #26a69a;
+    --color-neg: #ef5350;
+
+    --border-outer: #363c4e;
+    --border-table: #1e222d;
+    --border-ui: #363c4e;
+    --border-input: #434651;
+
+    --btn-default: #495057;
+    --btn-voilet: #9c27b0;
+    --btn-orange: #ff9800;
 }
 
 /* --- 2. Base Reset --- */
 body {
-  margin: 0;
-  padding: 0;
-  background-color: var(--bg-main);
-  height: 100vh;
-  width: 100vw;
-  box-sizing: border-box;
-  overflow: hidden;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  color: var(--text-main);
+    margin: 0;
+    padding: 0;
+    background-color: var(--bg-main);
+    height: 100vh;
+    width: 100vw;
+    box-sizing: border-box;
+    overflow: hidden;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--text-main);
 }
 
 a {
-  color: var(--text-white)
+    color: var(--text-white);
 }
 
 /* --- 3. Dashboard Layout --- */
 .dashboard-container {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  height: 100%;
-  border: 4px solid var(--border-outer);
-  box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    border: 4px solid var(--border-outer);
+    box-sizing: border-box;
 }
 
 #controls-section {
-  flex: 1; /* Takes space above the chart */
-  display: flex;
-  flex-direction: column;
-  background-color: var(--bg-dashboard);
-  border-bottom: 2px solid var(--border-ui);
-  min-height: 0; /* Critical for enabling internal scroll */
+    flex: 1; /* Takes space above the chart */
+    display: flex;
+    flex-direction: column;
+    background-color: var(--bg-dashboard);
+    border-bottom: 2px solid var(--border-ui);
+    min-height: 0; /* Critical for enabling internal scroll */
 }
 
 #chart-section {
-  flex: 0 0 30%; /* Chart takes bottom 40% height */
-  background-color: var(--bg-table);
-  border-top: 2px solid var(--border-ui);
+    flex: 0 0 30%; /* Chart takes bottom 40% height */
+    background-color: var(--bg-table);
+    border-top: 2px solid var(--border-ui);
 }
 
 #chart-container {
-  width: 100%;
-  height: 100%;
+    width: 100%;
+    height: 100%;
 }
 
 /* --- 4. Side-by-Side Tables --- */
 .tables-wrapper {
-  display: flex;
-  flex: 1;
-  overflow: hidden;
+    display: flex;
+    flex: 1;
+    overflow: hidden;
 }
 
 .table-container {
-  overflow-y: auto;
-  position: relative;
-  background-color: var(--bg-table);
+    overflow-y: auto;
+    position: relative;
+    background-color: var(--bg-table);
 }
 
 /* Specified Widths */
 .diff-table-container {
-  flex: 0 0 55%;
-  border-right: 2px solid var(--border-ui);
+    flex: 0 0 55%;
+    border-right: 2px solid var(--border-ui);
 }
 
 .ltp-table-container {
-  flex: 0 0 45%;
+    flex: 0 0 45%;
 }
 
 /* --- 5. Table Styling --- */
 table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 11px;
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
 }
 
-th, td {
-  padding: 4px 2px;
-  border-bottom: 1px solid var(--border-table);
-  white-space: nowrap;
-  text-align: right;
+th,
+td {
+    padding: 4px 2px;
+    border-bottom: 1px solid var(--border-table);
+    white-space: nowrap;
+    text-align: center;
 }
 
 /* Sticky Header */
 th {
-  background-color: var(--bg-header);
-  color: var(--text-muted);
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  border-bottom: 1px solid var(--border-ui);
+    background-color: var(--bg-header);
+    color: var(--text-muted);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    border-bottom: 1px solid var(--border-ui);
 }
 
 /* --- 6. NEOVIM-SAFE STICKY FOOTER --- */
 /* This makes the last row of the body stick to the bottom */
-#diffBody tr:last-child, 
+#diffBody tr:last-child,
 #ltpBody tr:last-child {
-  position: sticky;
-  bottom: 0;
-  z-index: 20;
-  background-color: var(--bg-header) !important;
-  box-shadow: 0 -2px 5px rgba(0,0,0,0.5);
-  outline: 1px solid var(--border-ui);
+    position: sticky;
+    bottom: 0;
+    z-index: 20;
+    background-color: var(--bg-header) !important;
+    box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.5);
+    outline: 1px solid var(--border-ui);
 }
 
 #diffBody tr:last-child td,
 #ltpBody tr:last-child td {
-  font-weight: bold;
-  color: var(--text-white);
-  padding: 10px 4px;
+    font-weight: bold;
+    color: var(--text-white);
+    padding: 10px 4px;
 }
 
 /* --- 7. Column & UI Styles --- */
 .text5 {
-  width: 5em;
+    width: 5em;
 }
 
 .text2 {
-  width: 3em;
+    width: 3em;
 }
 
-.cb-cell { width: 30px; text-align: center; }
-.pos { color: var(--color-pos); }
-.neg { color: var(--color-neg); }
+.cb-cell {
+    width: 30px;
+}
+.pos {
+    color: var(--color-pos);
+}
+.neg {
+    color: var(--color-neg);
+}
 
 .top-control-bar {
-  display: flex;
-  padding: 10px;
-  gap: 10px;
-  align-items: center;
-  border-bottom: 1px solid var(--border-ui);
+    display: flex;
+    padding: 10px;
+    gap: 10px;
+    align-items: center;
+    border-bottom: 1px solid var(--border-ui);
 }
 
-.top-control-bar select, .top-control-bar input {
-  padding: 6px;
-  background-color: var(--bg-input);
-  border: 1px solid var(--border-input);
-  color: var(--text-main);
-  border-radius: 4px;
+.top-control-bar select,
+.top-control-bar input {
+    padding: 6px;
+    background-color: var(--bg-input);
+    border: 1px solid var(--border-input);
+    color: var(--text-main);
+    border-radius: 4px;
 }
 
 /* --- 8. Buttons --- */
 .btn {
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-  color: var(--text-white);
-  border: none;
-  font-weight: bold;
-  background-color: var(--btn-default);
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    color: var(--text-white);
+    border: none;
+    font-weight: bold;
+    background-color: var(--btn-default);
 }
 
-.violet-btn { background-color: var(--btn-voilet); }
-.orange-btn { background-color: var(--btn-orange); }
+.violet-btn {
+    background-color: var(--btn-voilet);
+}
+.orange-btn {
+    background-color: var(--btn-orange);
+}
 
 /* --- 9. Custom Scrollbar --- */
-::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-track { background: var(--bg-main); }
-::-webkit-scrollbar-thumb { background: var(--border-input); border-radius: 4px; }
-
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: var(--bg-main);
+}
+::-webkit-scrollbar-thumb {
+    background: var(--border-input);
+    border-radius: 4px;
+}
 
 /* --- Side Toggle Button --- */
 .side-btn {
-  min-width: 40px;
-  transition: all 0.2s ease;
+    min-width: 40px;
+    transition: all 0.2s ease;
 }
 
 /* Buy Mode Styles */
 .buy-mode {
-  background-color: var(--color-pos) !important;
+    background-color: var(--color-pos) !important;
 }
 
 .buy-mode-active .ce-check,
 .buy-mode-active .pe-check {
-  accent-color: var(--color-pos);
+    accent-color: var(--color-pos);
 }
 
 /* Sell Mode Styles */
 .sell-mode {
-  background-color: var(--color-neg) !important;
+    background-color: var(--color-neg) !important;
 }
 
 .sell-mode-active .ce-check,
 .sell-mode-active .pe-check {
-  accent-color: var(--color-neg);
+    accent-color: var(--color-neg);
 }
