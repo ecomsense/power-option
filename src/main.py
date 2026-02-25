@@ -59,7 +59,7 @@ async def lifespan(app: FastAPI):
 
         app.state.METADATA = {}
         kwargs = dict(
-            base_expiry="BANKNIFTY (2026-02-24)",
+            base_expiry="BANKNIFTY (2026-03-30)",
             ce_start=60600,
             pe_start=60600,
             num_of_strikes=10,

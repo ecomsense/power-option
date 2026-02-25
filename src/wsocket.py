@@ -23,7 +23,6 @@ class Wsocket:
         self.kws.connect(threaded=True)
 
     def ltp(self):
-        print(self._ltp)
         return self._ltp
 
     def unsubscribe(self, tokens):
