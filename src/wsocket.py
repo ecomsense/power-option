@@ -1,4 +1,5 @@
 from constants import logging
+from pprint import pprint
 
 
 class Wsocket:
@@ -32,17 +33,31 @@ class Wsocket:
         self._subscribe = tokens
 
     def on_ticks(self, ws, ticks):
-        # Create a dictionary of just the new data
-        new_data = {tick["instrument_token"]: tick["last_price"] for tick in ticks}
+        try:
+            # Use a generator expression with a conditional check to avoid KeyErrors
+            new_data = {
+                tick["instrument_token"]: tick["depth"]["buy"][-1]["price"] 
+                for tick in ticks 
+                if "depth" in tick and tick["depth"]["buy"]
+            }
+            
+            # Update your persistent cache
+            if new_data:
+                self._ltp = self._ltp | new_data
+            else:
+                pprint(ticks)
+                
+        except Exception as e:
+            # Catching general exceptions prevents the thread from dying
+            print(f"Error processing ticks: {e}")
 
-        # Merge new_data into the existing persistent cache
-        # This preserves old tokens that didn't tick in this specific second
-        self._ltp = self._ltp | new_data
+        # Handle subscription changes
         if self._unsubscribe:
             ws.unsubscribe(self._unsubscribe)
             self._unsubscribe = None
         elif self._subscribe:
             ws.subscribe(self._subscribe)
+            ws.set_mode(ws.MODE_FULL, self._subscribe)
             self._subscribe = None
 
     def on_connect(self, ws, response):
@@ -51,7 +66,7 @@ class Wsocket:
 
         ws.subscribe(self.tokens)
         # Set RELIANCE to tick in `full` mode.
-        ws.set_mode(ws.MODE_LTP, self.tokens)
+        ws.set_mode(ws.MODE_FULL, self.tokens)
 
     def on_close(self, ws, code, reason):
         # On connection close stop the main loop
