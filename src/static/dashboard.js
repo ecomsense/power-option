@@ -33,20 +33,22 @@ document.addEventListener("DOMContentLoaded", () => {
         const data = JSON.parse(event.data);
         if (data.type === "UPDATE") {
             // FIX: Map incoming data to separate table handlers
-            renderDashboard(data.diff_rows || [], data.hedge_rows || []);
+            renderDashboard(data.diff_rows || [], data.hedge_rows || [], data.main_fresh || 0, data.hedge_fresh || 0);
         }
     };
 });
 
-function renderDashboard(diffRows, hedgeRows) {
+
+/**
+ * Fully Optimized renderDashboard
+ * Independently tracks Call and Put checkboxes for both Diff and Hedge tables.
+ */
+function renderDashboard(diffRows, hedgeRows, mainFresh, hedgeFresh) {
     const now = Math.floor(Date.now() / 1000);
 
     // --- 1. Render DIFF TABLE (14 Columns) ---
     let diffHtml = "";
-    let sCeLtp = 0,
-        sPrCe = 0,
-        sPrPe = 0,
-        sPeLtp = 0;
+    let sCeLtp = 0, sPrCe = 0, sPrPe = 0, sPeLtp = 0;
 
     diffRows.forEach((row) => {
         sCeLtp += row.curr_ce;
@@ -54,9 +56,21 @@ function renderDashboard(diffRows, hedgeRows) {
         sPrPe += row.prev_pe;
         sPeLtp += row.curr_pe;
 
+        // Unique IDs for Left (Call) and Right (Put)
+        const leftId = `cb-diff-ce-${row.ce_strike}`;
+        const rightId = `cb-diff-pe-${row.pe_strike}`;
+        
+        // Lookup existing state
+        const exLeft = document.getElementById(leftId);
+        const exRight = document.getElementById(rightId);
+
+        // State logic: Fresh flag > Existing DOM state > Default true
+        const isLeftChecked = mainFresh ? true : (exLeft ? exLeft.checked : true);
+        const isRightChecked = mainFresh ? true : (exRight ? exRight.checked : true);
+
         diffHtml += `
       <tr>
-        <td class="cb-cell"><input type="checkbox"></td>
+        <td class="cb-cell"><input type="checkbox" id="${leftId}" ${isLeftChecked ? 'checked' : ''}></td>
         <td class="${getColorClass(row.total_diff)}">${row.total_diff.toFixed(2)}</td>
         <td class="${getColorClass(row.ce_diff_pct)}">${row.ce_diff_pct.toFixed(2)}</td>
         <td class="${getColorClass(row.ce_diff)}">${row.ce_diff.toFixed(2)}</td>
@@ -69,14 +83,13 @@ function renderDashboard(diffRows, hedgeRows) {
         <td class="${getColorClass(row.pe_diff)}">${row.pe_diff.toFixed(2)}</td>
         <td class="${getColorClass(row.pe_diff_pct)}">${row.pe_diff_pct.toFixed(2)}</td>
         <td class="${getColorClass(row.total_diff_pct)}">${row.total_diff_pct}</td>
-        <td class="cb-cell"><input type="checkbox"></td>
+        <td class="cb-cell"><input type="checkbox" id="${rightId}" ${isRightChecked ? 'checked' : ''}></td>
       </tr>`;
     });
 
-    // Sticky Totals Row for Diff Table
     const diffFooter = `
     <tr class="footer-row">
-    <td colspan="4"></td>
+      <td colspan="4"></td>
       <td>${sCeLtp.toFixed(2)}</td><td>${sPrCe.toFixed(2)}</td>
       <td colspan="2" style="text-align:center; font-weight:bold;">TOTALS</td>
       <td>${sPrPe.toFixed(2)}</td><td>${sPeLtp.toFixed(2)}</td>
@@ -89,14 +102,24 @@ function renderDashboard(diffRows, hedgeRows) {
     // --- 2. Render HEDGE TABLE (6 Columns) ---
     let hedgeHtml = "";
     hedgeRows.forEach((row) => {
+        // Unique IDs for Hedge Left (Call) and Right (Put)
+        const hLeftId = `cb-hedge-ce-${row.ce_strike}`;
+        const hRightId = `cb-hedge-pe-${row.pe_strike}`;
+
+        const exHLeft = document.getElementById(hLeftId);
+        const exHRight = document.getElementById(hRightId);
+
+        const isHLeftChecked = hedgeFresh ? true : (exHLeft ? exHLeft.checked : true);
+        const isHRightChecked = hedgeFresh ? true : (exHRight ? exHRight.checked : true);
+
         hedgeHtml += `
       <tr>
-        <td class="cb-cell"><input type="checkbox"></td>
+        <td class="cb-cell"><input type="checkbox" id="${hLeftId}" ${isHLeftChecked ? 'checked' : ''}></td>
         <td>${row.curr_ce.toFixed(2)}</td>
         <td>${row.ce_strike}</td>
         <td>${row.pe_strike}</td>
         <td>${row.curr_pe.toFixed(2)}</td>
-        <td class="cb-cell"><input type="checkbox"></td>
+        <td class="cb-cell"><input type="checkbox" id="${hRightId}" ${isHRightChecked ? 'checked' : ''}></td>
       </tr>`;
     });
 
@@ -107,6 +130,7 @@ function renderDashboard(diffRows, hedgeRows) {
     if (currentLine) currentLine.update({ time: now, value: sCeLtp + sPeLtp });
     if (mainLine) mainLine.update({ time: now, value: sPrCe + sPrPe });
 }
+
 
 function getColorClass(val) {
     return val < 0 ? "neg" : "pos";

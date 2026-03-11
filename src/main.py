@@ -58,6 +58,9 @@ async def lifespan(app: FastAPI):
         app.state.SUBSCRIBED = {"main": [], "hedge": []}
 
         app.state.METADATA = {}
+
+        app.state.checkbox = {"main": 1, "hedge": 1}
+
         kwargs = dict(
             base_expiry="BANKNIFTY (2026-03-30)",
             ce_start=60600,
@@ -117,6 +120,9 @@ async def update_subscription(payload: dict = Body(...)):
         # 5. Update global state for next comparison
         app.state.SUBSCRIBED[side] = new_tokens
 
+        # 6 set checkbox state
+        app.state.checkbox[side] = 1
+
         return {"status": "success", "side": side}
     except Exception as e:
         logging.error(f"Subscription Error: {e}")
@@ -166,9 +172,13 @@ async def market_broadcaster(websocket: WebSocket):
                 "type": "UPDATE",
                 "diff_rows": assemble_table_rows("main", ticks),
                 "hedge_rows": assemble_table_rows("hedge", ticks),
+                "main_fresh": app.state.checkbox["main"],
+                "hedge_fresh": app.state.checkbox["hedge"],
             }
 
             await websocket.send_json(payload)
+            app.state.checkbox["main"] = 0
+            app.state.checkbox["hedge"] = 0
             await asyncio.sleep(1)
     except Exception as e:
         logging.error(f"Broadcaster Error: {e}")

@@ -100,7 +100,7 @@ class Helper:
                 interval="day",
             )
             lst = broker_object.historical(kwargs)
-            if isinstance(lst, list) and len(lst) > 0:
+            if isinstance(lst, list) and len(lst) > 1:
                 if close := lst[-2].get("close"):
                     cls.baseline[instrument_token] = close
                 return cls.baseline[instrument_token]
