@@ -101,7 +101,7 @@ class Helper:
             )
             lst = broker_object.historical(kwargs)
             if isinstance(lst, list) and len(lst) > 0:
-                if close:= lst[-1].get("close"):
+                if close := lst[-2].get("close"):
                     cls.baseline[instrument_token] = close
                 return cls.baseline[instrument_token]
             return 0
@@ -115,16 +115,19 @@ class Helper:
 
 if __name__ == "__main__":
     from pprint import pprint
+
     instrument_token = 256265
     yesterday_close = Helper._get_history(instrument_token)
 
     broker_object = Helper.api()
     kwargs = dict(
         instrument_token=instrument_token,
-        from_date=pdlm.now("Asia/Kolkata").subtract(days=6).to_date_string(),
+        from_date=pdlm.now("Asia/Kolkata").subtract(days=7).to_date_string(),
         to_date=pdlm.now("Asia/Kolkata").to_date_string(),
         interval="day",
     )
     lst = broker_object.historical(kwargs)
     pprint(lst)
-    print(f'verify that {yesterday_close=} and recent historical close {lst[-1]["close"]} are same')
+    print(
+        f"verify that {yesterday_close=} and recent historical close {lst[-2]['close']} are same"
+    )
