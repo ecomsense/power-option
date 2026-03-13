@@ -61,6 +61,7 @@ async def lifespan(app: FastAPI):
 
         app.state.checkbox = {"main": 1, "hedge": 1}
 
+        """
         kwargs = dict(
             base_expiry="BANKNIFTY (2026-03-30)",
             ce_start=60600,
@@ -71,10 +72,12 @@ async def lifespan(app: FastAPI):
         new_tokens = update_metadata(kwargs)
         app.state.SUBSCRIBED["main"] = new_tokens
         app.state.SUBSCRIBED["hedge"] = new_tokens
+        """
 
         # 4. Initialize WebSocket Manager
         # We assign it to app.state.ws so the broadcaster can find it
-        app.state.ws = Wsocket(Helper.api(), new_tokens)
+        index_tokens = [256265, 265, 260105]  # NIFTY, SENSEX, BANKNIFTY
+        app.state.ws = Wsocket(Helper.api(), index_tokens)
 
         # Wait for first ticks to ensure app.state.ws.ltp() isn't empty
         while not any(app.state.ws.ltp()):
@@ -98,8 +101,8 @@ async def update_subscription(payload: dict = Body(...)):
         side = payload.get("side")
         kwargs = dict(
             base_expiry=payload.get("base_expiry"),
-            ce_start=int(payload.get("ce_start"), 0),
-            pe_start=int(payload.get("pe_start"), 0),
+            ce_start=int(payload.get("ce_start")),
+            pe_start=int(payload.get("pe_start")),
             num_of_strikes=int(payload.get("num_of_strikes")),
         )
         new_tokens = update_metadata(kwargs)
@@ -168,17 +171,18 @@ async def market_broadcaster(websocket: WebSocket):
             # Safely get current LTP cache
             ticks = app.state.ws.ltp() if hasattr(app.state, "ws") else {}
 
-            payload = {
-                "type": "UPDATE",
-                "diff_rows": assemble_table_rows("main", ticks),
-                "hedge_rows": assemble_table_rows("hedge", ticks),
-                "main_fresh": app.state.checkbox["main"],
-                "hedge_fresh": app.state.checkbox["hedge"],
-            }
+            if ticks:
+                payload = {
+                    "type": "UPDATE",
+                    "diff_rows": assemble_table_rows("main", ticks),
+                    "hedge_rows": assemble_table_rows("hedge", ticks),
+                    "main_fresh": app.state.checkbox["main"],
+                    "hedge_fresh": app.state.checkbox["hedge"],
+                }
 
-            await websocket.send_json(payload)
-            app.state.checkbox["main"] = 0
-            app.state.checkbox["hedge"] = 0
+                await websocket.send_json(payload)
+                app.state.checkbox["main"] = 0
+                app.state.checkbox["hedge"] = 0
             await asyncio.sleep(1)
     except Exception as e:
         logging.error(f"Broadcaster Error: {e}")
@@ -194,6 +198,9 @@ def assemble_table_rows(side, ticks):
 
     if not tokens:
         return rows
+
+    if not ticks:
+        print(f"DEBUG: Have {len(tokens)} tokens for {side} but 0 ticks received yet.")
 
     # Calculate the midpoint (half are CE, half are PE)
     half = len(tokens) // 2

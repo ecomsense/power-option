@@ -11,16 +11,45 @@ let socket;
 document.addEventListener("DOMContentLoaded", () => {
     const chartElement = document.getElementById("chart-container");
     if (chartElement) {
+
         chart = LightweightCharts.createChart(chartElement, {
-            width: chartElement.clientWidth,
-            height: chartElement.clientHeight,
-            layout: { background: { color: "#131722" }, textColor: "#d1d4dc" },
-            grid: {
-                vertLines: { color: "#1e222d" },
-                horzLines: { color: "#1e222d" },
-            },
-            timeScale: { timeVisible: true, secondsVisible: true },
+    width: chartElement.clientWidth,
+    height: chartElement.clientHeight,
+    layout: { background: { color: "#131722" }, textColor: "#d1d4dc" },
+    grid: {
+        vertLines: { color: "#1e222d" },
+        horzLines: { color: "#1e222d" },
+    },
+    localization: {
+        // This formats the price/time in the floating tooltip
+        timeFormatter: timestamp => {
+            return new Date(timestamp * 1000).toLocaleTimeString("en-IN", {
+                timeZone: "Asia/Kolkata",
+                hour12: false,
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        },
+    },
+    timeScale: { 
+        timeVisible: true, 
+        secondsVisible: true,
+        shiftVisibleRangeOnNewBar: true,
+
+        // This forces the axis labels to use your local time
+        tickMarkFormatter: (time, tickMarkType, locale) => {
+            const date = new Date(time * 1000);
+            return date.toLocaleTimeString("en-IN", {
+                timeZone: "Asia/Kolkata",
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            });
+        },
+    },
         });
+
         mainLine = chart.addLineSeries({ color: "#9c27b0", title: "Baseline" });
         currentLine = chart.addLineSeries({
             color: "#ff9800",
@@ -127,8 +156,11 @@ function renderDashboard(diffRows, hedgeRows, mainFresh, hedgeFresh) {
     if (hedgeBody) hedgeBody.innerHTML = hedgeHtml;
 
     // --- 3. Update Chart ---
-    if (currentLine) currentLine.update({ time: now, value: sCeLtp + sPeLtp });
-    if (mainLine) mainLine.update({ time: now, value: sPrCe + sPrPe });
+    // In dashboard.js inside renderDashboard
+    if (diffRows.length > 0) {
+        if (currentLine) currentLine.update({ time: now, value: sCeLtp + sPeLtp });
+        if (mainLine) mainLine.update({ time: now, value: sPrCe + sPrPe });
+    }
 }
 
 

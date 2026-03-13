@@ -34,21 +34,23 @@ class Wsocket:
 
     def on_ticks(self, ws, ticks):
         try:
-            # Use a generator expression with a conditional check to avoid KeyErrors
-            new_data = {
-                tick["instrument_token"]: tick["depth"]["buy"][-1]["price"] 
-                for tick in ticks 
-                if "depth" in tick and tick["depth"]["buy"]
-            }
-            
-            # Update your persistent cache
+            new_data = {}
+            for tick in ticks:
+                token = tick["instrument_token"]
+
+                # 1. Try to get Market Depth Price (for Options)
+                if "depth" in tick and tick["depth"]["buy"]:
+                    new_data[token] = tick["depth"]["buy"][-1]["price"]
+
+                # 2. Fallback to Last Traded Price (for Indices or non-full mode)
+                elif "last_price" in tick:
+                    new_data[token] = tick["last_price"]
+
+            # Update persistent cache if we found any valid price data
             if new_data:
                 self._ltp = self._ltp | new_data
-            else:
-                pprint(ticks)
-                
+
         except Exception as e:
-            # Catching general exceptions prevents the thread from dying
             print(f"Error processing ticks: {e}")
 
         # Handle subscription changes
