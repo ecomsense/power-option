@@ -13,12 +13,17 @@
                     <div class="top-control-bar">
                         <select
                             id="symbol-select"
-                            onchange="updateStrikeDropdowns()"
+                            onchange="updateExpiryDropdown()"
                         >
                             {% for symbol in symbols %}
                             <option value="{{ symbol }}">{{ symbol }}</option>
                             {% endfor %}
                         </select>
+                        <select 
+                            id="expiry-select"
+                            name="expiry-select"
+                            onchange="updateStrikeDropdowns()"
+                        ></select>
                         <label for="main-call-base">C</label>
                         <select
                             id="main-call-base"

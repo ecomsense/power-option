@@ -11,9 +11,11 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from symbols import (
     dump_basename_from_exchange,
-    find_base_expiries,
-    find_call_and_put_from_dropdown,
+    find_base,
+    # find_base_expiries,
+    find_expiry_from_base,
     find_strike_from_base_expiry,
+    find_call_and_put_from_dropdown,
 )
 from wsocket import Wsocket
 
@@ -91,7 +93,8 @@ async def update_subscription(payload: dict = Body(...)):
     try:
         side = payload.get("side")
         kwargs = dict(
-            base_expiry=payload.get("base_expiry"),
+            basename=payload.get("basename"),
+            expiry=payload.get("expiry"),
             ce_start=int(payload.get("ce_start")),
             pe_start=int(payload.get("pe_start")),
             num_of_strikes=int(payload.get("num_of_strikes")),
@@ -125,16 +128,25 @@ async def update_subscription(payload: dict = Body(...)):
 
 @app.get("/")
 async def get(request: Request):
-    symbols = find_base_expiries()
+    symbols = find_base()
     return templates.TemplateResponse(
         "index.html", {"request": request, "symbols": symbols}
     )
 
 
-@app.get("/get-strikes/{base_expiry}")
-async def get_strikes(base_expiry: str):
+@app.get("/get-expiries/{basename}")
+async def get_expiries(basename: str):
     try:
-        return find_strike_from_base_expiry(base_expiry)
+        return find_expiry_from_base(basename)
+    except Exception as e:
+        logging.error(f"Error fetching strikes: {e}")
+        return []
+
+
+@app.get("/get-strikes/{basename}/{expiry}")
+async def get_strikes(basename: str, expiry: str):
+    try:
+        return find_strike_from_base_expiry(basename, expiry)
     except Exception as e:
         logging.error(f"Error fetching strikes: {e}")
         return {"CE": [], "PE": []}

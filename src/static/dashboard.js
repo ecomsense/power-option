@@ -156,7 +156,6 @@ function renderDashboard(diffRows, hedgeRows, mainFresh, hedgeFresh) {
     if (hedgeBody) hedgeBody.innerHTML = hedgeHtml;
 
     // --- 3. Update Chart ---
-    // In dashboard.js inside renderDashboard
     if (diffRows.length > 0) {
         if (currentLine) currentLine.update({ time: now, value: sCeLtp + sPeLtp });
         if (mainLine) mainLine.update({ time: now, value: sPrCe + sPrPe });
@@ -181,6 +180,7 @@ function updateHedge() {
     );
 }
 
+/*
 function sendSub(ns, baseId, qtyId, radioName) {
     const sym = document.getElementById("symbol-select").value;
     const base = document.getElementById(baseId).value;
@@ -202,6 +202,7 @@ function sendSub(ns, baseId, qtyId, radioName) {
         );
     }
 }
+*/
 
 /**
  * Unified subscription updater
@@ -211,7 +212,8 @@ async function updateSubscription(side) {
     // Collecting values manually using the side as the ID prefix
     const payload = {
         side: side,
-        base_expiry: document.getElementById("symbol-select").value,
+        basename: document.getElementById("symbol-select").value,
+        expiry: document.getElementById("expiry-select").value,
         ce_start: document.getElementById(`${side}-call-base`).value,
         pe_start: document.getElementById(`${side}-put-base`).value,
         num_of_strikes: document.getElementById(`${side}-num`).value, // Assuming same count for both

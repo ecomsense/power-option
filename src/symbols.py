@@ -127,6 +127,32 @@ def dump_basename_from_exchange(basename: str, exchange: str) -> None:
         print_exc()
 
 
+def find_base() -> list:
+    """3. populate unique basename (expiries) for the UI from csv
+
+    returns:
+        list of unique basename expiries BANKNIFTY (2030-11-01)
+    """
+    try:
+        return list(D_SYMBOL.keys())
+    except Exception as e:
+        logging.error(f"{e} while")
+        print_exc()
+
+
+def find_expiry_from_base(basename):
+    try:
+        file_path = f"{S_DATA}/CE/{basename}.csv"
+        df = pd.read_csv(file_path)
+        formatted = df["expiry"].astype(str)
+        expiries = formatted.unique().tolist()
+        return expiries
+    except Exception as e:
+        logging.error(f"{e} when finding expiry from base")
+        print_exc()
+
+
+# to be removed
 def find_base_expiries() -> list:
     """3. populate unique basename (expiries) for the UI from csv
 
@@ -138,7 +164,6 @@ def find_base_expiries() -> list:
         for basename in D_SYMBOL.keys():
             file_path = f"{S_DATA}/CE/{basename}.csv"
             df = pd.read_csv(file_path)
-            # Extract the keys from your D_SYMBOL dictionary
             formatted = basename + " (" + df["expiry"].astype(str) + ")"
             # Add unique values to our list
             all_symbols.extend(formatted.unique().tolist())
@@ -148,7 +173,7 @@ def find_base_expiries() -> list:
         print_exc()
 
 
-def find_strike_from_base_expiry(base_expiry) -> dict:
+def find_strike_from_base_expiry(basename, expiry) -> dict:
     """4. get data dependant drop downs
 
     returns:
@@ -156,8 +181,6 @@ def find_strike_from_base_expiry(base_expiry) -> dict:
         with values as strike prices
     """
     try:
-        lst = base_expiry.split(" ")
-        basename, expiry = lst[0], lst[1].replace("(", "").replace(")", "")
         dct = {}
         for option_type in ["CE", "PE"]:
             file_path = f"{S_DATA}/{option_type}/{basename}.csv"
@@ -171,7 +194,7 @@ def find_strike_from_base_expiry(base_expiry) -> dict:
 
 
 def find_symbolinfo(
-    ce_or_pe: OptionType, base_expiry: str, start: int, num_of_strikes: int
+    ce_or_pe: OptionType, basename: str, expiry: str, start: int, num_of_strikes: int
 ) -> pd.DataFrame:
     """5. helper function to find symbol infos based on the request from UI
 
@@ -186,15 +209,11 @@ def find_symbolinfo(
     """
     try:
         # Parsing the input
-        lst = base_expiry.split(" ")
-        basename, expiry = lst[0], lst[1].replace("(", "").replace(")", "")
-
         # Load the CSV
         csv_file = f"{S_DATA}{ce_or_pe}/{basename}.csv"
         df = pd.read_csv(csv_file)
-
         # 1. Filter by expiry first
-        df = df[df["expiry"] == expiry].reset_index(drop=True)
+        df = df[df["expiry"] == str(expiry)].reset_index(drop=True)
 
         # 2. Find the index of the row where 'strike' equals 'start'
         # We use .index[0] to get the first occurrence
@@ -212,13 +231,13 @@ def find_symbolinfo(
 
         return df_sliced
     except Exception as e:
-        logging.error(f"{e}rror in find trading symbol")
+        logging.error(f"{e} error in find trading symbol")
         print_exc()
         return pd.DataFrame()
 
 
 def find_call_and_put_from_dropdown(
-    base_expiry: str, ce_start: int, pe_start: int, num_of_strikes: int
+    basename: str, expiry: str, ce_start: int, pe_start: int, num_of_strikes: int
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """6. wrapper to get symbol info dataframes
 
@@ -235,13 +254,15 @@ def find_call_and_put_from_dropdown(
         df_ce = find_symbolinfo(
             ce_or_pe="CE",
             start=ce_start,
-            base_expiry=base_expiry,
+            basename=basename,
+            expiry=expiry,
             num_of_strikes=num_of_strikes,
         )
         df_pe = find_symbolinfo(
             ce_or_pe="PE",
             start=pe_start,
-            base_expiry=base_expiry,
+            basename=basename,
+            expiry=expiry,
             num_of_strikes=num_of_strikes,
         )
         return df_ce, df_pe
