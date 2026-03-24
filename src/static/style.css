@@ -212,6 +212,9 @@ th {
     transition: all 0.2s ease;
 }
 
+.side-btn:active {
+    transform: scale(0.9);
+}
 /* Buy Mode Styles */
 .buy-mode {
     background-color: var(--color-pos) !important;
@@ -231,3 +234,5 @@ th {
 .sell-mode-active .pe-check {
     accent-color: var(--color-neg);
 }
+
+

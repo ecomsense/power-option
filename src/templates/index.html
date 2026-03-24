@@ -4,7 +4,6 @@
         <title>Power Option</title>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link rel="stylesheet" href="/static/style.css" />
         <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.development.js"></script>
     </head>
     <body>
@@ -51,7 +50,7 @@
                             value="1"
                         />
                         <button
-                            id="side-toggle"
+                            id="main-side-toggle"
                             class="btn side-btn buy-mode"
                             onclick="toggleSide('diff')"
                         >
@@ -155,6 +154,8 @@
                 <div id="chart-container"></div>
             </div>
         </div>
+        <link rel="stylesheet" href="/static/style.css" />
+        <script src="/static/toggle.js"></script>
         <script src="/static/dashboard.js"></script>
         <script src="/static/dropdown.js"></script>
     </body>

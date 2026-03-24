@@ -28,20 +28,24 @@ def update_metadata(kwargs):
     for _, row in df_ce.iterrows():
         t = row["instrument_token"]
         new_tokens.append(t)
-        app.state.METADATA[t] = {
-            "strike": row["strike"],
-            "type": "CE",
-            "prev": Helper.history(t),
-        }
+        hist = Helper.history(t)
+        if hist > 0:
+            app.state.METADATA[t] = {
+                "strike": row["strike"],
+                "type": "CE",
+                "prev": hist,
+            }
 
     for _, row in df_pe.iterrows():
         t = row["instrument_token"]
         new_tokens.append(t)
-        app.state.METADATA[t] = {
-            "strike": row["strike"],
-            "type": "PE",
-            "prev": Helper.history(t),
-        }
+        hist = Helper.history(t)
+        if hist > 0:
+            app.state.METADATA[t] = {
+                "strike": row["strike"],
+                "type": "PE",
+                "prev": hist,
+            }
     return new_tokens
 
 
@@ -60,19 +64,6 @@ async def lifespan(app: FastAPI):
         app.state.METADATA = {}
 
         app.state.checkbox = {"main": 1, "hedge": 1}
-
-        """
-        kwargs = dict(
-            base_expiry="BANKNIFTY (2026-03-30)",
-            ce_start=60600,
-            pe_start=60600,
-            num_of_strikes=10,
-        )
-
-        new_tokens = update_metadata(kwargs)
-        app.state.SUBSCRIBED["main"] = new_tokens
-        app.state.SUBSCRIBED["hedge"] = new_tokens
-        """
 
         # 4. Initialize WebSocket Manager
         # We assign it to app.state.ws so the broadcaster can find it
