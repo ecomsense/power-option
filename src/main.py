@@ -88,6 +88,54 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
 
+@app.post("/order_place")
+async def order_place(payload: dict = Body(...)):
+    try:
+        incoming_orders = payload.get(
+            "orders", []
+        )  # List of {'type': 'CE', 'strike': 22000}
+        qty = payload.get("quantity", 1)
+        side = payload.get("transaction_type")
+
+        # 1. Access your current metadata
+        metadata = app.state.METADATA
+
+        executed_count = 0
+        for item in incoming_orders:
+            target_strike = item["strike"]
+            target_type = item["type"]
+
+            # 2. Reverse Lookup: Find the token that matches this strike and type
+            # Metadata is { token: { 'strike': 22000, 'type': 'CE', ... } }
+            token = next(
+                (
+                    t
+                    for t, data in metadata.items()
+                    if data["strike"] == target_strike and data["type"] == target_type
+                ),
+                None,
+            )
+
+            if token:
+                # 3. Fire the order using the found token
+                logging.info(
+                    f"Firing {side} for {target_type} {target_strike} (Token: {token})"
+                )
+
+                # kite.place_order(token=token, quantity=qty, transaction_type=side, ...)
+                executed_count += 1
+            else:
+                logging.warning(
+                    f"Could not find token for {target_type} {target_strike}"
+                )
+
+        return {"status": "success", "executed": executed_count}
+
+    except Exception as e:
+        logging.error(f"Order Execution Error: {e}")
+        return {"status": "error", "message": str(e)}
+
+
 @app.post("/update-subscription")
 async def update_subscription(payload: dict = Body(...)):
     try:

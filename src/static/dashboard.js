@@ -167,43 +167,6 @@ function getColorClass(val) {
     return val < 0 ? "neg" : "pos";
 }
 
-// Logic for update buttons (Preserving unified symbol truth)
-function updateDiff() {
-    sendSub("DIFF", "base-strike", "num-strikes", "diff-call-put");
-}
-function updateHedge() {
-    sendSub(
-        "HEDGE",
-        "hedge-base-strike",
-        "hedge-num-strikes",
-        "hedge-call-put",
-    );
-}
-
-/*
-function sendSub(ns, baseId, qtyId, radioName) {
-    const sym = document.getElementById("symbol-select").value;
-    const base = document.getElementById(baseId).value;
-    const qty = document.getElementById(qtyId).value;
-    const type = document.querySelector(
-        `input[name="${radioName}"]:checked`,
-    ).value;
-
-    if (socket && socket.readyState === WebSocket.OPEN) {
-        socket.send(
-            JSON.stringify({
-                action: "SUBSCRIBE",
-                namespace: ns,
-                symbol: sym,
-                base_strike: parseInt(base),
-                num_strikes: parseInt(qty),
-                option_type: type,
-            }),
-        );
-    }
-}
-*/
-
 /**
  * Unified subscription updater
  * @param {string} side - Must be 'main' or 'hedge' to match HTML IDs
@@ -234,3 +197,92 @@ async function updateSubscription(side) {
         console.error("Subscription update failed:", error);
     }
 }
+
+/**
+ * Collects checked strikes by parsing existing element IDs
+ */
+async function processBatchOrders(tableId, modeType, qtyId, isSquareOff = false) {
+    const table = document.getElementById(tableId);
+    const checkedBoxes = table.querySelectorAll('tbody input[type="checkbox"]:checked');
+    const lots = document.getElementById(qtyId).value;
+    
+    let side = getTableMode(modeType); // From toggle.js
+    if (isSquareOff) side = (side === 'BUY') ? 'SELL' : 'BUY';
+
+    if (checkedBoxes.length === 0) {
+        alert("Please select at least one strike!");
+        return;
+    }
+
+    // Parse IDs like "cb-diff-ce-22000"
+    const orderList = Array.from(checkedBoxes).map(cb => {
+        const parts = cb.id.split('-'); 
+        return {
+            type: parts[2].toUpperCase(), // "ce" -> "CE"
+            strike: parseInt(parts[3])    // "22000" -> 22000
+        };
+    });
+
+    const payload = {
+        orders: orderList,
+        quantity: parseInt(lots),
+        transaction_type: side,
+        tag: modeType
+    };
+
+    try {
+        await fetch('/order_place', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        console.log(`Sent ${orderList.length} ${side} orders for ${modeType}`);
+    } catch (error) {
+        console.error("Order request failed:", error);
+    }
+}
+
+
+// Button Mappings
+function diffFire()   { processBatchOrders('diffTable', 'diff', 'main-qty', false); }
+function diffSquare() { processBatchOrders('diffTable', 'diff', 'main-qty', true); }
+function hedgeFire()  { processBatchOrders('hedgeTable', 'hedge', 'hedge-qty', false); }
+function hedgeSquare(){ processBatchOrders('hedgeTable', 'hedge', 'hedge-qty', true); }
+
+
+
+// Logic for update buttons (Preserving unified symbol truth)
+/*
+function updateDiff() {
+    sendSub("DIFF", "base-strike", "num-strikes", "diff-call-put");
+}
+function updateHedge() {
+    sendSub(
+        "HEDGE",
+        "hedge-base-strike",
+        "hedge-num-strikes",
+        "hedge-call-put",
+    );
+}
+function sendSub(ns, baseId, qtyId, radioName) {
+    const sym = document.getElementById("symbol-select").value;
+    const base = document.getElementById(baseId).value;
+    const qty = document.getElementById(qtyId).value;
+    const type = document.querySelector(
+        `input[name="${radioName}"]:checked`,
+    ).value;
+
+    if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(
+            JSON.stringify({
+                action: "SUBSCRIBE",
+                namespace: ns,
+                symbol: sym,
+                base_strike: parseInt(base),
+                num_strikes: parseInt(qty),
+                option_type: type,
+            }),
+        );
+    }
+
+*/
