@@ -1,6 +1,7 @@
 import asyncio
 from contextlib import asynccontextmanager
 
+import httpx  # Ensure you run: pip install httpx
 import uvicorn
 
 # Assuming these are your existing local modules
@@ -12,7 +13,6 @@ from fastapi.templating import Jinja2Templates
 from symbols import (
     dump_basename_from_exchange,
     find_base,
-    # find_base_expiries,
     find_expiry_from_base,
     find_strike_from_base_expiry,
     find_call_and_put_from_dropdown,
@@ -88,51 +88,77 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
 
+async def send_to_webhook_async(message: str, url: str, timeout: int):
+    async with httpx.AsyncClient() as client:
+        return await client.post(url, data=message, timeout=timeout)
+
+
 @app.post("/order_place")
 async def order_place(payload: dict = Body(...)):
     try:
-        incoming_orders = payload.get(
-            "orders", []
-        )  # List of {'type': 'CE', 'strike': 22000}
-        qty = payload.get("quantity", 1)
-        side = payload.get("transaction_type")
+        # 3. Handle Webhook Logic (Looping for Exit, Batching for Entry)
+        webhook_url = "http://api.algobaba.com/tv/QHC1C-Q5AHT-4MXN5-2UKHK"
+        timeout = 30
+        default_quantity = 2
 
-        # 1. Access your current metadata
-        metadata = app.state.METADATA
+        incoming_orders = payload.get("orders", [])
+        lots = payload.get("quantity", default_quantity)
+        side = payload.get("transaction_type")  # 'BUY' or 'SELL'
+        is_square = payload.get("is_square", False)  # New flag from JS
 
-        executed_count = 0
+        # 1. Map to your specific Order Codes
+        # LE: Long Entry, SE: Short Entry, LX: Long Exit, SX: Short Exit
+        if side == "BUY":
+            order_type = "SX" if is_square else "LE"
+        else:
+            order_type = "LX" if is_square else "SE"
+
+        # 2. Reverse Lookup for Symbols
+        rows_to_process = []
         for item in incoming_orders:
-            target_strike = item["strike"]
-            target_type = item["type"]
-
-            # 2. Reverse Lookup: Find the token that matches this strike and type
-            # Metadata is { token: { 'strike': 22000, 'type': 'CE', ... } }
             token = next(
                 (
                     t
-                    for t, data in metadata.items()
-                    if data["strike"] == target_strike and data["type"] == target_type
+                    for t, data in app.state.METADATA.items()
+                    if data["strike"] == item["strike"] and data["type"] == item["type"]
                 ),
                 None,
             )
 
             if token:
-                # 3. Fire the order using the found token
-                logging.info(
-                    f"Firing {side} for {target_type} {target_strike} (Token: {token})"
+                # We extract the 'symbol' and 'stag' from your METADATA
+                # Ensure your update_metadata function stores these!
+                rows_to_process.append(
+                    {
+                        "symbol": app.state.METADATA[token].get("symbol", "UNKNOWN"),
+                        "stag": "MAIN" if payload.get("tag") == "diff" else "HEDGE",
+                        "qty": lots,
+                    }
                 )
 
-                # kite.place_order(token=token, quantity=qty, transaction_type=side, ...)
-                executed_count += 1
-            else:
-                logging.warning(
-                    f"Could not find token for {target_type} {target_strike}"
-                )
+        if not rows_to_process:
+            return {"status": "error", "message": "No valid symbols found"}
 
-        return {"status": "success", "executed": executed_count}
+        if order_type in {"LX", "SX"}:
+            # Individual calls for Exits
+            for row in rows_to_process:
+                msg = f"TYPE:{order_type},SYMBOL:{row['symbol']},STAG:{row['stag']},QTY:{row['qty']}"
+                await send_to_webhook_async(msg, webhook_url, timeout)
+                logging.info(f"Exit Order Sent: {msg}")
+        else:
+            # Batch call for Entries
+            parts = [
+                f"TYPE:{order_type},SYMBOL:{r['symbol']},STAG:{r['stag']},QTY:{r['qty']}"
+                for r in rows_to_process
+            ]
+            msg = ";".join(parts)
+            await send_to_webhook_async(msg, webhook_url, timeout)
+            logging.info(f"Entry Batch Sent: {msg}")
+
+        return {"status": "success", "order_type": order_type}
 
     except Exception as e:
-        logging.error(f"Order Execution Error: {e}")
+        logging.error(f"Webhook Order Error: {e}")
         return {"status": "error", "message": str(e)}
 
 
