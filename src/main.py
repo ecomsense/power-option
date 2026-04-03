@@ -203,8 +203,9 @@ async def update_subscription(payload: dict = Body(...)):
 @app.get("/")
 async def get(request: Request):
     symbols = find_base()
+
     return templates.TemplateResponse(
-        "index.html", {"request": request, "symbols": symbols}
+        request=request, name="index.html", context={"symbols": symbols}
     )
 
 
@@ -333,12 +334,15 @@ def assemble_table_rows(side, ticks):
 if __name__ == "__main__":
     try:
         # reload=False is better for production/stable testing to avoid double-triggers
-        uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
+        uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=False)
+
     except KeyboardInterrupt:
         # This catch happens when you press Ctrl+C
         logging.info("Power-Option Server stopped by user (Ctrl+C).")
+
     except Exception as e:
         # Use an f-string or comma to properly log the error object
         logging.error(f"Error in main: {e}")
+
     finally:
         logging.info("Cleaning up resources... Shutdown complete.")
