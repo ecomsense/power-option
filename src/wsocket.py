@@ -1,5 +1,4 @@
 from constants import logging
-from pprint import pprint
 
 
 class Wsocket:
@@ -10,7 +9,8 @@ class Wsocket:
         self._unsubscribe = None
 
         self.tokens = tokens
-        self.kws = api.kite.kws()
+        # self.kws = api.kite.kws()
+        self.kws = api.kws
 
         self.kws.on_ticks = self.on_ticks
         self.kws.on_connect = self.on_connect

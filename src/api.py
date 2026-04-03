@@ -3,6 +3,8 @@ from traceback import print_exc
 import pendulum as pdlm
 from constants import O_CNFG, O_FUTL, S_DATA
 
+tokpath = S_DATA + "token.txt"
+
 
 def get_bypass():
     from stock_brokers.bypass.bypass import Bypass
@@ -11,7 +13,6 @@ def get_bypass():
         if isinstance(O_CNFG, dict):
             dct = O_CNFG["bypass"]
 
-            tokpath = S_DATA + dct["userid"] + ".txt"
             enctoken = None
             if not O_FUTL.is_file_not_2day(tokpath):
                 print(f"{tokpath} modified today ... reading {enctoken}")
@@ -33,7 +34,7 @@ def get_bypass():
     except Exception as e:
         print(f"unable to create bypass object {e}")
         remove_token(tokpath)
-        # get_bypass()
+        get_bypass()
         print_exc()
     else:
         return bypass
@@ -42,6 +43,7 @@ def get_bypass():
 def get_zerodha():
     try:
         from stock_brokers.zerodha.zerodha import Zerodha
+        from kiteconnect import KiteTicker
 
         zera = None
         if isinstance(O_CNFG, dict):
@@ -56,10 +58,12 @@ def get_zerodha():
             )
             if not zera.authenticate():
                 raise Exception("unable to authenticate")
+            else:
+                zera.kws = KiteTicker(zera.api_key, zera.enctoken)
 
     except Exception as e:
         print(f"exception while creating zerodha object {e}")
-        # remove_token(tokpath)
+        remove_token(tokpath)
         get_zerodha()
     else:
         return zera
