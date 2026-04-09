@@ -1,6 +1,6 @@
+webhook_url: https://stoxxo.com 
+tag: poweroption
+timeout: 30
 log:
-  show: True
-  level: 30
-exchange: NSE
-base: BANKNIFTY
-live: 1
+  show: False
+  level: 10

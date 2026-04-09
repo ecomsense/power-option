@@ -66,25 +66,6 @@ def yml_to_obj(arg=None):
         return O_FUTL.get_lst_fm_yml(file)
 
 
-def read_yml():
-    try:
-        O_CNFG = yml_to_obj()
-        O_SETG = yml_to_obj("settings.yml")
-    except Exception as e:
-        print(e)
-        print_exc()
-        __import__("sys").exit(1)
-    else:
-        return O_CNFG, O_SETG
-
-
-O_CNFG, O_SETG = read_yml()
-print("broker credentials" + "\n" + "*****************")
-pprint(O_CNFG)
-
-print("settings " + "\n" + "*****************")
-pprint(O_SETG)
-
 D_SYMBOL = O_FUTL.get_lst_fm_yml(S_SYM)
 print("symbols " + "\n" + "*****************")
 pprint(D_SYMBOL)
@@ -98,6 +79,7 @@ def set_logger():
         based on user choice from settings
     """
     try:
+        O_SETG = yml_to_obj("settings.yml")
         if O_SETG.get("log", None):
             level = O_SETG["log"].get("level", 10)
             if not O_SETG["log"].get("show", None):

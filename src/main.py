@@ -6,7 +6,7 @@ import uvicorn
 
 # Assuming these are your existing local modules
 from api import Helper
-from constants import D_SYMBOL, logging
+from constants import D_SYMBOL, logging, yml_to_obj
 from fastapi import Body, FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -55,6 +55,12 @@ def update_metadata(kwargs):
 async def lifespan(app: FastAPI):
     try:
         await asyncio.sleep(10)
+
+        O_SETG = yml_to_obj("settings.yml")
+
+        app.state.webhook_url = O_SETG["webhook_url"]
+        app.state.timeout = O_SETG["timeout"]
+
         # 1. Initialize symbols
         for kwargs in D_SYMBOL.values():
             dump_basename_from_exchange(kwargs["name"], kwargs["exchange"])
@@ -88,21 +94,18 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
 
-async def send_to_webhook_async(message: str, url: str, timeout: int):
+async def send_to_webhook_async(message: str):
     async with httpx.AsyncClient() as client:
-        return await client.post(url, data=message, timeout=timeout)
+        webhook_url = app.state.webhook_url
+        timeout = app.state.timeout
+        return await client.post(url=webhook_url, data=message, timeout=timeout)
 
 
 @app.post("/order_place")
 async def order_place(payload: dict = Body(...)):
     try:
-        # 3. Handle Webhook Logic (Looping for Exit, Batching for Entry)
-        webhook_url = "http://api.algobaba.com/tv/QHC1C-Q5AHT-4MXN5-2UKHK"
-        timeout = 30
-        default_quantity = 2
-
         incoming_orders = payload.get("orders", [])
-        lots = payload.get("quantity", default_quantity)
+        lots = payload.get("quantity")
         side = payload.get("transaction_type")  # 'BUY' or 'SELL'
         is_square = payload.get("is_square", False)  # New flag from JS
 
@@ -143,7 +146,7 @@ async def order_place(payload: dict = Body(...)):
             # Individual calls for Exits
             for row in rows_to_process:
                 msg = f"TYPE:{order_type},SYMBOL:{row['symbol']},STAG:{row['stag']},QTY:{row['qty']}"
-                await send_to_webhook_async(msg, webhook_url, timeout)
+                await send_to_webhook_async(msg)
                 logging.info(f"Exit Order Sent: {msg}")
         else:
             # Batch call for Entries
@@ -152,7 +155,7 @@ async def order_place(payload: dict = Body(...)):
                 for r in rows_to_process
             ]
             msg = ";".join(parts)
-            await send_to_webhook_async(msg, webhook_url, timeout)
+            await send_to_webhook_async(msg)
             logging.info(f"Entry Batch Sent: {msg}")
 
         return {"status": "success", "order_type": order_type}
