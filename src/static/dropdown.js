@@ -3,24 +3,52 @@
  * Handles the cascading updates: Symbol -> Expiry -> Strikes
  */
 
+const EMPTY_OPTION = '<option value="">-- Select --</option>';
+
+function clearExpiryAndStrikes() {
+    document.getElementById("expiry-select").innerHTML = EMPTY_OPTION;
+    const ceSelects = ["main-call-base", "hedge-call-base"];
+    const peSelects = ["main-put-base", "hedge-put-base"];
+    ceSelects.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = EMPTY_OPTION;
+    });
+    peSelects.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = EMPTY_OPTION;
+    });
+}
+
+function clearStrikes() {
+    const ceSelects = ["main-call-base", "hedge-call-base"];
+    const peSelects = ["main-put-base", "hedge-put-base"];
+    ceSelects.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = EMPTY_OPTION;
+    });
+    peSelects.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = EMPTY_OPTION;
+    });
+}
+
 async function updateExpiryDropdown() {
     const symbol = document.getElementById("symbol-select").value;
     const expirySelect = document.getElementById("expiry-select");
+
+    // Clear expiry and strikes when symbol changes
+    clearExpiryAndStrikes();
 
     try {
         const response = await fetch(`/get-expiries/${encodeURIComponent(symbol)}`);
         const expiries = await response.json();
 
-        // 1. Populate the Expiry dropdown
-        expirySelect.innerHTML = expiries.map(
+        // 1. Populate the Expiry dropdown with empty first
+        expirySelect.innerHTML = EMPTY_OPTION + expiries.map(
             (e) => `<option value="${e}">${e}</option>`
         ).join("");
 
-        // 2. Trigger the Strike update immediately for the first expiry in the list
-        if (expiries.length > 0) {
-            updateStrikeDropdowns();
-        }
-        
+        // 2. Trigger the Strike update when user selects expiry (not auto anymore)
     } catch (error) {
         console.error("Error fetching expiries:", error);
     }
@@ -29,6 +57,9 @@ async function updateExpiryDropdown() {
 async function updateStrikeDropdowns() {
     const symbol = document.getElementById("symbol-select").value;
     const expiry = document.getElementById("expiry-select").value;
+
+    // Clear strikes when expiry changes
+    clearStrikes();
 
     // Safety check: Don't fetch if expiry isn't selected yet
     if (!expiry) return;
@@ -42,21 +73,21 @@ async function updateStrikeDropdowns() {
         const ceSelects = ["main-call-base", "hedge-call-base"];
         const peSelects = ["main-put-base", "hedge-put-base"];
 
-        // Populate CE dropdowns
+        // Populate CE dropdowns with empty first
         ceSelects.forEach((id) => {
             const select = document.getElementById(id);
             if (select) {
-                select.innerHTML = data.CE.map(
+                select.innerHTML = EMPTY_OPTION + data.CE.map(
                     (s) => `<option value="${s}">${s}</option>`
                 ).join("");
             }
         });
 
-        // Populate PE dropdowns
+        // Populate PE dropdowns with empty first
         peSelects.forEach((id) => {
             const select = document.getElementById(id);
             if (select) {
-                select.innerHTML = data.PE.map(
+                select.innerHTML = EMPTY_OPTION + data.PE.map(
                     (s) => `<option value="${s}">${s}</option>`
                 ).join("");
             }
@@ -70,5 +101,7 @@ async function updateStrikeDropdowns() {
 
 // Initialize the chain on page load
 document.addEventListener("DOMContentLoaded", () => {
+    // Initialize with empty options
+    clearExpiryAndStrikes();
     updateExpiryDropdown();
 });

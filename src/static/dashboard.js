@@ -172,13 +172,24 @@ function getColorClass(val) {
  * @param {string} side - Must be 'main' or 'hedge' to match HTML IDs
  */
 async function updateSubscription(side) {
+    // Validate all required fields are selected
+    const symbol = document.getElementById("symbol-select").value;
+    const expiry = document.getElementById("expiry-select").value;
+    const ce_start = document.getElementById(`${side}-call-base`).value;
+    const pe_start = document.getElementById(`${side}-put-base`).value;
+
+    if (!symbol || !expiry || !ce_start || !pe_start) {
+        alert("Please select Symbol, Expiry, Call Strike, and Put Strike");
+        return;
+    }
+
     // Collecting values manually using the side as the ID prefix
     const payload = {
         side: side,
-        basename: document.getElementById("symbol-select").value,
-        expiry: document.getElementById("expiry-select").value,
-        ce_start: document.getElementById(`${side}-call-base`).value,
-        pe_start: document.getElementById(`${side}-put-base`).value,
+        basename: symbol,
+        expiry: expiry,
+        ce_start: ce_start,
+        pe_start: pe_start,
         num_of_strikes: document.getElementById(`${side}-num`).value, // Assuming same count for both
     };
 
