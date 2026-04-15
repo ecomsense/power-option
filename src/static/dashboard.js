@@ -57,14 +57,22 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    socket = new WebSocket(`ws://${window.location.host}/ws`);
+socket = new WebSocket(`ws://${window.location.host}/ws`);
     socket.onmessage = (event) => {
         const data = JSON.parse(event.data);
         if (data.type === "UPDATE") {
-            // FIX: Map incoming data to separate table handlers
             renderDashboard(data.diff_rows || [], data.hedge_rows || [], data.main_fresh || 0, data.hedge_fresh || 0);
         }
     };
+    socket.onclose = () => {
+        console.log("WebSocket closed");
+    };
+});
+
+window.addEventListener("beforeunload", () => {
+    if (socket) {
+        socket.close();
+    }
 });
 
 
