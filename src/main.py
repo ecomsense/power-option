@@ -6,8 +6,8 @@ import uvicorn
 
 # Assuming these are your existing local modules
 from api import Helper
-from constants import D_SYMBOL, logging, yml_to_obj
-from fastapi import Body, FastAPI, Request, WebSocket, WebSocketDisconnect
+from constants import D_SYMBOL, S_LOG, logging, yml_to_obj
+from fastapi import Body, FastAPI, Request, Response, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from symbols import (
@@ -230,6 +230,17 @@ async def get_strikes(basename: str, expiry: str):
     except Exception as e:
         logging.error(f"Error fetching strikes: {e}")
         return {"CE": [], "PE": []}
+
+
+@app.get("/logs")
+async def get_logs():
+    try:
+        with open(S_LOG, "r") as f:
+            lines = f.readlines()[-200:]
+        return Response(content="".join(lines), media_type="text/plain")
+    except Exception as e:
+        logging.error(f"Error reading logs: {e}")
+        return Response(content=f"Error reading logs: {e}", media_type="text/plain")
 
 
 @app.websocket("/ws")
