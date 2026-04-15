@@ -35,7 +35,7 @@ class Wsocket:
     def on_ticks(self, ws, ticks):
         try:
             # Log ALL incoming ticks to see what's coming
-            logging.info(f"ALL TICKS: {ticks}")
+            logging.debug(f"ALL TICKS: {ticks}")
             
             new_data = {}
             for tick in ticks:
@@ -51,7 +51,7 @@ class Wsocket:
 
             # Print received quotes for debugging
             if new_data:
-                logging.info(f"TICKS RECEIVED: {new_data}")
+                logging.debug(f"TICKS RECEIVED: {new_data}")
 
             # Update persistent cache if we found any valid price data
             if new_data:

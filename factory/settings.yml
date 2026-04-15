@@ -2,5 +2,5 @@ webhook_url: https://stoxxo.com
 tag: poweroption
 timeout: 30
 log:
-  show: False
+  show: True
   level: 10
