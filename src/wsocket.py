@@ -46,6 +46,10 @@ class Wsocket:
                 elif "last_price" in tick:
                     new_data[token] = tick["last_price"]
 
+            # Print received quotes for debugging
+            if new_data:
+                print(f"TICKS RECEIVED: {new_data}")
+
             # Update persistent cache if we found any valid price data
             if new_data:
                 self._ltp = self._ltp | new_data
