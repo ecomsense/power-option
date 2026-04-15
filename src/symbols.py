@@ -146,7 +146,8 @@ def find_expiry_from_base(basename):
         df = pd.read_csv(file_path)
         formatted = df["expiry"].astype(str)
         expiries = formatted.unique().tolist()
-        expiries.sort(reverse=True)
+        # Convert to date, sort newest first, convert back to string
+        expiries = sorted(expiries, key=lambda x: __import__("datetime").datetime.strptime(x, "%Y-%m-%d"), reverse=True)
         return expiries
     except Exception as e:
         logging.error(f"{e} when finding expiry from base")
