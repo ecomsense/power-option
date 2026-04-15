@@ -34,6 +34,9 @@ class Wsocket:
 
     def on_ticks(self, ws, ticks):
         try:
+            # Log ALL incoming ticks to see what's coming
+            logging.info(f"ALL TICKS: {ticks}")
+            
             new_data = {}
             for tick in ticks:
                 token = tick["instrument_token"]
