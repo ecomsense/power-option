@@ -34,9 +34,6 @@ class Wsocket:
 
     def on_ticks(self, ws, ticks):
         try:
-            # Log ALL incoming ticks to see what's coming
-            logging.debug(f"ALL TICKS: {ticks}")
-            
             new_data = {}
             for tick in ticks:
                 token = tick["instrument_token"]
@@ -49,12 +46,8 @@ class Wsocket:
                 elif "last_price" in tick:
                     new_data[token] = tick["last_price"]
 
-            # Print received quotes for debugging
             if new_data:
                 logging.debug(f"TICKS RECEIVED: {new_data}")
-
-            # Update persistent cache if we found any valid price data
-            if new_data:
                 self._ltp = self._ltp | new_data
 
         except Exception as e:
