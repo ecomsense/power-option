@@ -348,5 +348,7 @@ def assemble_table_rows(side, ticks):
 
 
 if __name__ == "__main__":
-    # Run externally with: python -m uvicorn main:app --host 0.0.0.0 --port 8000
-    pass
+    # With nginx proxy: python -m uvicorn main:app --host 127.0.0.1 --port 8000
+    # Without proxy (direct access): python -m uvicorn main:app --host 0.0.0.0 --port 8000
+    import uvicorn
+    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=False)
