@@ -265,7 +265,7 @@ function updateHedge() {
     );
 }
 function sendSub(ns, baseId, qtyId, radioName) {
-    const sym = document.getElementById("symbol-select").value;
+const sym = document.getElementById("symbol-select").value;
     const base = document.getElementById(baseId).value;
     const qty = document.getElementById(qtyId).value;
     const type = document.querySelector(
@@ -284,5 +284,23 @@ function sendSub(ns, baseId, qtyId, radioName) {
             }),
         );
     }
+}
+
+async function showLogsModal() {
+    const modal = document.getElementById("logsModal");
+    const content = document.getElementById("logsContent");
+    modal.style.display = "block";
+    content.textContent = "Loading...";
+    try {
+        const resp = await fetch("/logs");
+        content.textContent = await resp.text();
+    } catch(e) {
+        content.textContent = "Error loading logs: " + e;
+    }
+}
+
+function closeLogsModal() {
+    document.getElementById("logsModal").style.display = "none";
+}
 
 */
