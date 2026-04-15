@@ -261,42 +261,6 @@ function hedgeFire()  { processBatchOrders('hedgeTable', 'hedge', 'hedge-qty', f
 function hedgeSquare(){ processBatchOrders('hedgeTable', 'hedge', 'hedge-qty', true); }
 
 
-
-// Logic for update buttons (Preserving unified symbol truth)
-/*
-function updateDiff() {
-    sendSub("DIFF", "base-strike", "num-strikes", "diff-call-put");
-}
-function updateHedge() {
-    sendSub(
-        "HEDGE",
-        "hedge-base-strike",
-        "hedge-num-strikes",
-        "hedge-call-put",
-    );
-}
-function sendSub(ns, baseId, qtyId, radioName) {
-const sym = document.getElementById("symbol-select").value;
-    const base = document.getElementById(baseId).value;
-    const qty = document.getElementById(qtyId).value;
-    const type = document.querySelector(
-        `input[name="${radioName}"]:checked`,
-    ).value;
-
-    if (socket && socket.readyState === WebSocket.OPEN) {
-        socket.send(
-            JSON.stringify({
-                action: "SUBSCRIBE",
-                namespace: ns,
-                symbol: sym,
-                base_strike: parseInt(base),
-                num_strikes: parseInt(qty),
-                option_type: type,
-            }),
-        );
-    }
-}
-
 async function showLogsModal() {
     const modal = document.getElementById("logsModal");
     const content = document.getElementById("logsContent");
@@ -313,5 +277,3 @@ async function showLogsModal() {
 function closeLogsModal() {
     document.getElementById("logsModal").style.display = "none";
 }
-
-*/
