@@ -95,10 +95,12 @@ templates = Jinja2Templates(directory="templates")
 
 
 async def send_to_webhook_async(message: str):
+    webhook_url = app.state.webhook_url
+    timeout = app.state.timeout
     async with httpx.AsyncClient() as client:
-        webhook_url = app.state.webhook_url
-        timeout = app.state.timeout
-        return await client.post(url=webhook_url, data=message, timeout=timeout)
+        response = await client.post(url=webhook_url, data=message, timeout=timeout)
+    logging.debug(f"WEBHOOK | URL: {webhook_url} | BODY: {message} | STATUS: {response.status_code}")
+    return response
 
 
 @app.post("/order_place")
