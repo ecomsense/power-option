@@ -48,7 +48,7 @@ class Wsocket:
 
             # Print received quotes for debugging
             if new_data:
-                print(f"TICKS RECEIVED: {new_data}")
+                logging.info(f"TICKS RECEIVED: {new_data}")
 
             # Update persistent cache if we found any valid price data
             if new_data:
