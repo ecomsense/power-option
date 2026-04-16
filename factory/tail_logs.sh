@@ -1,13 +1,6 @@
 #!/bin/bash
-# Simple all-logs watcher (needs sudo for nginx)
-
-# App logs
-tail -f ~/power-option/data/log.txt &
-
-# Gunicorn service logs
-journalctl -u fastapi_app -f --no-pager &
-
-# Nginx logs (needs sudo)
-sudo tail -f /var/log/nginx/access.log &
-
-wait
+# Watch app logs and nginx in separate windows (3 splits)
+multitail -s 3 \
+    ~/power-option/data/log.txt \
+    ~/power-option/data/log.txt \
+    /var/log/nginx/access.log
