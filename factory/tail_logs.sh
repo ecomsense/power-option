@@ -1,6 +1,8 @@
 #!/bin/bash
-# Watch app logs and nginx in separate windows (3 splits)
-multitail -s 3 \
-    ~/power-option/data/log.txt \
-    ~/power-option/data/log.txt \
-    /var/log/nginx/access.log
+# Create tmux with 3 panes: app, nginx, gunicorn
+tmux new-session -d -s logs 'tail -f ~/power-option/data/log.txt'
+tmux split-window -h 'tail -f /var/log/nginx/access.log'
+tmux select-pane -t 0
+tmux split-window -v 'journalctl -u fastapi_app -f --no-pager'
+tmux select-layout -t logs tiled
+tmux attach-session -t logs
