@@ -1,19 +1,13 @@
 #!/bin/bash
-# Usage: ./tail_logs.sh [app|nginx|all|svc]
-# Default: app only
+# Simple all-logs watcher (needs sudo for nginx)
 
-case "${1:-app}" in
-    app)
-        multitail ~/power-option/data/log.txt
-        ;;
-    nginx)
-        multitail /var/log/nginx/access.log /var/log/nginx/error.log
-        ;;
-    all)
-        multitail ~/power-option/data/log.txt -I /var/log/nginx/access.log
-        ;;
-    svc)
-        # Gunicorn service logs (no sudo needed)
-        journalctl -u fastapi_app -f --no-pager
-        ;;
-esac
+# App logs
+tail -f ~/power-option/data/log.txt &
+
+# Gunicorn service logs
+journalctl -u fastapi_app -f --no-pager &
+
+# Nginx logs (needs sudo)
+sudo tail -f /var/log/nginx/access.log &
+
+wait
