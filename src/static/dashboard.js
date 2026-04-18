@@ -9,7 +9,9 @@ let currentLine;
 let socket;
 
 document.addEventListener("DOMContentLoaded", () => {
-    // Checkboxes start unchecked by default
+    // Initialize toggles to unchecked (buy mode)
+    document.getElementById("main-side-toggle").checked = false;
+    document.getElementById("hedge-side-toggle").checked = false;
     
     const chartElement = document.getElementById("chart-container");
     if (chartElement) {

@@ -10,30 +10,21 @@ const tableModes = {
 };
 
 /**
- * Toggles the button state between Buy (B) and Sell (S)
+ * Toggles the button state between Buy and Sell
  * Handles visual classes and internal state.
  */
 function toggleSide(type) {
-    // Map the logic type to the specific HTML ID
-    const buttonId = type === 'diff' ? 'main-side-toggle' : 'hedge-side-toggle';
-    const btn = document.getElementById(buttonId);
+    const checkboxId = type === 'diff' ? 'main-side-toggle' : 'hedge-side-toggle';
+    const checkbox = document.getElementById(checkboxId);
     
-    if (!btn) return;
-
-    const isBuy = tableModes[type] === 'BUY';
+    if (!checkbox) return;
     
-    if (isBuy) {
-        // Switch to SELL
+    const isChecked = checkbox.checked;
+    
+    if (isChecked) {
         tableModes[type] = 'SELL';
-        btn.innerText = 'S';
-        btn.classList.remove('buy-mode');
-        btn.classList.add('sell-mode');
     } else {
-        // Switch to BUY
         tableModes[type] = 'BUY';
-        btn.innerText = 'B';
-        btn.classList.remove('sell-mode');
-        btn.classList.add('buy-mode');
     }
     
     console.log(`${type} table updated to: ${tableModes[type]}`);
