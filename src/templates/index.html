@@ -12,7 +12,7 @@
                 <div class="table-container diff-table-container">
                     <div class="top-control-bar">
                         <table class="control-table">
-                            <tr class="label-row">
+<tr class="label-row">
                                 <td>Symbol</td>
                                 <td>Expiry</td>
                                 <td>Call</td>
@@ -41,7 +41,11 @@
                                 <td>
                                     <input id="main-num" class="text2" type="number" value="10" />
                                 </td>
-<td>
+                                <td>
+                                    <input id="main-qty" class="text2" type="number" value="1" />
+                                </td>
+                                <td class="actions-cell">
+                                    <button class="btn" onclick="updateSubscription('main')">update</button>
                                     <label class="toggle-switch">
                                         <input type="checkbox" id="main-side-toggle" onchange="toggleSide('diff')">
                                         <span class="slider">
@@ -49,10 +53,6 @@
                                             <span class="label sell">sell</span>
                                         </span>
                                     </label>
-                                </td>
-                                <td class="actions-cell">
-                                    <button class="btn" onclick="updateSubscription('main')">update</button>
-                                    <button id="main-side-toggle" class="btn side-btn buy-mode" onclick="toggleSide('diff')">B</button>
                                     <button class="btn violet-btn" onclick="diffFire()">Fire</button>
                                     <button class="btn orange-btn" onclick="diffSquare()">Square</button>
                                 </td>
@@ -103,7 +103,11 @@
                                 <td>
                                     <input id="hedge-num" class="text2" type="number" value="10" />
                                 </td>
-<td>
+                                <td>
+                                    <input id="hedge-qty" class="text2" type="number" value="10" />
+                                </td>
+                                <td class="actions-cell">
+                                    <button class="btn" onclick="updateSubscription('hedge')">update</button>
                                     <label class="toggle-switch">
                                         <input type="checkbox" id="hedge-side-toggle" onchange="toggleSide('hedge')">
                                         <span class="slider">
@@ -111,10 +115,6 @@
                                             <span class="label sell">sell</span>
                                         </span>
                                     </label>
-                                </td>
-                                <td class="actions-cell">
-                                    <button class="btn" onclick="updateSubscription('hedge')">update</button>
-                                    <button id="hedge-side-toggle" class="btn side-btn buy-mode" onclick="toggleSide('hedge')">B</button>
                                     <button class="btn violet-btn" onclick="hedgeFire()">Hedge</button>
                                     <button class="btn orange-btn" onclick="hedgeSquare()">Square</button>
                                     <button class="btn" onclick="showLogsModal()">logs</button>
