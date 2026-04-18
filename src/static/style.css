@@ -135,6 +135,11 @@ td {
     text-align: center;
 }
 
+/* Row hover effect for better tracking */
+tbody tr:hover {
+    background-color: #2a2e39;
+}
+
 /* Sticky Header */
 th {
     background-color: var(--bg-header);
