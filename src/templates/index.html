@@ -71,7 +71,7 @@
                     <table id="diffTable">
                         <thead>
                             <tr>
-                                <th class="cb-cell">CE</th>
+                                <th class="cb-cell"><input type="checkbox" id="diff-ce-checkall" onchange="toggleColumn('diffTable', 0, this.checked)"></th>
                                 <th>Total Diff</th>
                                 <th>CE %</th>
                                 <th>CE Diff</th>
@@ -84,7 +84,7 @@
                                 <th>PE Diff</th>
                                 <th>PE %</th>
                                 <th>Total %</th>
-                                <th class="cb-cell">PE</th>
+                                <th class="cb-cell"><input type="checkbox" id="diff-pe-checkall" onchange="toggleColumn('diffTable', 13, this.checked)"></th>
                             </tr>
                         </thead>
                         <tbody id="diffBody"></tbody>
@@ -142,12 +142,12 @@
                     <table id="hedgeTable">
                         <thead>
                             <tr>
-                                <th class="cb-cell">CE</th>
+                                <th class="cb-cell"><input type="checkbox" id="hedge-ce-checkall" onchange="toggleColumn('hedgeTable', 0, this.checked)"></th>
                                 <th>CE LTP</th>
                                 <th>CE Strike</th>
                                 <th>PE Strike</th>
                                 <th>PE LTP</th>
-                                <th class="cb-cell">PE</th>
+                                <th class="cb-cell"><input type="checkbox" id="hedge-pe-checkall" onchange="toggleColumn('hedgeTable', 5, this.checked)"></th>
                             </tr>
                         </thead>
                         <tbody id="hedgeBody"></tbody>

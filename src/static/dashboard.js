@@ -285,3 +285,13 @@ async function showLogsModal() {
 function closeLogsModal() {
     document.getElementById("logsModal").style.display = "none";
 }
+
+function toggleColumn(tableId, colIndex, checked) {
+    const table = document.getElementById(tableId);
+    const rows = table.querySelectorAll("tbody tr");
+    rows.forEach(row => {
+        const cell = row.children[colIndex];
+        const checkbox = cell.querySelector("input[type='checkbox']");
+        if (checkbox) checkbox.checked = checked;
+    });
+}
