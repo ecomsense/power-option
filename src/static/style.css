@@ -80,18 +80,28 @@ a {
 }
 
 /* WebSocket Status Indicator */
-.ws-status {
-    font-size: 16px;
-    margin-right: 8px;
-    vertical-align: middle;
+.ltp-table-container {
+    overflow-y: auto;
+    position: relative;
+    background-color: var(--bg-table);
 }
 
-.ws-status.connected {
+.ltp-table-container .ws-status {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-size: 18px;
+    z-index: 50;
+}
+
+.ltp-table-container .ws-status.connected {
     color: var(--color-pos);
+    text-shadow: 0 0 5px var(--color-pos);
 }
 
-.ws-status.disconnected {
+.ltp-table-container .ws-status.disconnected {
     color: var(--color-neg);
+    text-shadow: 0 0 5px var(--color-neg);
 }
 
 .table-container {

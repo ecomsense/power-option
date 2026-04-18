@@ -78,6 +78,7 @@
 
                 <div class="table-container ltp-table-container">
                     <div class="top-control-bar">
+                        <span id="ws-status" class="ws-status disconnected">●</span>
                         <table class="control-table">
                             <tr class="label-row">
                                 <td>Call</td>
@@ -100,7 +101,6 @@
                                     <input id="hedge-qty" class="text2" type="number" value="10" />
                                 </td>
                                 <td class="actions-cell">
-                                    <span id="ws-status" class="ws-status disconnected">●</span>
                                     <button class="btn" onclick="updateSubscription('hedge')">update</button>
                                     <button id="hedge-side-toggle" class="btn side-btn buy-mode" onclick="toggleSide('hedge')">B</button>
                                     <button class="btn violet-btn" onclick="hedgeFire()">Hedge</button>
