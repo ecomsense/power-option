@@ -60,6 +60,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 socket = new WebSocket(`ws://${window.location.host}/ws`);
+    socket.onopen = () => {
+        updateConnectionStatus(true);
+    };
     socket.onmessage = (event) => {
         const data = JSON.parse(event.data);
         if (data.type === "UPDATE") {
@@ -68,8 +71,17 @@ socket = new WebSocket(`ws://${window.location.host}/ws`);
     };
     socket.onclose = () => {
         console.log("WebSocket closed");
+        updateConnectionStatus(false);
     };
 });
+
+function updateConnectionStatus(connected) {
+    const status = document.getElementById("ws-status");
+    if (status) {
+        status.className = connected ? "ws-status connected" : "ws-status disconnected";
+        status.textContent = connected ? "Connected" : "Disconnected";
+    }
+}
 
 window.addEventListener("beforeunload", () => {
     if (socket) {
