@@ -251,7 +251,6 @@ th {
     font-weight: bold;
     font-size: var(--text-xs);
     background-color: var(--btn);
-    height: 30px;
 }
 
 .btn:hover {
