@@ -6,6 +6,7 @@ pyotp
 pandas
 httpx
 pytest
+gunicorn
 git+https://github.com/ecomsense/stock-brokers
 git+https://github.com/pannet1/toolkit
 git+https://github.com/pannet1/kiteext
