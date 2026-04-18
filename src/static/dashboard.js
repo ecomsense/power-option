@@ -9,8 +9,8 @@ let currentLine;
 let socket;
 
 document.addEventListener("DOMContentLoaded", () => {
-    resetCheckAllForSide("main");
-    resetCheckAllForSide("hedge");
+    resetCheckAllForSide("main", true);
+    resetCheckAllForSide("hedge", true);
     
     const chartElement = document.getElementById("chart-container");
     if (chartElement) {
@@ -307,12 +307,12 @@ function resetCheckAllBoxes() {
     document.getElementById("hedge-pe-checkall").checked = false;
 }
 
-function resetCheckAllForSide(side) {
+function resetCheckAllForSide(side, defaultChecked = false) {
     if (side === "main") {
-        document.getElementById("diff-ce-checkall").checked = false;
-        document.getElementById("diff-pe-checkall").checked = false;
+        document.getElementById("diff-ce-checkall").checked = defaultChecked;
+        document.getElementById("diff-pe-checkall").checked = defaultChecked;
     } else if (side === "hedge") {
-        document.getElementById("hedge-ce-checkall").checked = false;
-        document.getElementById("hedge-pe-checkall").checked = false;
+        document.getElementById("hedge-ce-checkall").checked = defaultChecked;
+        document.getElementById("hedge-pe-checkall").checked = defaultChecked;
     }
 }
