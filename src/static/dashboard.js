@@ -211,7 +211,7 @@ async function updateSubscription(side) {
         const result = await response.json();
         if (result.status === "success") {
             console.log(`Successfully updated ${side} tokens.`);
-            resetCheckAllBoxes();
+            resetCheckAllForSide(side);
         }
     } catch (error) {
         console.error("Subscription update failed:", error);
@@ -302,4 +302,14 @@ function resetCheckAllBoxes() {
     document.getElementById("diff-pe-checkall").checked = false;
     document.getElementById("hedge-ce-checkall").checked = false;
     document.getElementById("hedge-pe-checkall").checked = false;
+}
+
+function resetCheckAllForSide(side) {
+    if (side === "main") {
+        document.getElementById("diff-ce-checkall").checked = false;
+        document.getElementById("diff-pe-checkall").checked = false;
+    } else if (side === "hedge") {
+        document.getElementById("hedge-ce-checkall").checked = false;
+        document.getElementById("hedge-pe-checkall").checked = false;
+    }
 }
