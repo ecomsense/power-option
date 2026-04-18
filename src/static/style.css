@@ -86,20 +86,12 @@ a {
     background-color: var(--bg-table);
 }
 
-.top-control-bar {
-    position: relative;
-}
-
-.top-control-bar .ws-status {
-    position: absolute;
-    top: 50%;
-    right: 120px;
-    transform: translateY(-50%);
+#ws-status {
+    text-align: center;
     font-size: 18px;
-    z-index: 50;
 }
 
-.ltp-table-container .ws-status.connected {
+#ws-status.connected {
     color: var(--color-pos);
     text-shadow: 0 0 5px var(--color-pos);
 }

@@ -95,6 +95,7 @@
                                 <td>Qty</td>
                                 <td>Mode</td>
                                 <td class="actions-label">Actions</td>
+                                <td id="ws-status" class="ws-status disconnected">●</td>
                             </tr>
                             <tr class="control-row">
                                 <td>
@@ -124,9 +125,9 @@
                                     <button class="btn orange-btn" onclick="hedgeSquare()">Square</button>
                                     <button class="btn" onclick="showLogsModal()">logs</button>
                                 </td>
+                                <td>&nbsp;</td>
                             </tr>
                         </table>
-                        <div id="ws-status" class="ws-status disconnected">●</div>
                     </div>
 
                     <table id="hedgeTable">
@@ -143,7 +144,6 @@
                         <tbody id="hedgeBody"></tbody>
                     </table>
                 </div>
-                <div id="ws-status" class="ws-status disconnected">●</div>
             </div>
 
             <div id="chart-section">
