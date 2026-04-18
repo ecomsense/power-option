@@ -463,13 +463,13 @@ tbody tr:hover {
     background-color: var(--red) !important;
 }
 
-.buy-mode-active .ce-check,
-.buy-mode-active .pe-check {
+.buy-active .ce-check,
+.buy-active .pe-check {
     accent-color: var(--green);
 }
 
-.sell-mode-active .ce-check,
-.sell-mode-active .pe-check {
+.sell-active .ce-check,
+.sell-active .pe-check {
     accent-color: var(--red);
 }
 
