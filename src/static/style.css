@@ -496,12 +496,10 @@ tbody tr:hover {
    -------------------------------------------------------------------------- */
 .strike {
     width: 2ch;
-    box-sizing: content-box;
 }
 
 .qty {
     width: 9ch;
-    box-sizing: content-box;
 }
 .cb-cell { width: var(--size-sm); }
 
