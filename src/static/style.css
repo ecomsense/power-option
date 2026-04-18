@@ -200,7 +200,7 @@ th {
     vertical-align: middle;
 }
 
-.top-control-bar .control-table .label-row td {
+.top-control-bar .control-table .label-row th {
     font-size: 11px;
     color: var(--text-muted);
     text-transform: uppercase;
