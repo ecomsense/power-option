@@ -88,24 +88,14 @@ a {
 
 #ws-status {
     text-align: center;
-    font-size: 18px;
 }
 
 #ws-status svg {
     vertical-align: middle;
 }
 
-#ws-status.connected {
-    color: var(--color-pos);
-    text-shadow: 0 0 5px var(--color-pos);
-}
-
 #ws-status.connected .disconnected-line {
     display: none;
-}
-
-#ws-status.disconnected {
-    color: var(--color-neg);
 }
 
 #ws-status.disconnected .disconnected-line {
