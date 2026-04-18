@@ -495,15 +495,13 @@ tbody tr:hover {
    6. Utilities
    -------------------------------------------------------------------------- */
 .strike {
-    width: 4ch;
+    width: 2ch;
     box-sizing: content-box;
-    text-align: center;
 }
 
 .qty {
-    width: 2ch;
+    width: 6ch;
     box-sizing: content-box;
-    text-align: center;
 }
 .cb-cell { width: var(--size-sm); }
 
