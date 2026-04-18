@@ -500,7 +500,7 @@ tbody tr:hover {
 }
 
 .qty {
-    width: 6ch;
+    width: 9ch;
     box-sizing: content-box;
 }
 .cb-cell { width: var(--size-sm); }
