@@ -89,13 +89,13 @@
                     <div class="top-control-bar">
                         <table class="control-table">
                             <tr class="label-row">
-                                <td>Call</td>
-                                <td>Put</td>
-                                <td>Strikes</td>
-                                <td>Qty</td>
-                                <td>Mode</td>
-                                <td class="actions-label">Actions</td>
-                                <td id="ws-status" class="ws-status disconnected" style="width:25px;text-align:center">●</td>
+                                <th>Call</th>
+                                <th>Put</th>
+                                <th>Strikes</th>
+                                <th>Qty</th>
+                                <th>Mode</th>
+                                <th class="actions-label">Actions</th>
+                                <th style="width:25px">Status</th>
                             </tr>
                             <tr class="control-row">
                                 <td>
@@ -125,7 +125,7 @@
                                     <button class="btn orange-btn" onclick="hedgeSquare()">Square</button>
                                     <button class="btn" onclick="showLogsModal()">logs</button>
                                 </td>
-                                <td style="width:10px">&nbsp;</td>
+                                <td id="ws-status" class="ws-status disconnected" style="width:25px;text-align:center">●</td>
                             </tr>
                         </table>
                     </div>
