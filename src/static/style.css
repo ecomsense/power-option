@@ -494,8 +494,8 @@ tbody tr:hover {
 /* --------------------------------------------------------------------------
    6. Utilities
    -------------------------------------------------------------------------- */
-.strike { width: 5em; }
-.qty { width: 2em; }
+.strike { width: var(--space-4); }
+.qty { width: var(--space-2); }
 .cb-cell { width: var(--size-sm); }
 
 /* Scrollbar */
