@@ -9,8 +9,7 @@ let currentLine;
 let socket;
 
 document.addEventListener("DOMContentLoaded", () => {
-    resetCheckAllForSide("main", true);
-    resetCheckAllForSide("hedge", true);
+    // Checkboxes start unchecked by default
     
     const chartElement = document.getElementById("chart-container");
     if (chartElement) {
@@ -214,7 +213,7 @@ async function updateSubscription(side) {
         const result = await response.json();
         if (result.status === "success") {
             console.log(`Successfully updated ${side} tokens.`);
-            resetCheckAllForSide(side);
+            resetCheckAllForSide(side, true);
         }
     } catch (error) {
         console.error("Subscription update failed:", error);
@@ -307,12 +306,12 @@ function resetCheckAllBoxes() {
     document.getElementById("hedge-pe-checkall").checked = false;
 }
 
-function resetCheckAllForSide(side, defaultChecked = false) {
+function resetCheckAllForSide(side, checked = false) {
     if (side === "main") {
-        document.getElementById("diff-ce-checkall").checked = defaultChecked;
-        document.getElementById("diff-pe-checkall").checked = defaultChecked;
+        document.getElementById("diff-ce-checkall").checked = checked;
+        document.getElementById("diff-pe-checkall").checked = checked;
     } else if (side === "hedge") {
-        document.getElementById("hedge-ce-checkall").checked = defaultChecked;
-        document.getElementById("hedge-pe-checkall").checked = defaultChecked;
+        document.getElementById("hedge-ce-checkall").checked = checked;
+        document.getElementById("hedge-pe-checkall").checked = checked;
     }
 }
