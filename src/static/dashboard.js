@@ -302,7 +302,7 @@ function toggleColumn(tableId, colIndex, checked) {
 
 function updateCheckAllState(tableId, colIndex) {
     const table = document.getElementById(tableId);
-    const rows = table.querySelectorAll("tbody tr");
+    const rows = table.querySelectorAll("tbody tr:not(.footer-row)");
     let allChecked = true;
     rows.forEach(row => {
         const cell = row.children[colIndex];
