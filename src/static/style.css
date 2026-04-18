@@ -209,7 +209,7 @@ th {
 }
 
 .top-control-bar .control-table td {
-    padding: var(--space-1) var(--space-3);
+    padding: var(--space-1) 0;
     vertical-align: middle;
 }
 
@@ -218,6 +218,7 @@ th {
     color: var(--text-muted);
     text-transform: uppercase;
     padding-bottom: var(--space-1);
+    padding-right: 0;
     text-align: left;
 }
 
@@ -242,7 +243,7 @@ th {
 
 /* -- Buttons -- */
 .btn {
-    padding: var(--space-2) var(--space-8);
+    padding: 6px 16px;
     border-radius: var(--radius-sm);
     cursor: pointer;
     color: var(--white);
@@ -250,6 +251,7 @@ th {
     font-weight: bold;
     font-size: var(--text-xs);
     background-color: var(--btn);
+    height: 30px;
 }
 
 .btn:hover {
@@ -273,7 +275,7 @@ th {
     position: relative;
     display: inline-block;
     width: var(--size-md);
-    height: var(--space-5);
+    height: 30px;
 }
 
 .toggle-switch input {
@@ -291,19 +293,19 @@ th {
     bottom: 0;
     background-color: var(--red);
     transition: 0.3s;
-    border-radius: var(--radius-full);
+    border-radius: 30px;
 }
 
 .toggle-switch .slider::before {
     position: absolute;
     content: "";
-    height: var(--space-4);
-    width: var(--space-4);
-    left: var(--space-0);
-    bottom: var(--space-0);
+    height: 24px;
+    width: 24px;
+    left: 3px;
+    bottom: 3px;
     background-color: white;
     transition: 0.3s;
-    border-radius: var(--radius-full);
+    border-radius: 50%;
 }
 
 .toggle-switch input:checked + .slider {
