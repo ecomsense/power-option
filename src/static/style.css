@@ -482,7 +482,7 @@ tbody tr:hover {
    6. Utilities
    -------------------------------------------------------------------------- */
 .text5 { width: 5em; }
-.text2 { width: 3em; }
+.text2 { width: 2em; }
 .cb-cell { width: var(--size-sm); }
 
 /* Scrollbar */
