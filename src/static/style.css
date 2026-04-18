@@ -1,42 +1,28 @@
 /* ==========================================================================
-   CSS Architecture - Organized by Mutation Hierarchy
+   CSS - Simplified
    ========================================================================== */
 
 /* --------------------------------------------------------------------------
-   1. CSS Variables (Theming) - Single Source of Truth
+   1. Base Colors (use directly where possible)
    -------------------------------------------------------------------------- */
 :root {
-    /* Backgrounds */
-    --bg-main: #0b0e14;
-    --bg-dashboard: #1e222d;
-    --bg-table: #131722;
-    --bg-header: #2a2e39;
-    --bg-input: #2a2e39;
-    --bg-strike-highlight: #1e222d;
+    /* Core */
+    --bg: #0b0e14;
+    --bg-dash: #1e222d;
+    --bg-tbl: #131722;
+    --bg-hdr: #2a2e39;
+    --bg-inp: #2a2e39;
     --bg-hover: #2a2e39;
-
-    /* Text */
-    --text-main: #d1d4dc;
-    --text-muted: #848e9c;
-    --text-strike: #ff9800;
-    --text-white: #ffffff;
-
-    /* Semantic Colors */
-    --color-pos: #26a69a;
-    --color-neg: #ef5350;
-    --color-fire: #9c27b0;
-    --color-square: #ff9800;
-
-    /* Borders */
-    --border-outer: #363c4e;
-    --border-table: #1e222d;
-    --border-ui: #363c4e;
-    --border-input: #434651;
-
-    /* Buttons */
-    --btn-default: #495057;
-    --btn-fire: #9c27b0;
-    --btn-square: #ff9800;
+    --text: #d1d4dc;
+    --text-dim: #848e9c;
+    --white: #fff;
+    --green: #26a69a;
+    --red: #ef5350;
+    --purple: #9c27b0;
+    --orange: #ff9800;
+    --border: #363c4e;
+    --border-dim: #434651;
+    --btn: #495057;
 }
 
 /* --------------------------------------------------------------------------
@@ -49,16 +35,16 @@
 body {
     margin: 0;
     padding: 0;
-    background-color: var(--bg-main);
+    background-color: var(--bg);
     height: 100vh;
     width: 100vw;
     overflow: hidden;
     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-    color: var(--text-main);
+    color: var(--text);
 }
 
 a {
-    color: var(--text-white);
+    color: var(--white);
 }
 
 /* --------------------------------------------------------------------------
@@ -69,22 +55,22 @@ a {
     flex-direction: column;
     width: 100%;
     height: 100%;
-    border: 4px solid var(--border-outer);
+    border: 4px solid var(--border);
 }
 
 #controls-section {
     flex: 1;
     display: flex;
     flex-direction: column;
-    background-color: var(--bg-dashboard);
-    border-bottom: 2px solid var(--border-ui);
+    background-color: var(--bg-dash);
+    border-bottom: 2px solid var(--border);
     min-height: 0;
 }
 
 #chart-section {
     flex: 0 0 30%;
-    background-color: var(--bg-table);
-    border-top: 2px solid var(--border-ui);
+    background-color: var(--bg-tbl);
+    border-top: 2px solid var(--border);
 }
 
 #chart-container {
@@ -106,12 +92,12 @@ a {
 .table-container {
     overflow-y: auto;
     position: relative;
-    background-color: var(--bg-table);
+    background-color: var(--bg-tbl);
 }
 
 .diff-table-container {
     flex: 0 0 55%;
-    border-right: 2px solid var(--border-ui);
+    border-right: 2px solid var(--border);
 }
 
 .ltp-table-container {
@@ -126,25 +112,25 @@ table {
 
 th, td {
     padding: 4px 2px;
-    border-bottom: 1px solid var(--border-table);
+    border-bottom: 1px solid var(--border);
     white-space: nowrap;
     text-align: center;
 }
 
 /* Sticky Headers */
 th {
-    background-color: var(--bg-header);
-    color: var(--text-muted);
+    background-color: var(--bg-hdr);
+    color: var(--text-dim);
     position: sticky;
     top: 0;
     z-index: 10;
-    border-bottom: 1px solid var(--border-ui);
+    border-bottom: 1px solid var(--border);
 }
 
 /* -- Control Bar -- */
 .top-control-bar {
     padding: 10px;
-    border-bottom: 1px solid var(--border-ui);
+    border-bottom: 1px solid var(--border);
 }
 
 .top-control-bar .control-table {
@@ -159,7 +145,7 @@ th {
 
 .top-control-bar .control-table .label-row th {
     font-size: 11px;
-    color: var(--text-muted);
+    color: var(--text-dim);
     text-transform: uppercase;
     padding-bottom: 5px;
     text-align: center;
@@ -178,9 +164,9 @@ th {
 .top-control-bar select,
 .top-control-bar input {
     padding: 6px;
-    background-color: var(--bg-input);
-    border: 1px solid var(--border-input);
-    color: var(--text-main);
+    background-color: var(--bg-inp);
+    border: 1px solid var(--border-dim);
+    color: var(--text);
     border-radius: 4px;
 }
 
@@ -189,10 +175,10 @@ th {
     padding: 8px 16px;
     border-radius: 4px;
     cursor: pointer;
-    color: var(--text-white);
+    color: var(--white);
     border: none;
     font-weight: bold;
-    background-color: var(--btn-default);
+    background-color: var(--btn);
 }
 
 .btn:hover {
@@ -204,11 +190,11 @@ th {
 }
 
 .violet-btn {
-    background-color: var(--btn-fire);
+    background-color: var(--purple);
 }
 
 .orange-btn {
-    background-color: var(--btn-square);
+    background-color: var(--orange);
 }
 
 /* -- Toggle Switch -- */
@@ -232,7 +218,7 @@ th {
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: var(--color-neg);
+    background-color: var(--red);
     transition: 0.3s;
     border-radius: 30px;
 }
@@ -250,7 +236,7 @@ th {
 }
 
 .toggle-switch input:checked + .slider {
-    background-color: var(--color-pos);
+    background-color: var(--green);
 }
 
 .toggle-switch input:checked + .slider::before {
@@ -289,7 +275,7 @@ th {
 }
 
 #ws-status.disconnected .disconnected-line {
-    stroke: var(--color-neg);
+    stroke: var(--red);
 }
 
 /* -- Modal -- */
@@ -316,11 +302,14 @@ th {
 
 .modal-header {
     color: #fff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
 }
 
 .modal-header h2 {
     margin: 0;
-    display: inline-block;
 }
 
 .modal-close {
@@ -359,26 +348,26 @@ tbody tr:hover {
 }
 
 /* Pos/Neg Colors */
-.pos { color: var(--color-pos); }
-.neg { color: var(--color-neg); }
+.pos { color: var(--green); }
+.neg { color: var(--red); }
 
 /* Buy/Sell Mode */
 .buy-mode {
-    background-color: var(--color-pos) !important;
+    background-color: var(--green) !important;
 }
 
 .sell-mode {
-    background-color: var(--color-neg) !important;
+    background-color: var(--red) !important;
 }
 
 .buy-mode-active .ce-check,
 .buy-mode-active .pe-check {
-    accent-color: var(--color-pos);
+    accent-color: var(--green);
 }
 
 .sell-mode-active .ce-check,
 .sell-mode-active .pe-check {
-    accent-color: var(--color-neg);
+    accent-color: var(--red);
 }
 
 /* Sticky Footer */
@@ -387,15 +376,15 @@ tbody tr:hover {
     position: sticky;
     bottom: 0;
     z-index: 20;
-    background-color: var(--bg-header) !important;
+    background-color: var(--bg-hdr) !important;
     box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.5);
-    outline: 1px solid var(--border-ui);
+    outline: 1px solid var(--border);
 }
 
 #diffBody tr:last-child td,
 #ltpBody tr:last-child td {
     font-weight: bold;
-    color: var(--text-white);
+    color: var(--white);
     padding: 10px 4px;
 }
 
@@ -412,9 +401,9 @@ tbody tr:hover {
     height: 8px;
 }
 ::-webkit-scrollbar-track {
-    background: var(--bg-main);
+    background: var(--bg);
 }
 ::-webkit-scrollbar-thumb {
-    background: var(--border-input);
+    background: var(--border-dim);
     border-radius: 4px;
 }
