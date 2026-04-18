@@ -276,7 +276,7 @@ th {
 .toggle-switch {
     position: relative;
     display: inline-block;
-    width: var(--size-md);
+    width: 50px;
     height: 28px;
     vertical-align: middle;
 }
@@ -316,7 +316,7 @@ th {
 }
 
 .toggle-switch input:checked + .slider::before {
-    transform: translateX(38px);
+    transform: translateX(22px);
 }
 
 .toggle-switch .slider .label {
