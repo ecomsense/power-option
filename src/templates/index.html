@@ -11,62 +11,73 @@
             <div class="tables-wrapper">
                 <div class="table-container diff-table-container">
                     <div class="top-control-bar">
-                        <select
-                            id="symbol-select"
-                            onchange="updateExpiryDropdown()"
-                        >
-                            {% for symbol in symbols %}
-                            <option value="{{ symbol }}">{{ symbol }}</option>
-                            {% endfor %}
-                        </select>
-                        <select 
-                            id="expiry-select"
-                            name="expiry-select"
-                            onchange="updateStrikeDropdowns()"
-                        ></select>
-                        <label for="main-call-base">C</label>
-                        <select
-                            id="main-call-base"
-                            name="main-call-base"
-                        ></select>
-                        <label for="main-put-base">P</label>
-                        <select
-                            id="main-put-base"
-                            name="main-put-base"
-                        ></select>
-                        <input
-                            id="main-num"
-                            class="text2"
-                            type="number"
-                            placeholder="No. of Strikes"
-                            value="10"
-                        />
-                        <button
-                            class="btn"
-                            onclick="updateSubscription('main')"
-                        >
-                            update
-                        </button>
-                        <label for="main-qty">Lots</label>
-                        <input
-                            id="main-qty"
-                            class="text2"
-                            type="number"
-                            value="1"
-                        />
-                        <button
-                            id="main-side-toggle"
-                            class="btn side-btn buy-mode"
-                            onclick="toggleSide('diff')"
-                        >
-                            B
-                        </button>
-                        <button class="btn violet-btn" onclick="diffFire()">
-                            Fire
-                        </button>
-                        <button class="btn orange-btn" onclick="diffSquare()">
-                            Square
-                        </button>
+                        <div class="label-row">
+                            <label>Symbol</label>
+                            <label>Expiry</label>
+                            <label>Call</label>
+                            <label>Put</label>
+                            <label>Strikes</label>
+                            <label>Qty</label>
+                            <label class="actions-label">Actions</label>
+                        </div>
+                        <div class="control-row">
+                            <select
+                                id="symbol-select"
+                                onchange="updateExpiryDropdown()"
+                            >
+                                {% for symbol in symbols %}
+                                <option value="{{ symbol }}">{{ symbol }}</option>
+                                {% endfor %}
+                            </select>
+                            <select 
+                                id="expiry-select"
+                                name="expiry-select"
+                                onchange="updateStrikeDropdowns()"
+                            ></select>
+                            <label for="main-call-base">C</label>
+                            <select
+                                id="main-call-base"
+                                name="main-call-base"
+                            ></select>
+                            <label for="main-put-base">P</label>
+                            <select
+                                id="main-put-base"
+                                name="main-put-base"
+                            ></select>
+                            <input
+                                id="main-num"
+                                class="text2"
+                                type="number"
+                                placeholder="No. of Strikes"
+                                value="10"
+                            />
+                            <button
+                                class="btn"
+                                onclick="updateSubscription('main')"
+                            >
+                                update
+                            </button>
+                            <label for="main-qty">Qty</label>
+                            <input
+                                id="main-qty"
+                                class="text2"
+                                type="number"
+                                value="1"
+                            />
+                            <button
+                                id="main-side-toggle"
+                                class="btn side-btn buy-mode"
+                                onclick="toggleSide('diff')"
+                            >
+                                B
+                            </button>
+                            <button class="btn violet-btn" onclick="diffFire()">
+                                Fire
+                            </button>
+                            <button class="btn orange-btn" onclick="diffSquare()">
+                                Square
+                            </button>
+                        </div>
                     </div>
                     <table id="diffTable">
                         <thead>
@@ -93,50 +104,59 @@
 
                 <div class="table-container ltp-table-container">
                     <div class="top-control-bar">
-                        <label for="hedge-call-base">C</label>
-                        <select
-                            id="hedge-call-base"
-                            name="hedge-call-base"
-                        ></select>
-                        <label for="hedge-put-base">P</label>
-                        <select
-                            id="hedge-put-base"
-                            name="hedge-put-base"
-                        ></select>
-                        <input
-                            id="hedge-num"
-                            class="text2"
-                            type="number"
-                            placeholder="No. of Strikes"
-                            value="10"
-                        />
-                        <button
-                            class="btn"
-                            onclick="updateSubscription('hedge')"
-                        >
-                            update
-                        </button>
-                        <label for="hedge-qty">Lots</label>
-                        <input
-                            id="hedge-qty"
-                            class="text2"
-                            type="number"
-                            value="10"
-                        />
-                        <button
-                            id="hedge-side-toggle"
-                            class="btn side-btn buy-mode"
-                            onclick="toggleSide('hedge')"
-                        >
-                            B
-                        </button>
-                        <button class="btn violet-btn" onclick="hedgeFire()">
-                            Hedge
-                        </button>
-                        <button class="btn orange-btn" onclick="hedgeSquare()">
-                            Square
-                        </button>
-                        <button class="btn" onclick="showLogsModal()">logs</button>
+                        <div class="label-row">
+                            <label>Call</label>
+                            <label>Put</label>
+                            <label>Strikes</label>
+                            <label>Qty</label>
+                            <label class="actions-label">Actions</label>
+                        </div>
+                        <div class="control-row">
+                            <label for="hedge-call-base">C</label>
+                            <select
+                                id="hedge-call-base"
+                                name="hedge-call-base"
+                            ></select>
+                            <label for="hedge-put-base">P</label>
+                            <select
+                                id="hedge-put-base"
+                                name="hedge-put-base"
+                            ></select>
+                            <input
+                                id="hedge-num"
+                                class="text2"
+                                type="number"
+                                placeholder="No. of Strikes"
+                                value="10"
+                            />
+                            <button
+                                class="btn"
+                                onclick="updateSubscription('hedge')"
+                            >
+                                update
+                            </button>
+                            <label for="hedge-qty">Qty</label>
+                            <input
+                                id="hedge-qty"
+                                class="text2"
+                                type="number"
+                                value="10"
+                            />
+                            <button
+                                id="hedge-side-toggle"
+                                class="btn side-btn buy-mode"
+                                onclick="toggleSide('hedge')"
+                            >
+                                B
+                            </button>
+                            <button class="btn violet-btn" onclick="hedgeFire()">
+                                Hedge
+                            </button>
+                            <button class="btn orange-btn" onclick="hedgeSquare()">
+                                Square
+                            </button>
+                            <button class="btn" onclick="showLogsModal()">logs</button>
+                        </div>
                     </div>
 
                     <table id="hedgeTable">
