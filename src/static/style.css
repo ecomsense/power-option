@@ -239,7 +239,7 @@ th {
     border: var(--border-w1) solid var(--border-sub);
     color: var(--text-main);
     border-radius: var(--radius-sm);
-    height: 30px;
+    height: 28px;
 }
 
 /* -- Buttons -- */
@@ -252,8 +252,8 @@ th {
     font-weight: bold;
     font-size: var(--text-xs);
     background-color: var(--btn);
-    height: 30px;
-    line-height: 30px;
+    height: 28px;
+    line-height: 28px;
 }
 
 .btn:hover {
@@ -277,7 +277,7 @@ th {
     position: relative;
     display: inline-block;
     width: var(--size-md);
-    height: 30px;
+    height: 28px;
     vertical-align: middle;
 }
 
@@ -296,14 +296,14 @@ th {
     bottom: 0;
     background-color: var(--red);
     transition: 0.3s;
-    border-radius: 30px;
+    border-radius: 14px;
 }
 
 .toggle-switch .slider::before {
     position: absolute;
     content: "";
-    height: 24px;
-    width: 24px;
+    height: 22px;
+    width: 22px;
     left: 3px;
     bottom: 3px;
     background-color: white;
@@ -316,7 +316,7 @@ th {
 }
 
 .toggle-switch input:checked + .slider::before {
-    transform: translateX(36px);
+    transform: translateX(38px);
 }
 
 .toggle-switch .slider .label {
