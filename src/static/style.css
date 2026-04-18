@@ -1,28 +1,52 @@
 /* ==========================================================================
-   CSS - Simplified
+   CSS - Light/Dark Theme Ready
    ========================================================================== */
 
 /* --------------------------------------------------------------------------
-   1. Base Colors (use directly where possible)
+   Theme: Dark (default)
    -------------------------------------------------------------------------- */
 :root {
-    /* Core */
-    --bg: #0b0e14;
-    --bg-dash: #1e222d;
-    --bg-tbl: #131722;
-    --bg-hdr: #2a2e39;
-    --bg-inp: #2a2e39;
-    --bg-hover: #2a2e39;
-    --text: #d1d4dc;
-    --text-dim: #848e9c;
+    /* Semantic aliases */
+    --bg-main: var(--bg0);
+    --bg-card: var(--bg1);
+    --bg-header: var(--bg2);
+    --bg-input: var(--bg2);
+    --bg-hover: var(--bg2);
+    --text-main: var(--text0);
+    --text-muted: var(--text1);
+    --text-white: var(--white);
+    --border-main: var(--border0);
+    --border-sub: var(--border1);
+    
+    /* Base palette */
+    --bg0: #0b0e14;
+    --bg1: #1e222d;
+    --bg2: #2a2e39;
+    --bg3: #131722;
+    --text0: #d1d4dc;
+    --text1: #848e9c;
     --white: #fff;
     --green: #26a69a;
     --red: #ef5350;
     --purple: #9c27b0;
     --orange: #ff9800;
-    --border: #363c4e;
-    --border-dim: #434651;
+    --border0: #363c4e;
+    --border1: #434651;
     --btn: #495057;
+}
+
+/* --------------------------------------------------------------------------
+   Theme: Light (unused for now)
+   -------------------------------------------------------------------------- */
+:root[data-theme="light"] {
+    --bg0: #ffffff;
+    --bg1: #f5f5f5;
+    --bg2: #eeeeee;
+    --bg3: #fafafa;
+    --text0: #333333;
+    --text1: #666666;
+    --border0: #dddddd;
+    --border1: #cccccc;
 }
 
 /* --------------------------------------------------------------------------
@@ -35,12 +59,12 @@
 body {
     margin: 0;
     padding: 0;
-    background-color: var(--bg);
+    background-color: var(--bg-main);
     height: 100vh;
     width: 100vw;
     overflow: hidden;
     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-    color: var(--text);
+    color: var(--text-main);
 }
 
 a {
@@ -55,22 +79,22 @@ a {
     flex-direction: column;
     width: 100%;
     height: 100%;
-    border: 4px solid var(--border);
+    border: 4px solid var(--border-main);
 }
 
 #controls-section {
     flex: 1;
     display: flex;
     flex-direction: column;
-    background-color: var(--bg-dash);
-    border-bottom: 2px solid var(--border);
+    background-color: var(--bg-card);
+    border-bottom: 2px solid var(--border-main);
     min-height: 0;
 }
 
 #chart-section {
     flex: 0 0 30%;
-    background-color: var(--bg-tbl);
-    border-top: 2px solid var(--border);
+    background-color: var(--bg-header);
+    border-top: 2px solid var(--border-main);
 }
 
 #chart-container {
@@ -92,12 +116,12 @@ a {
 .table-container {
     overflow-y: auto;
     position: relative;
-    background-color: var(--bg-tbl);
+    background-color: var(--bg-header);
 }
 
 .diff-table-container {
     flex: 0 0 55%;
-    border-right: 2px solid var(--border);
+    border-right: 2px solid var(--border-main);
 }
 
 .ltp-table-container {
@@ -112,25 +136,25 @@ table {
 
 th, td {
     padding: 4px 2px;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--border-main);
     white-space: nowrap;
     text-align: center;
 }
 
 /* Sticky Headers */
 th {
-    background-color: var(--bg-hdr);
-    color: var(--text-dim);
+    background-color: var(--bg-header);
+    color: var(--text-muted);
     position: sticky;
     top: 0;
     z-index: 10;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--border-main);
 }
 
 /* -- Control Bar -- */
 .top-control-bar {
     padding: 10px;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--border-main);
 }
 
 .top-control-bar .control-table {
@@ -145,7 +169,7 @@ th {
 
 .top-control-bar .control-table .label-row th {
     font-size: 11px;
-    color: var(--text-dim);
+    color: var(--text-muted);
     text-transform: uppercase;
     padding-bottom: 5px;
     text-align: center;
@@ -164,9 +188,9 @@ th {
 .top-control-bar select,
 .top-control-bar input {
     padding: 6px;
-    background-color: var(--bg-inp);
-    border: 1px solid var(--border-dim);
-    color: var(--text);
+    background-color: var(--bg-input);
+    border: 1px solid var(--border-sub);
+    color: var(--text-main);
     border-radius: 4px;
 }
 
@@ -376,9 +400,9 @@ tbody tr:hover {
     position: sticky;
     bottom: 0;
     z-index: 20;
-    background-color: var(--bg-hdr) !important;
+    background-color: var(--bg-header) !important;
     box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.5);
-    outline: 1px solid var(--border);
+    outline: 1px solid var(--border-main);
 }
 
 #diffBody tr:last-child td,
@@ -401,9 +425,9 @@ tbody tr:hover {
     height: 8px;
 }
 ::-webkit-scrollbar-track {
-    background: var(--bg);
+    background: var(--bg-main);
 }
 ::-webkit-scrollbar-thumb {
-    background: var(--border-dim);
+    background: var(--border-sub);
     border-radius: 4px;
 }
