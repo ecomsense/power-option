@@ -1,12 +1,12 @@
 /* ==========================================================================
-   CSS - Light/Dark Theme Ready
+   CSS - Theme Driven (no default in CSS, HTML sets data-theme)
    ========================================================================== */
 
 /* --------------------------------------------------------------------------
-   Theme: Dark (default)
+   Semantic aliases (always available)
    -------------------------------------------------------------------------- */
 :root {
-    /* Semantic aliases */
+    /* Semantic aliases - components use these */
     --bg-main: var(--bg0);
     --bg-card: var(--bg1);
     --bg-header: var(--bg2);
@@ -18,7 +18,21 @@
     --border-main: var(--border0);
     --border-sub: var(--border1);
     
-    /* Base palette - Dark (default) */
+    /* Shared colors */
+    --white: #fff;
+    --green: #26a69a;
+    --red: #ef5350;
+    --purple: #9c27b0;
+    --orange: #ff9800;
+    --btn: #495057;
+    --highlight: #f44336;
+    --code: #0f0;
+}
+
+/* --------------------------------------------------------------------------
+   Theme: Dark (set data-theme="dark" on html element)
+   -------------------------------------------------------------------------- */
+:root[data-theme="dark"] {
     --bg0: #0b0e14;
     --bg1: #1e222d;
     --bg2: #2a2e39;
@@ -27,20 +41,12 @@
     --bg5: #111;
     --text0: #d1d4dc;
     --text1: #848e9c;
-    --white: #fff;
-    --green: #26a69a;
-    --red: #ef5350;
-    --purple: #9c27b0;
-    --orange: #ff9800;
     --border0: #363c4e;
     --border1: #434651;
-    --btn: #495057;
-    --highlight: #f44336;
-    --code: #0f0;
 }
 
 /* --------------------------------------------------------------------------
-   Theme: Light (set data-theme="light" on html to enable)
+   Theme: Light (set data-theme="light" on html element)
    -------------------------------------------------------------------------- */
 :root[data-theme="light"] {
     --bg0: #ffffff;
