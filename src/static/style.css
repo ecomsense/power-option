@@ -219,7 +219,7 @@ th {
     text-transform: uppercase;
     padding-bottom: var(--space-1);
     padding-right: var(--space-1);
-    padding-left: 0;
+    padding-left: var(--space-3);
     text-align: left;
 }
 
