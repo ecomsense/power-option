@@ -81,7 +81,6 @@ function updateConnectionStatus(connected) {
     const status = document.getElementById("ws-status");
     if (status) {
         status.className = connected ? "ws-status connected" : "ws-status disconnected";
-        status.textContent = connected ? "●" : "●";
     }
 }
 
