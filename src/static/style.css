@@ -209,7 +209,7 @@ th {
 }
 
 .top-control-bar .control-table td {
-    padding: var(--space-1) 0;
+    padding: var(--space-1) var(--space-1) var(--space-1) 0;
     vertical-align: middle;
 }
 
@@ -218,7 +218,8 @@ th {
     color: var(--text-muted);
     text-transform: uppercase;
     padding-bottom: var(--space-1);
-    padding-right: 0;
+    padding-right: var(--space-1);
+    padding-left: 0;
     text-align: left;
 }
 
