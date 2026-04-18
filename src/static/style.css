@@ -285,7 +285,7 @@ th {
     position: relative;
     display: inline-block;
     width: 70px;
-    height: 24px;
+    height: 30px;
 }
 
 .toggle-switch input {
@@ -303,14 +303,14 @@ th {
     bottom: 0;
     background-color: var(--color-neg);
     transition: 0.3s;
-    border-radius: 24px;
+    border-radius: 30px;
 }
 
 .toggle-switch .slider:before {
     position: absolute;
     content: "";
-    height: 18px;
-    width: 18px;
+    height: 24px;
+    width: 24px;
     left: 3px;
     bottom: 3px;
     background-color: white;
@@ -323,7 +323,7 @@ th {
 }
 
 .toggle-switch input:checked + .slider:before {
-    transform: translateX(46px);
+    transform: translateX(40px);
 }
 
 .toggle-switch .slider .label {
@@ -333,14 +333,15 @@ th {
     font-size: 9px;
     font-weight: bold;
     color: white;
+    text-transform: uppercase;
 }
 
 .toggle-switch .slider .label.buy {
-    left: 6px;
+    left: 8px;
 }
 
 .toggle-switch .slider .label.sell {
-    right: 6px;
+    right: 8px;
 }
 
 .buy-mode-active .ce-check,
