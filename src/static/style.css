@@ -498,14 +498,12 @@ tbody tr:hover {
     width: 4ch;
     box-sizing: content-box;
     text-align: center;
-    font-family: 'Courier New', monospace;
 }
 
 .qty {
     width: 2ch;
     box-sizing: content-box;
     text-align: center;
-    font-family: 'Courier New', monospace;
 }
 .cb-cell { width: var(--size-sm); }
 
