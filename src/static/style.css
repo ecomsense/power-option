@@ -239,11 +239,12 @@ th {
     border: var(--border-w1) solid var(--border-sub);
     color: var(--text-main);
     border-radius: var(--radius-sm);
+    height: 30px;
 }
 
 /* -- Buttons -- */
 .btn {
-    padding: 6px 16px;
+    padding: 0 16px;
     border-radius: var(--radius-sm);
     cursor: pointer;
     color: var(--white);
@@ -251,6 +252,8 @@ th {
     font-weight: bold;
     font-size: var(--text-xs);
     background-color: var(--btn);
+    height: 30px;
+    line-height: 30px;
 }
 
 .btn:hover {
@@ -275,6 +278,7 @@ th {
     display: inline-block;
     width: var(--size-md);
     height: 30px;
+    vertical-align: middle;
 }
 
 .toggle-switch input {
