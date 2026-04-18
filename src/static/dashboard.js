@@ -211,6 +211,7 @@ async function updateSubscription(side) {
         const result = await response.json();
         if (result.status === "success") {
             console.log(`Successfully updated ${side} tokens.`);
+            resetCheckAllBoxes();
         }
     } catch (error) {
         console.error("Subscription update failed:", error);
@@ -294,4 +295,11 @@ function toggleColumn(tableId, colIndex, checked) {
         const checkbox = cell.querySelector("input[type='checkbox']");
         if (checkbox) checkbox.checked = checked;
     });
+}
+
+function resetCheckAllBoxes() {
+    document.getElementById("diff-ce-checkall").checked = false;
+    document.getElementById("diff-pe-checkall").checked = false;
+    document.getElementById("hedge-ce-checkall").checked = false;
+    document.getElementById("hedge-pe-checkall").checked = false;
 }
