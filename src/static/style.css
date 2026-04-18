@@ -209,7 +209,7 @@ th {
 }
 
 .top-control-bar .control-table td {
-    padding: var(--space-1) var(--space-1) var(--space-1) 0;
+    padding: var(--space-1) 0;
     vertical-align: middle;
 }
 
@@ -241,6 +241,7 @@ th {
     color: var(--text-main);
     border-radius: var(--radius-sm);
     height: 28px;
+    margin-right: var(--space-1);
 }
 
 /* -- Buttons -- */
@@ -255,6 +256,7 @@ th {
     background-color: var(--btn);
     height: 28px;
     line-height: 28px;
+    margin-right: var(--space-1);
 }
 
 .btn:hover {
