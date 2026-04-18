@@ -107,9 +107,9 @@ function renderDashboard(diffRows, hedgeRows, mainFresh, hedgeFresh) {
         const isLeftChecked = mainFresh ? true : (exLeft ? exLeft.checked : true);
         const isRightChecked = mainFresh ? true : (exRight ? exRight.checked : true);
 
-        diffHtml += `
+diffHtml += `
       <tr>
-        <td class="cb-cell"><input type="checkbox" id="${leftId}" ${isLeftChecked ? 'checked' : ''}></td>
+        <td class="cb-cell"><input type="checkbox" id="${leftId}" ${isLeftChecked ? 'checked' : ''} onchange="updateCheckAllState('diffTable', 0)"></td>
         <td class="${getColorClass(row.total_diff)}">${row.total_diff.toFixed(2)}</td>
         <td class="${getColorClass(row.ce_diff_pct)}">${row.ce_diff_pct.toFixed(2)}</td>
         <td class="${getColorClass(row.ce_diff)}">${row.ce_diff.toFixed(2)}</td>
@@ -122,7 +122,7 @@ function renderDashboard(diffRows, hedgeRows, mainFresh, hedgeFresh) {
         <td class="${getColorClass(row.pe_diff)}">${row.pe_diff.toFixed(2)}</td>
         <td class="${getColorClass(row.pe_diff_pct)}">${row.pe_diff_pct.toFixed(2)}</td>
         <td class="${getColorClass(row.total_diff_pct)}">${row.total_diff_pct}</td>
-        <td class="cb-cell"><input type="checkbox" id="${rightId}" ${isRightChecked ? 'checked' : ''}></td>
+        <td class="cb-cell"><input type="checkbox" id="${rightId}" ${isRightChecked ? 'checked' : ''} onchange="updateCheckAllState('diffTable', 13)"></td>
       </tr>`;
     });
 
@@ -153,12 +153,12 @@ function renderDashboard(diffRows, hedgeRows, mainFresh, hedgeFresh) {
 
         hedgeHtml += `
       <tr>
-        <td class="cb-cell"><input type="checkbox" id="${hLeftId}" ${isHLeftChecked ? 'checked' : ''}></td>
+<td class="cb-cell"><input type="checkbox" id="${hLeftId}" ${isHLeftChecked ? 'checked' : ''} onchange="updateCheckAllState('hedgeTable', 0)"></td>
         <td>${row.curr_ce.toFixed(2)}</td>
         <td>${row.ce_strike}</td>
         <td>${row.pe_strike}</td>
         <td>${row.curr_pe.toFixed(2)}</td>
-        <td class="cb-cell"><input type="checkbox" id="${hRightId}" ${isHRightChecked ? 'checked' : ''}></td>
+        <td class="cb-cell"><input type="checkbox" id="${hRightId}" ${isHRightChecked ? 'checked' : ''} onchange="updateCheckAllState('hedgeTable', 5)"></td>
       </tr>`;
     });
 
@@ -297,6 +297,26 @@ function toggleColumn(tableId, colIndex, checked) {
         const checkbox = cell.querySelector("input[type='checkbox']");
         if (checkbox) checkbox.checked = checked;
     });
+    updateCheckAllState(tableId, colIndex);
+}
+
+function updateCheckAllState(tableId, colIndex) {
+    const table = document.getElementById(tableId);
+    const rows = table.querySelectorAll("tbody tr");
+    let allChecked = true;
+    rows.forEach(row => {
+        const cell = row.children[colIndex];
+        const checkbox = cell.querySelector("input[type='checkbox']");
+        if (checkbox && !checkbox.checked) {
+            allChecked = false;
+        }
+    });
+    
+    const checkallId = tableId === "diffTable" 
+        ? (colIndex === 0 ? "diff-ce-checkall" : "diff-pe-checkall")
+        : (colIndex === 0 ? "hedge-ce-checkall" : "hedge-pe-checkall");
+    const checkall = document.getElementById(checkallId);
+    if (checkall) checkall.checked = allChecked;
 }
 
 function resetCheckAllBoxes() {
