@@ -50,7 +50,6 @@ a {
     height: 100%;
     border: 4px solid var(--border-outer);
     box-sizing: border-box;
-    position: relative;
 }
 
 #controls-section {
@@ -82,24 +81,17 @@ a {
 
 /* WebSocket Status Indicator */
 .ws-status {
-    position: absolute;
-    top: 10px;
-    right: 15px;
-    padding: 4px 10px;
-    border-radius: 12px;
-    font-size: 11px;
-    font-weight: bold;
-    z-index: 100;
+    font-size: 16px;
+    margin-right: 8px;
+    vertical-align: middle;
 }
 
 .ws-status.connected {
-    background-color: var(--color-pos);
-    color: white;
+    color: var(--color-pos);
 }
 
 .ws-status.disconnected {
-    background-color: var(--color-neg);
-    color: white;
+    color: var(--color-neg);
 }
 
 .table-container {

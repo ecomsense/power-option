@@ -8,7 +8,6 @@
     </head>
     <body>
         <div class="dashboard-container">
-            <div id="ws-status" class="ws-status disconnected">Disconnected</div>
             <div class="tables-wrapper">
                 <div class="table-container diff-table-container">
                     <div class="top-control-bar">
@@ -101,6 +100,7 @@
                                     <input id="hedge-qty" class="text2" type="number" value="10" />
                                 </td>
                                 <td class="actions-cell">
+                                    <span id="ws-status" class="ws-status disconnected">●</span>
                                     <button class="btn" onclick="updateSubscription('hedge')">update</button>
                                     <button id="hedge-side-toggle" class="btn side-btn buy-mode" onclick="toggleSide('hedge')">B</button>
                                     <button class="btn violet-btn" onclick="hedgeFire()">Hedge</button>
