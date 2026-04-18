@@ -438,12 +438,25 @@ tbody tr:hover {
 }
 
 /* Pos/Neg Colors */
-.pos { color: var(--green); }
-.neg { color: var(--red); }
+.positive { color: var(--green); }
+.negative { color: var(--red); }
 
-/* Buy/Sell Mode */
 .buy-mode {
     background-color: var(--green) !important;
+}
+
+.sell-mode {
+    background-color: var(--red) !important;
+}
+
+.buy-active .ce-check,
+.buy-active .pe-check {
+    accent-color: var(--green);
+}
+
+.sell-active .ce-check,
+.sell-active .pe-check {
+    accent-color: var(--red);
 }
 
 .sell-mode {
