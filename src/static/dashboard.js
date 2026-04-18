@@ -9,6 +9,9 @@ let currentLine;
 let socket;
 
 document.addEventListener("DOMContentLoaded", () => {
+    resetCheckAllForSide("main");
+    resetCheckAllForSide("hedge");
+    
     const chartElement = document.getElementById("chart-container");
     if (chartElement) {
 
