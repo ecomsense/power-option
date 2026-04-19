@@ -166,12 +166,12 @@ a {
 }
 
 .diff-table-container {
-    flex: 0 0 55%;
+    flex: 1;
     border-right: var(--border-w2) solid var(--border-main);
 }
 
 .ltp-table-container {
-    flex: 0 0 45%;
+    flex: 1;
 }
 
 table {
