@@ -166,12 +166,25 @@ a {
 }
 
 .diff-table-container {
-    flex: 1;
+    flex: 0 0 55%;
     border-right: var(--border-w2) solid var(--border-main);
 }
 
 .ltp-table-container {
-    flex: 1;
+    flex: 0 0 45%;
+}
+
+/* Make tables match control bar width */
+.diff-table-container table,
+.ltp-table-container table {
+    width: max-content;
+    min-width: 100%;
+}
+
+.table-container {
+    overflow-x: auto;
+    position: relative;
+    background-color: var(--bg-header);
 }
 
 table {
