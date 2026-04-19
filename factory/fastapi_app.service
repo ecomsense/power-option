@@ -8,7 +8,7 @@ User=trader
 Group=trader
 WorkingDirectory=/home/trader/no_venv/power-option
 Environment="PATH=/home/trader/no_venv/venv/bin"
-ExecStart=/home/trader/no_venv/venv/bin/python -m uvicorn main:app --host 127.0.0.1 --port 8000
+ExecStart=/bin/bash -c "cd /home/trader/no_venv/power-option && /home/trader/no_venv/venv/bin/python -m uvicorn main:app --host 127.0.0.1 --port 8000"
 Restart=always
 RestartSec=5
 
