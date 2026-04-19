@@ -505,6 +505,29 @@ tbody tr:hover {
 }
 .cb-cell { width: var(--size-sm); }
 
+/* -- Toast Notification -- */
+.toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 12px 24px;
+    border-radius: var(--radius-sm);
+    color: var(--white);
+    font-size: var(--text-sm);
+    z-index: 10000;
+    animation: slideIn 0.3s ease;
+}
+.toast.success {
+    background: var(--green);
+}
+.toast.error {
+    background: var(--red);
+}
+@keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar {
     width: var(--space-4);

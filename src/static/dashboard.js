@@ -234,6 +234,17 @@ async function updateSubscription(side) {
 }
 
 /**
+ * Show toast notification
+ */
+function showToast(message, isSuccess = true) {
+    const toast = document.createElement('div');
+    toast.className = `toast ${isSuccess ? 'success' : 'error'}`;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+}
+
+/**
  * Collects checked strikes by parsing existing element IDs
  */
 async function processBatchOrders(tableId, modeType, qtyId, isSquareOff = false) {
@@ -265,14 +276,20 @@ async function processBatchOrders(tableId, modeType, qtyId, isSquareOff = false)
         tag: modeType
     };
 
-    try {
-        await fetch('/order_place', {
+try {
+        const res = await fetch('/order_place', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
-        console.log(`Sent ${orderList.length} ${side} orders for ${modeType}`);
+        const result = await res.json();
+        if (result.status === 'success') {
+            showToast(`${orderList.length} ${side} orders sent`, true);
+        } else {
+            showToast(result.message || 'Order failed', false);
+        }
     } catch (error) {
+        showToast('Order request failed', false);
         console.error("Order request failed:", error);
     }
 }
