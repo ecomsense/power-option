@@ -50,12 +50,20 @@ def update_metadata(kwargs):
                 # Extract symbol prefix and strike/option from tradingsymbol
                 # e.g., NIFTY26JUN12000CE -> NIFTY + 260630 + 12000 + CE
                 import re
-                match = re.match(r'^([A-Z]+)\d+[A-Z]+(\d+)(CE|PE)$', tradingsym)
+                # Pattern: NIFTY26JUN12000CE -> NIFTY(26)(JUN)(12000)(CE)
+                match = re.match(r'^([A-Z]+)(\d{2})([A-Z]{3})(\d+)(CE|PE)$', tradingsym)
                 if match:
                     symbol_prefix = match.group(1)  # NIFTY
-                    strike = match.group(2)  # 12000
-                    option_type = match.group(3)  # CE
-                    tradingsym = f"{symbol_prefix}{expiry_formatted}{strike}{option_type}"
+                    year_short = match.group(2)  # 26
+                    month_abbr = match.group(3)  # JUN
+                    strike = match.group(4)  # 12000
+                    option_type = match.group(5)  # CE
+                    
+                    # Convert month abbreviation to number
+                    month_map = {"JAN": "01", "FEB": "02", "MAR": "03", "APR": "04", "MAY": "05", "JUN": "06",
+                               "JUL": "07", "AUG": "08", "SEP": "09", "OCT": "10", "NOV": "11", "DEC": "12"}
+                    month_num = month_map.get(month_abbr, "01")
+                    tradingsym = f"{symbol_prefix}{year_short}{month_num}{strike}{option_type}"
             
             app.state.METADATA[t] = {
                 "strike": row["strike"],
@@ -73,12 +81,20 @@ def update_metadata(kwargs):
             # Format: {Symbol}{yymmdd}{strike}{CE/PE}
             if tradingsym and expiry_formatted:
                 import re
-                match = re.match(r'^([A-Z]+)\d+[A-Z]+(\d+)(CE|PE)$', tradingsym)
+                # Pattern: NIFTY26JUN12000CE -> NIFTY(26)(JUN)(12000)(CE)
+                match = re.match(r'^([A-Z]+)(\d{2})([A-Z]{3})(\d+)(CE|PE)$', tradingsym)
                 if match:
                     symbol_prefix = match.group(1)
-                    strike = match.group(2)
-                    option_type = match.group(3)
-                    tradingsym = f"{symbol_prefix}{expiry_formatted}{strike}{option_type}"
+                    year_short = match.group(2)
+                    month_abbr = match.group(3)
+                    strike = match.group(4)
+                    option_type = match.group(5)
+                    
+                    # Convert month abbreviation to number
+                    month_map = {"JAN": "01", "FEB": "02", "MAR": "03", "APR": "04", "MAY": "05", "JUN": "06",
+                               "JUL": "07", "AUG": "08", "SEP": "09", "OCT": "10", "NOV": "11", "DEC": "12"}
+                    month_num = month_map.get(month_abbr, "01")
+                    tradingsym = f"{symbol_prefix}{year_short}{month_num}{strike}{option_type}"
             
             app.state.METADATA[t] = {
                 "strike": row["strike"],
