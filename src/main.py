@@ -83,7 +83,7 @@ async def lifespan(app: FastAPI):
 
         app.state.webhook_url = O_SETG["webhook_url"]
         app.state.timeout = O_SETG["timeout"]
-        app.state.stag = O_SETG.get("tag", "DEFAULT")
+        app.state.stag = O_SETG.get("stag", "DEFAULT")
 
         # 1. Initialize symbols
         for kwargs in D_SYMBOL.values():
