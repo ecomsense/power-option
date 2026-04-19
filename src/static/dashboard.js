@@ -234,6 +234,20 @@ async function updateSubscription(side) {
 }
 
 /**
+ * Play beep sound
+ */
+function playBeep() {
+    try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        osc.connect(ctx.destination);
+        osc.frequency.value = 800;
+        osc.start();
+        osc.stop(0.1);
+    } catch(e) {}
+}
+
+/**
  * Show toast notification
  */
 function showToast(message, isSuccess = true) {
@@ -241,6 +255,7 @@ function showToast(message, isSuccess = true) {
     toast.className = `toast ${isSuccess ? 'success' : 'error'}`;
     toast.textContent = message;
     document.body.appendChild(toast);
+    playBeep();
     setTimeout(() => toast.remove(), 3000);
 }
 
@@ -248,6 +263,9 @@ function showToast(message, isSuccess = true) {
  * Collects checked strikes by parsing existing element IDs
  */
 async function processBatchOrders(tableId, modeType, qtyId, isSquareOff = false) {
+    // Disable action buttons during processing
+    document.querySelectorAll('.action-btn').forEach(b => b.disabled = true);
+
     const table = document.getElementById(tableId);
     const checkedBoxes = table.querySelectorAll('tbody input[type="checkbox"]:checked');
     const lots = document.getElementById(qtyId).value;
@@ -257,6 +275,7 @@ async function processBatchOrders(tableId, modeType, qtyId, isSquareOff = false)
 
     if (checkedBoxes.length === 0) {
         alert("Please select at least one strike!");
+        document.querySelectorAll('.action-btn').forEach(b => b.disabled = false);
         return;
     }
 
@@ -291,6 +310,9 @@ try {
     } catch (error) {
         showToast('Order request failed', false);
         console.error("Order request failed:", error);
+    } finally {
+        // Re-enable buttons
+        document.querySelectorAll('.action-btn').forEach(b => b.disabled = false);
     }
 }
 

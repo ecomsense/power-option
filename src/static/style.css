@@ -255,6 +255,11 @@ th {
     margin-right: var(--space-1);
 }
 
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
 .btn:hover {
     filter: brightness(1.1);
 }
