@@ -271,12 +271,19 @@ async function processBatchOrders(tableId, modeType, qtyId, isSquareOff = false)
     const table = document.getElementById(tableId);
     const checkedBoxes = table.querySelectorAll('tbody input[type="checkbox"]:checked');
     const lots = document.getElementById(qtyId).value;
+    const numStrikes = document.getElementById(modeType + '-num').value;
     
     let side = getTableMode(modeType); // From toggle.js
     if (isSquareOff) side = (side === 'BUY') ? 'SELL' : 'BUY';
 
     if (checkedBoxes.length === 0) {
-        alert("Please select at least one strike!");
+        showToast("Select at least one strike!", false);
+        document.querySelectorAll('.action-btn').forEach(b => b.disabled = false);
+        return;
+    }
+    
+    if (parseInt(lots) < 1 || parseInt(numStrikes) < 1) {
+        showToast("Qty and strikes must be at least 1!", false);
         document.querySelectorAll('.action-btn').forEach(b => b.disabled = false);
         return;
     }
