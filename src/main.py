@@ -115,9 +115,12 @@ async def place_order_endpoint(payload: dict = Body(...)):
 
         # 2. Reverse Lookup for Symbols
         rows_to_process = []
-        for item in incoming_orders:  # item is like "ce-22000"
-            item_type, item_strike = item.split('-')
-            item_strike = int(item_strike)
+        for item in incoming_orders:  # item is like "cb-diff-ce-22000"
+            parts = item.split('-')
+            # Format: [cb, diff/hedge, ce/pe, strike]
+            table_side = parts[1]  # "diff" or "hedge"
+            item_type = parts[2]   # "ce" or "pe"
+            item_strike = int(parts[3])
             
             token = next(
                 (
@@ -132,7 +135,7 @@ async def place_order_endpoint(payload: dict = Body(...)):
                 rows_to_process.append(
                     {
                         "symbol": app.state.METADATA[token].get("symbol", "UNKNOWN"),
-                        "stag": "MAIN" if payload.get("tag") == "diff" else "HEDGE",
+                        "stag": "MAIN" if table_side == "diff" else "HEDGE",
                         "qty": lots,
                     }
                 )

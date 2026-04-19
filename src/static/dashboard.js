@@ -288,11 +288,8 @@ async function processBatchOrders(tableId, modeType, qtyId, orderCode) {
         return;
     }
 
-    // Simple list of selected checkbox IDs: ["ce-22000", "pe-23500"]
-    const orderList = Array.from(checkedBoxes).map(cb => {
-        const parts = cb.id.split('-'); 
-        return parts[2] + '-' + parts[3];  // "ce-22000"
-    });
+    // Simple list of selected checkbox IDs: ["cb-diff-ce-22000", "cb-diff-pe-23500"]
+    const orderList = Array.from(checkedBoxes).map(cb => cb.id);
 
     const payload = {
         orders: orderList,
