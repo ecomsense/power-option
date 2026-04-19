@@ -11,14 +11,11 @@ let socket;
 document.addEventListener("DOMContentLoaded", () => {
     // Initialize toggles to unchecked (buy mode) and sync state
     document.getElementById("main-side-toggle").checked = false;
-    document.getElementById("hedge-side-toggle").checked = false;
+document.getElementById("ltp-side-toggle").checked = false;
     
-    // Sync initial state from toggles
-    const mainToggle = document.getElementById("main-side-toggle");
-    const hedgeToggle = document.getElementById("hedge-side-toggle");
-    if (mainToggle) tableModes.main = mainToggle.checked ? 'SELL' : 'BUY';
-    if (hedgeToggle) tableModes.hedge = hedgeToggle.checked ? 'SELL' : 'BUY';
-    console.log(`Initial modes: main=${tableModes.main}, hedge=${tableModes.hedge}`);
+    const ltpToggle = document.getElementById("ltp-side-toggle");
+    if (ltpToggle) tableModes.ltp = ltpToggle.checked ? 'SELL' : 'BUY';
+    console.log(`Initial modes: main=${tableModes.main}, ltp=${tableModes.ltp}`);
     
     const chartElement = document.getElementById("chart-container");
     if (chartElement) {
@@ -77,7 +74,7 @@ socket = new WebSocket(`ws://${window.location.host}/ws`);
     socket.onmessage = (event) => {
         const data = JSON.parse(event.data);
         if (data.type === "UPDATE") {
-            renderDashboard(data.diff_rows || [], data.hedge_rows || [], data.main_fresh || 0, data.hedge_fresh || 0);
+            renderDashboard(data.diff_rows || [], data.ltp_rows || [], data.main_fresh || 0, data.ltp_fresh || 0);
         }
     };
     socket.onclose = () => {
@@ -104,7 +101,7 @@ window.addEventListener("beforeunload", () => {
  * Fully Optimized renderDashboard
  * Independently tracks Call and Put checkboxes for both Diff and Hedge tables.
  */
-function renderDashboard(diffRows, hedgeRows, mainFresh, hedgeFresh) {
+function renderDashboard(diffRows, ltpRows, mainFresh, ltpFresh) {
     const now = Math.floor(Date.now() / 1000);
 
     // --- 1. Render DIFF TABLE (14 Columns) ---
@@ -161,31 +158,31 @@ diffHtml += `
     if (diffBody) diffBody.innerHTML = diffHtml + diffFooter;
 
     // --- 2. Render HEDGE TABLE (6 Columns) ---
-    let hedgeHtml = "";
-    hedgeRows.forEach((row) => {
+    let ltpHtml = "";
+    ltpRows.forEach((row) => {
         // Unique IDs for Hedge Left (Call) and Right (Put)
-        const hLeftId = `cb-hedge-ce-${row.ce_strike}`;
-        const hRightId = `cb-hedge-pe-${row.pe_strike}`;
+        const hLeftId = `cb-ltp-ce-${row.ce_strike}`;
+        const hRightId = `cb-ltp-pe-${row.pe_strike}`;
 
         const exHLeft = document.getElementById(hLeftId);
         const exHRight = document.getElementById(hRightId);
 
-        const isHLeftChecked = hedgeFresh ? true : (exHLeft ? exHLeft.checked : true);
-        const isHRightChecked = hedgeFresh ? true : (exHRight ? exHRight.checked : true);
+        const isHLeftChecked = ltpFresh ? true : (exHLeft ? exHLeft.checked : true);
+        const isHRightChecked = ltpFresh ? true : (exHRight ? exHRight.checked : true);
 
-        hedgeHtml += `
+        ltpHtml += `
       <tr>
-<td class="cb-cell"><input type="checkbox" id="${hLeftId}" ${isHLeftChecked ? 'checked' : ''} onchange="updateCheckAllState('hedgeTable', 0)"></td>
+<td class="cb-cell"><input type="checkbox" id="${hLeftId}" ${isHLeftChecked ? 'checked' : ''} onchange="updateCheckAllState('ltpTable', 0)"></td>
         <td>${row.curr_ce.toFixed(2)}</td>
         <td>${row.ce_strike}</td>
         <td>${row.pe_strike}</td>
         <td>${row.curr_pe.toFixed(2)}</td>
-        <td class="cb-cell"><input type="checkbox" id="${hRightId}" ${isHRightChecked ? 'checked' : ''} onchange="updateCheckAllState('hedgeTable', 5)"></td>
+        <td class="cb-cell"><input type="checkbox" id="${hRightId}" ${isHRightChecked ? 'checked' : ''} onchange="updateCheckAllState('ltpTable', 5)"></td>
       </tr>`;
     });
 
-    const hedgeBody = document.getElementById("hedgeBody");
-    if (hedgeBody) hedgeBody.innerHTML = hedgeHtml;
+    const ltpBody = document.getElementById("ltpBody");
+    if (ltpBody) ltpBody.innerHTML = ltpHtml;
 
     // --- 3. Update Chart ---
     if (diffRows.length > 0) {
@@ -201,7 +198,7 @@ function getColorClass(val) {
 
 /**
  * Unified subscription updater
- * @param {string} side - Must be 'main' or 'hedge' to match HTML IDs
+ * @param {string} side - Must be 'main' or 'ltp' to match HTML IDs
  */
 async function updateSubscription(side) {
     // Validate all required fields are selected
@@ -295,8 +292,8 @@ async function processBatchOrders(tableId, modeType, qtyId, orderCode) {
     let numId;
     if (modeType === 'main') {
         numId = 'main-num';
-    } else if (modeType === 'hedge') {
-        numId = 'hedge-num';
+    } else if (modeType === 'ltp') {
+        numId = 'ltp-num';
     } else {
         showToast("Invalid table type!", false);
         document.querySelectorAll('.action-btn').forEach(b => b.disabled = false);
@@ -360,12 +357,12 @@ try {
 // Button Mappings - simplified
 function mainFire()   { placeOrder('main', 'main-qty', false); }
 function mainSquare() { placeOrder('main', 'main-qty', true); }
-function hedgeFire()  { placeOrder('hedge', 'hedge-qty', false); }
-function hedgeSquare(){ placeOrder('hedge', 'hedge-qty', true); }
+function ltpFire()  { placeOrder('ltp', 'ltp-qty', false); }
+function ltpSquare(){ placeOrder('ltp', 'ltp-qty', true); }
 
 // Unified order function
 function placeOrder(tableTag, qtyId, isSquareOff) {
-    const tableId = tableTag === 'main' ? 'mainTable' : 'hedgeTable';
+    const tableId = tableTag === 'main' ? 'mainTable' : 'ltpTable';
     if (!document.getElementById(tableId)) {
         showToast("Table not found!", false);
         return;
@@ -436,7 +433,7 @@ function updateCheckAllState(tableId, colIndex) {
     
     const checkallId = tableId === "diffTable" 
         ? (colIndex === 0 ? "main-ce-checkall" : "main-pe-checkall")
-        : (colIndex === 0 ? "hedge-ce-checkall" : "hedge-pe-checkall");
+        : (colIndex === 0 ? "ltp-ce-checkall" : "ltp-pe-checkall");
     const checkall = document.getElementById(checkallId);
     if (checkall) checkall.checked = allChecked;
 }
@@ -444,16 +441,16 @@ function updateCheckAllState(tableId, colIndex) {
 function resetCheckAllBoxes() {
     document.getElementById("main-ce-checkall").checked = false;
     document.getElementById("main-pe-checkall").checked = false;
-    document.getElementById("hedge-ce-checkall").checked = false;
-    document.getElementById("hedge-pe-checkall").checked = false;
+    document.getElementById("ltp-ce-checkall").checked = false;
+    document.getElementById("ltp-pe-checkall").checked = false;
 }
 
 function resetCheckAllForSide(side, checked = false) {
     if (side === "main") {
         document.getElementById("main-ce-checkall").checked = checked;
         document.getElementById("main-pe-checkall").checked = checked;
-    } else if (side === "hedge") {
-        document.getElementById("hedge-ce-checkall").checked = checked;
-        document.getElementById("hedge-pe-checkall").checked = checked;
+    } else if (side === "ltp") {
+        document.getElementById("ltp-ce-checkall").checked = checked;
+        document.getElementById("ltp-pe-checkall").checked = checked;
     }
 }

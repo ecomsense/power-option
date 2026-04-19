@@ -90,11 +90,11 @@ async def lifespan(app: FastAPI):
 
         # 2. Setup Global State Registry
         # METADATA stores: {token: {"strike": 26100, "type": "CE", "prev": 145.0}}
-        app.state.SUBSCRIBED = {"main": [], "hedge": []}
+        app.state.SUBSCRIBED = {"main": [], "ltp": []}
 
         app.state.METADATA = {}
 
-        app.state.checkbox = {"main": 1, "hedge": 1}
+        app.state.checkbox = {"main": 1, "ltp": 1}
 
         # 4. Initialize WebSocket Manager
         # We assign it to app.state.ws so the broadcaster can find it
@@ -136,8 +136,8 @@ async def place_order_endpoint(payload: dict = Body(...)):
         order_type = payload.get("order_code")  # LE, SE, LX, SX
         table_tag = payload.get("tag", "NO_TAG")
         
-        # Get STAG from table_tag (main/hedge table identifier)
-        # main table -> MAIN, hedge table -> HEDGE
+        # Get STAG from table_tag (main/ltp table identifier)
+        # main table -> MAIN, ltp table -> HEDGE
         table_id = table_tag.lower() if table_tag else "main"
         stag = "MAIN" if table_id == "main" else "HEDGE"
         
@@ -184,7 +184,7 @@ async def update_subscription(payload: dict = Body(...)):
         new_tokens = update_metadata(kwargs)
         # Handle Subscriptions
         stale_list = app.state.SUBSCRIBED[side]
-        other_side = "hedge" if side == "main" else "main"
+        other_side = "ltp" if side == "main" else "main"
         other_list = app.state.SUBSCRIBED[other_side]
 
         # Only unsubscribe if the other side isn't using the token
@@ -272,14 +272,14 @@ async def market_broadcaster(websocket: WebSocket):
                 payload = {
                     "type": "UPDATE",
                     "diff_rows": assemble_table_rows("main", ticks),
-                    "hedge_rows": assemble_table_rows("hedge", ticks),
+                    "ltp_rows": assemble_table_rows("ltp", ticks),
                     "main_fresh": app.state.checkbox["main"],
-                    "hedge_fresh": app.state.checkbox["hedge"],
+                    "ltp_fresh": app.state.checkbox["ltp"],
                 }
 
                 await websocket.send_json(payload)
                 app.state.checkbox["main"] = 0
-                app.state.checkbox["hedge"] = 0
+                app.state.checkbox["ltp"] = 0
             await asyncio.sleep(1)
     except Exception as e:
         logging.error(f"Broadcaster Error: {e}")

@@ -7,8 +7,8 @@ const EMPTY_OPTION = '<option value="">-- Select --</option>';
 
 function clearExpiryAndStrikes() {
     document.getElementById("expiry-select").innerHTML = EMPTY_OPTION;
-    const ceSelects = ["main-call-base", "hedge-call-base"];
-    const peSelects = ["main-put-base", "hedge-put-base"];
+    const ceSelects = ["main-call-base", "ltp-call-base"];
+    const peSelects = ["main-put-base", "ltp-put-base"];
     ceSelects.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.innerHTML = EMPTY_OPTION;
@@ -20,8 +20,8 @@ function clearExpiryAndStrikes() {
 }
 
 function clearStrikes() {
-    const ceSelects = ["main-call-base", "hedge-call-base"];
-    const peSelects = ["main-put-base", "hedge-put-base"];
+    const ceSelects = ["main-call-base", "ltp-call-base"];
+    const peSelects = ["main-put-base", "ltp-put-base"];
     ceSelects.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.innerHTML = EMPTY_OPTION;
@@ -70,8 +70,8 @@ async function updateStrikeDropdowns() {
         );
         const data = await response.json(); // Expected: { CE: [...], PE: [...] }
 
-        const ceSelects = ["main-call-base", "hedge-call-base"];
-        const peSelects = ["main-put-base", "hedge-put-base"];
+        const ceSelects = ["main-call-base", "ltp-call-base"];
+        const peSelects = ["main-put-base", "ltp-put-base"];
 
         // Populate CE dropdowns with empty first
         ceSelects.forEach((id) => {
