@@ -358,11 +358,16 @@ function closeLogsModal() {
 
 function toggleColumn(tableId, colIndex, checked) {
     const table = document.getElementById(tableId);
+    if (!table) return;
+    
     const rows = table.querySelectorAll("tbody tr");
     rows.forEach(row => {
-        const cell = row.children[colIndex];
-        const checkbox = cell.querySelector("input[type='checkbox']");
-        if (checkbox) checkbox.checked = checked;
+        // Check if the row has enough columns
+        if (row.children.length > colIndex) {
+            const cell = row.children[colIndex];
+            const checkbox = cell.querySelector("input[type='checkbox']");
+            if (checkbox) checkbox.checked = checked;
+        }
     });
     updateCheckAllState(tableId, colIndex);
 }
