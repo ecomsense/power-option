@@ -166,10 +166,13 @@ a {
     background-color: var(--bg-header);
 }
 
-.diff-table-container {
-    flex: 0 0 55%;
-    border-right: var(--border-w2) solid var(--border-main);
+.data-tables {
+    flex: 1;
     overflow: visible;
+}
+
+.data-tables table {
+    width: 100%;
 }
 
 .ltp-table-container {
