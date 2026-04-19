@@ -478,8 +478,8 @@ tbody tr:hover {
 }
 
 /* Sticky Footer */
-#diffBody tr:last-child,
-#ltpBody tr:last-child {
+#mainBody tr:last-child,
+#hedgeBody tr:last-child {
     position: sticky;
     bottom: 0;
     z-index: 20;
@@ -488,8 +488,8 @@ tbody tr:hover {
     outline: var(--border-w1) solid var(--border-main);
 }
 
-#diffBody tr:last-child td,
-#ltpBody tr:last-child td {
+#mainBody tr:last-child td,
+#hedgeBody tr:last-child td {
     font-weight: bold;
     color: var(--white);
     padding: var(--space-5) var(--space-2);

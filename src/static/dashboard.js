@@ -157,8 +157,8 @@ diffHtml += `
       <td colspan="4"></td>
     </tr>`;
 
-    const diffBody = document.getElementById("diffBody");
-    if (diffBody) diffBody.innerHTML = diffHtml + diffFooter;
+const mainBody = document.getElementById("mainBody");
+    if (mainBody) mainBody.innerHTML = diffHtml + diffFooter;
 
     // --- 2. Render HEDGE TABLE (6 Columns) ---
     let hedgeHtml = "";
