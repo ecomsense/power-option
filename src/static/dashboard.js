@@ -26,8 +26,9 @@ document.addEventListener("DOMContentLoaded", () => {
     },
     localization: {
         // This formats the price/time in the floating tooltip
-        timeFormatter: timestamp => {
-            return new Date(timestamp * 1000).toLocaleTimeString("en-IN", {
+timeFormatter: timestamp => {
+            const d = new Date(timestamp * 1000);
+            return d.toLocaleTimeString("en-IN", {
                 timeZone: "Asia/Kolkata",
                 hour12: false,
                 hour: '2-digit',
@@ -41,14 +42,15 @@ document.addEventListener("DOMContentLoaded", () => {
         secondsVisible: true,
         shiftVisibleRangeOnNewBar: true,
 
-        // This forces the axis labels to use your local time
+// This forces the axis labels to use your local time
         tickMarkFormatter: (time, tickMarkType, locale) => {
             const date = new Date(time * 1000);
             return date.toLocaleTimeString("en-IN", {
                 timeZone: "Asia/Kolkata",
+                hour12: false,
                 hour: '2-digit',
                 minute: '2-digit',
-                hour12: false
+                second: '2-digit'
             });
         },
     },
