@@ -174,15 +174,19 @@ a {
     flex: 0 0 45%;
 }
 
-/* Make tables match control bar width */
+/* Make tables fill container width */
+.diff-table-container,
+.ltp-table-container {
+    overflow: visible;
+}
+
 .diff-table-container table,
 .ltp-table-container table {
-    width: max-content;
-    min-width: 100%;
+    width: 100%;
+    table-layout: fixed;
 }
 
 .table-container {
-    overflow-x: auto;
     position: relative;
     background-color: var(--bg-header);
 }
