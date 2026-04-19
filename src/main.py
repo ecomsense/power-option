@@ -35,27 +35,25 @@ def update_metadata(kwargs):
         except:
             expiry_formatted = expiry_str.replace("-", "")[:6]
 
+    # Get basename for symbol prefix
+    basename = kwargs.get("basename", "NIFTY")
+
     # Populate initial metadata and tokens
-    # df also contains tradingsymbol, expiry
     new_tokens = []
     for _, row in df_ce.iterrows():
         t = row["instrument_token"]
         new_tokens.append(t)
         hist = Helper.history(t)
         if hist > 0:
-            tradingsym = row.get("tradingsymbol", "")
-            # Format: Use tradingsymbol as-is from CSV (already in correct format)
-            # The CSV already contains properly formatted symbols like NIFTY2642120100CE
-            # Just ensure we store it with the correct formatting
-            if tradingsym:
-                # Keep the tradingsymbol as-is from CSV, it's already in the required format
-                pass  # tradingsym is already correct
+            strike = row.get("strike", 0)
+            # Format: {Symbol}{yymmdd}{strike}{CE/PE} e.g., NIFTY26042122000CE
+            symbol = f"{basename}{expiry_formatted}{strike}CE"
             
             app.state.METADATA[t] = {
-                "strike": row["strike"],
+                "strike": strike,
                 "type": "CE",
                 "prev": hist,
-                "symbol": tradingsym,
+                "symbol": symbol,
             }
 
     for _, row in df_pe.iterrows():
@@ -63,16 +61,15 @@ def update_metadata(kwargs):
         new_tokens.append(t)
         hist = Helper.history(t)
         if hist > 0:
-            tradingsym = row.get("tradingsymbol", "")
-            # Format: Use tradingsymbol as-is from CSV
-            if tradingsym:
-                pass  # tradingsym is already correct
+            strike = row.get("strike", 0)
+            # Format: {Symbol}{yymmdd}{strike}{CE/PE} e.g., NIFTY26042122000PE
+            symbol = f"{basename}{expiry_formatted}{strike}PE"
             
             app.state.METADATA[t] = {
-                "strike": row["strike"],
+                "strike": strike,
                 "type": "PE",
                 "prev": hist,
-                "symbol": tradingsym,
+                "symbol": symbol,
             }
     return new_tokens
 
