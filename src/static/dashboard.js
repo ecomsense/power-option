@@ -380,6 +380,7 @@ function placeOrder(tableTag, qtyId, isSquareOff) {
     const qty = qtyElement.value;
     
     // Order code: L/S + E/X
+    // BUY toggle -> L (LE/LX), SELL toggle -> S (SE/SX)
     let code = (side === 'BUY' ? 'L' : 'S') + (isSquareOff ? 'X' : 'E');
     console.log(`placeOrder: tableTag=${tableTag}, side=${side}, isSquareOff=${isSquareOff}, code=${code}`);
     

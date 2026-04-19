@@ -24,6 +24,7 @@ function toggleSide(type) {
     
     const isChecked = checkbox.checked;
     
+    // Toggle behavior: unchecked=BUY, checked=SELL
     if (isChecked) {
         window.tableModes[type] = 'SELL';
     } else {
