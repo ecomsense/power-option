@@ -44,26 +44,12 @@ def update_metadata(kwargs):
         hist = Helper.history(t)
         if hist > 0:
             tradingsym = row.get("tradingsymbol", "")
-            # Format: {Symbol}{yymmdd}{strike}{CE/PE}
-            # If tradingsymbol is NIFTY26JUN12000CE, convert to NIFTY26063012000CE
-            if tradingsym and expiry_formatted:
-                # Extract symbol prefix and strike/option from tradingsymbol
-                # e.g., NIFTY26JUN12000CE -> NIFTY + 260630 + 12000 + CE
-                import re
-                # Pattern: NIFTY26JUN12000CE -> NIFTY(26)(JUN)(12000)(CE)
-                match = re.match(r'^([A-Z]+)(\d{2})([A-Z]{3})(\d+)(CE|PE)$', tradingsym)
-                if match:
-                    symbol_prefix = match.group(1)  # NIFTY
-                    year_short = match.group(2)  # 26
-                    month_abbr = match.group(3)  # JUN
-                    strike = match.group(4)  # 12000
-                    option_type = match.group(5)  # CE
-                    
-                    # Convert month abbreviation to number
-                    month_map = {"JAN": "01", "FEB": "02", "MAR": "03", "APR": "04", "MAY": "05", "JUN": "06",
-                               "JUL": "07", "AUG": "08", "SEP": "09", "OCT": "10", "NOV": "11", "DEC": "12"}
-                    month_num = month_map.get(month_abbr, "01")
-                    tradingsym = f"{symbol_prefix}{year_short}{month_num}{strike}{option_type}"
+            # Format: Use tradingsymbol as-is from CSV (already in correct format)
+            # The CSV already contains properly formatted symbols like NIFTY2642120100CE
+            # Just ensure we store it with the correct formatting
+            if tradingsym:
+                # Keep the tradingsymbol as-is from CSV, it's already in the required format
+                pass  # tradingsym is already correct
             
             app.state.METADATA[t] = {
                 "strike": row["strike"],
@@ -78,23 +64,9 @@ def update_metadata(kwargs):
         hist = Helper.history(t)
         if hist > 0:
             tradingsym = row.get("tradingsymbol", "")
-            # Format: {Symbol}{yymmdd}{strike}{CE/PE}
-            if tradingsym and expiry_formatted:
-                import re
-                # Pattern: NIFTY26JUN12000CE -> NIFTY(26)(JUN)(12000)(CE)
-                match = re.match(r'^([A-Z]+)(\d{2})([A-Z]{3})(\d+)(CE|PE)$', tradingsym)
-                if match:
-                    symbol_prefix = match.group(1)
-                    year_short = match.group(2)
-                    month_abbr = match.group(3)
-                    strike = match.group(4)
-                    option_type = match.group(5)
-                    
-                    # Convert month abbreviation to number
-                    month_map = {"JAN": "01", "FEB": "02", "MAR": "03", "APR": "04", "MAY": "05", "JUN": "06",
-                               "JUL": "07", "AUG": "08", "SEP": "09", "OCT": "10", "NOV": "11", "DEC": "12"}
-                    month_num = month_map.get(month_abbr, "01")
-                    tradingsym = f"{symbol_prefix}{year_short}{month_num}{strike}{option_type}"
+            # Format: Use tradingsymbol as-is from CSV
+            if tradingsym:
+                pass  # tradingsym is already correct
             
             app.state.METADATA[t] = {
                 "strike": row["strike"],
