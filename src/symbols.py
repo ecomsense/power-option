@@ -154,27 +154,6 @@ def find_expiry_from_base(basename):
         print_exc()
 
 
-# to be removed
-def find_base_expiries() -> list:
-    """3. populate unique basename (expiries) for the UI from csv
-
-    returns:
-        list of unique basename expiries BANKNIFTY (2030-11-01)
-    """
-    try:
-        all_symbols = []
-        for basename in D_SYMBOL.keys():
-            file_path = f"{S_DATA}/CE/{basename}.csv"
-            df = pd.read_csv(file_path)
-            formatted = basename + " (" + df["expiry"].astype(str) + ")"
-            # Add unique values to our list
-            all_symbols.extend(formatted.unique().tolist())
-        return all_symbols
-    except Exception as e:
-        logging.error(f"{e} while")
-        print_exc()
-
-
 def find_strike_from_base_expiry(basename, expiry) -> dict:
     """4. get data dependant drop downs
 
