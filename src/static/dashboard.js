@@ -283,13 +283,13 @@ async function processBatchOrders(tableId, modeType, qtyId, orderCode) {
     }
     
     const checkedBoxes = table.querySelectorAll('tbody input[type="checkbox"]:checked');
-    const lotsElement = document.getElementById(qtyId);
-    if (!lotsElement) {
+    const qtyElement = document.getElementById(qtyId);
+    if (!qtyElement) {
         showToast("Quantity input not found!", false);
         document.querySelectorAll('.action-btn').forEach(b => b.disabled = false);
         return;
     }
-    const lots = lotsElement.value;
+    const qty = qtyElement.value;
     
     // Determine the num input ID based on modeType
     let numId;
@@ -319,7 +319,7 @@ async function processBatchOrders(tableId, modeType, qtyId, orderCode) {
         return;
     }
     
-    if (parseInt(lots) < 1 || parseInt(numStrikes) < 1) {
+    if (parseInt(qty) < 1 || parseInt(numStrikes) < 1) {
         showToast("Qty and strikes must be at least 1!", false);
         document.querySelectorAll('.action-btn').forEach(b => b.disabled = false);
         return;
@@ -330,7 +330,7 @@ async function processBatchOrders(tableId, modeType, qtyId, orderCode) {
 
     const payload = {
         orders: orderList,
-        quantity: parseInt(lots),
+        quantity: parseInt(qty),
         order_code: orderCode,
         tag: modeType
     };
