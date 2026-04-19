@@ -46,8 +46,8 @@ def update_metadata(kwargs):
         hist = Helper.history(t)
         if hist > 0:
             strike = row.get("strike", 0)
-            # Format: {Symbol}{yymmdd}{strike}{CE/PE} e.g., NIFTY26042122000CE
-            symbol = f"{basename}{expiry_formatted}{strike}CE"
+            # Format: {Symbol}{yymmdd}{5-digit strike}{CE/PE} e.g., NIFTY26042122000CE
+            symbol = f"{basename}{expiry_formatted}{strike:05d}CE"
             
             app.state.METADATA[t] = {
                 "strike": strike,
@@ -62,8 +62,8 @@ def update_metadata(kwargs):
         hist = Helper.history(t)
         if hist > 0:
             strike = row.get("strike", 0)
-            # Format: {Symbol}{yymmdd}{strike}{CE/PE} e.g., NIFTY26042122000PE
-            symbol = f"{basename}{expiry_formatted}{strike}PE"
+            # Format: {Symbol}{yymmdd}{5-digit strike}{CE/PE} e.g., NIFTY26042122000PE
+            symbol = f"{basename}{expiry_formatted}{strike:05d}PE"
             
             app.state.METADATA[t] = {
                 "strike": strike,
