@@ -113,10 +113,10 @@ async def order_place(payload: dict = Body(...)):
 
         # 1. Map to your specific Order Codes
         # LE: Long Entry, SE: Short Entry, LX: Long Exit, SX: Short Exit
-        if side == "BUY":
-            order_type = "SX" if is_square else "LE"
-        else:
-            order_type = "LX" if is_square else "SE"
+if side == "BUY":
+    order_type = "LX" if is_square else "LE"
+else:
+    order_type = "SX" if is_square else "SE"
 
         # 2. Reverse Lookup for Symbols
         rows_to_process = []
