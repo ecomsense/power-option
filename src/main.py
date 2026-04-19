@@ -24,6 +24,17 @@ def update_metadata(kwargs):
     # 3. Initial Default Subscription (e.g., BANKNIFTY)
     df_ce, df_pe = find_call_and_put_from_dropdown(**kwargs)
 
+    # Format expiry as yymmdd
+    expiry_str = kwargs.get("expiry", "")
+    expiry_formatted = ""
+    if expiry_str:
+        try:
+            from datetime import datetime
+            dt = datetime.strptime(expiry_str, "%Y-%m-%d")
+            expiry_formatted = dt.strftime("%y%m%d")
+        except:
+            expiry_formatted = expiry_str.replace("-", "")[:6]
+
     # Populate initial metadata and tokens
     # df also contains tradingsymbol, expiry
     new_tokens = []
@@ -32,10 +43,25 @@ def update_metadata(kwargs):
         new_tokens.append(t)
         hist = Helper.history(t)
         if hist > 0:
+            tradingsym = row.get("tradingsymbol", "")
+            # Format: {Symbol}{yymmdd}{strike}{CE/PE}
+            # If tradingsymbol is NIFTY26JUN12000CE, convert to NIFTY26063012000CE
+            if tradingsym and expiry_formatted:
+                # Extract symbol prefix and strike/option from tradingsymbol
+                # e.g., NIFTY26JUN12000CE -> NIFTY + 260630 + 12000 + CE
+                import re
+                match = re.match(r'^([A-Z]+)\d+[A-Z]+(\d+)(CE|PE)$', tradingsym)
+                if match:
+                    symbol_prefix = match.group(1)  # NIFTY
+                    strike = match.group(2)  # 12000
+                    option_type = match.group(3)  # CE
+                    tradingsym = f"{symbol_prefix}{expiry_formatted}{strike}{option_type}"
+            
             app.state.METADATA[t] = {
                 "strike": row["strike"],
                 "type": "CE",
                 "prev": hist,
+                "symbol": tradingsym,
             }
 
     for _, row in df_pe.iterrows():
@@ -43,10 +69,22 @@ def update_metadata(kwargs):
         new_tokens.append(t)
         hist = Helper.history(t)
         if hist > 0:
+            tradingsym = row.get("tradingsymbol", "")
+            # Format: {Symbol}{yymmdd}{strike}{CE/PE}
+            if tradingsym and expiry_formatted:
+                import re
+                match = re.match(r'^([A-Z]+)\d+[A-Z]+(\d+)(CE|PE)$', tradingsym)
+                if match:
+                    symbol_prefix = match.group(1)
+                    strike = match.group(2)
+                    option_type = match.group(3)
+                    tradingsym = f"{symbol_prefix}{expiry_formatted}{strike}{option_type}"
+            
             app.state.METADATA[t] = {
                 "strike": row["strike"],
                 "type": "PE",
                 "prev": hist,
+                "symbol": tradingsym,
             }
     return new_tokens
 
@@ -60,6 +98,7 @@ async def lifespan(app: FastAPI):
 
         app.state.webhook_url = O_SETG["webhook_url"]
         app.state.timeout = O_SETG["timeout"]
+        app.state.stag = O_SETG.get("tag", "DEFAULT")
 
         # 1. Initialize symbols
         for kwargs in D_SYMBOL.values():
@@ -99,7 +138,9 @@ async def send_to_webhook_async(message: str):
     timeout = app.state.timeout
     async with httpx.AsyncClient() as client:
         response = await client.post(url=webhook_url, data=message, timeout=timeout)
-    logging.debug(f"WEBHOOK | URL: {webhook_url} | BODY: {message} | STATUS: {response.status_code}")
+    logging.debug(
+        f"WEBHOOK | URL: {webhook_url} | BODY: {message} | STATUS: {response.status_code}"
+    )
     return response
 
 
@@ -107,57 +148,34 @@ async def send_to_webhook_async(message: str):
 async def place_order_endpoint(payload: dict = Body(...)):
     try:
         incoming_orders = payload.get("orders", [])
-        lots = payload.get("quantity")
-        order_code = payload.get("order_code")  # LE, SE, LX, SX
+        quantity = payload.get("quantity")
+        order_type = payload.get("order_code")  # LE, SE, LX, SX
+        table_tag = payload.get("tag", "NO_TAG")
         
-        # Use order_code directly from JS
-        order_type = order_code
-
-        # 2. Reverse Lookup for Symbols
-        rows_to_process = []
-        for item in incoming_orders:  # item is like "cb-diff-ce-22000"
-            parts = item.split('-')
-            # Format: [cb, diff/hedge, ce/pe, strike]
-            table_side = parts[1]  # "diff" or "hedge"
-            item_type = parts[2]   # "ce" or "pe"
-            item_strike = int(parts[3])
-            
-            token = next(
-                (
-                    t
-                    for t, data in app.state.METADATA.items()
-                    if data["strike"] == item_strike and data["type"].upper() == item_type.upper()
-                ),
-                None,
-            )
-
-            if token:
-                rows_to_process.append(
-                    {
-                        "symbol": app.state.METADATA[token].get("symbol", "UNKNOWN"),
-                        "stag": "MAIN" if table_side == "diff" else "HEDGE",
-                        "qty": lots,
-                    }
-                )
-
-        if not rows_to_process:
-            return {"status": "error", "message": "No valid symbols found"}
-
-        if order_type in {"LX", "SX"}:
-            # Individual calls for Exits
-            for row in rows_to_process:
-                msg = f"TYPE:{order_type},SYMBOL:{row['symbol']},STAG:{row['stag']},QTY:{row['qty']}"
-                await send_to_webhook_async(msg)
-                logging.info(f"Exit Order Sent: {msg}")
-        else:
-            # Batch call for Entries
-            parts = [
-                f"TYPE:{order_type},SYMBOL:{r['symbol']},STAG:{r['stag']},QTY:{r['qty']}"
-                for r in rows_to_process
-            ]
-            msg = ";".join(parts)
-            await send_to_webhook_async(msg)
-            logging.info(f"Entry Batch Sent: {msg}")
+        # Get STAG from config
+        stag = getattr(app.state, "stag", "DEFAULT")
+        
+        # Build order parts - lookup symbol from METADATA
+        parts = []
+        for order_id in incoming_orders:
+            # Parse checkbox ID: cb-{table}-{type}-{strike}
+            parts_id = order_id.split("-")
+            if len(parts_id) >= 4:
+                option_type = parts_id[2].upper()  # CE or PE
+                strike = int(parts_id[3])
+                
+                # Find matching token in METADATA
+                symbol = "UNKNOWN"
+                for token, data in app.state.METADATA.items():
+                    if data.get("strike") == strike and data.get("type", "").upper() == option_type:
+                        symbol = data.get("symbol", "UNKNOWN")
+                        break
+                
+                parts.append(f"TYPE:{order_type},SYMBOL:{symbol},STAG:{stag},QTY:{quantity}")
+        
+        msg = ";".join(parts)
+        await send_to_webhook_async(msg)
+        logging.info(f"Entry: {msg}")
 
         return {"status": "success", "order_type": order_type}
 
@@ -350,4 +368,5 @@ if __name__ == "__main__":
     # With nginx proxy: python -m uvicorn main:app --host 127.0.0.1 --port 8000
     # Without proxy (direct access): python -m uvicorn main:app --host 0.0.0.0 --port 8000
     import uvicorn
+
     uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=False)
