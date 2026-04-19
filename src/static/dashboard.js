@@ -359,8 +359,18 @@ function hedgeSquare(){ placeOrder('hedge', 'hedge-qty', true); }
 // Unified order function
 function placeOrder(tableTag, qtyId, isSquareOff) {
     const tableId = tableTag === 'diff' ? 'diffTable' : 'hedgeTable';
+    if (!document.getElementById(tableId)) {
+        showToast("Table not found!", false);
+        return;
+    }
+    
     const side = getTableMode(tableTag);
-    const qty = document.getElementById(qtyId).value;
+    const qtyElement = document.getElementById(qtyId);
+    if (!qtyElement) {
+        showToast("Quantity input not found!", false);
+        return;
+    }
+    const qty = qtyElement.value;
     
     // Order code: L/S + E/X
     let code = (side === 'BUY' ? 'L' : 'S') + (isSquareOff ? 'X' : 'E');
