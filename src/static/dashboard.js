@@ -381,7 +381,8 @@ function placeOrder(tableTag, qtyId, isSquareOff) {
     
     // Order code: L/S + E/X
     // BUY toggle -> L (LE/LX), SELL toggle -> S (SE/SX)
-    let code = (side === 'BUY' ? 'L' : 'S') + (isSquareOff ? 'X' : 'E');
+    // Invert: BUY -> S, SELL -> L
+    let code = (side === 'BUY' ? 'S' : 'L') + (isSquareOff ? 'X' : 'E');
     console.log(`placeOrder: tableTag=${tableTag}, side=${side}, isSquareOff=${isSquareOff}, code=${code}`);
     
     processBatchOrders(tableId, tableTag, qtyId, code);
