@@ -5,16 +5,14 @@ import sys
 import os
 
 action = sys.argv[1] if len(sys.argv) > 1 else "start"
-
 service = "power-option"
 venv = os.path.expanduser("~/no_venv/venv/bin/gunicorn")
 main_app = os.path.expanduser("~/no_venv/power-option/main:app")
 bind = "127.0.0.1:8000"
-pidfile = os.path.expanduser("~/no_venv/power-option/power-option.pid")
 cwd = os.path.expanduser("~/no_venv/power-option")
 
 def start():
-    subprocess.run([venv, "-w", "1", "-k", "uvicorn.workers.UvicornWorker", main_app, "--bind", bind, "-D", pidfile], cwd=cwd)
+    subprocess.run([venv, "-w", "1", "-k", "uvicorn.workers.UvicornWorker", main_app, "--bind", bind, "-D"], cwd=cwd)
 
 def stop():
     subprocess.run(["pkill", "-f", "gunicorn.*power-option"])
@@ -27,7 +25,12 @@ def restart():
 
 if action == "start":
     start()
+    print(f"{service} started")
 elif action == "stop":
     stop()
+    print(f"{service} stopped")
 elif action == "restart":
     restart()
+    print(f"{service} restarted")
+else:
+    print(f"Usage: {sys.argv[0]} [start|stop|restart]")
