@@ -288,14 +288,10 @@ async function processBatchOrders(tableId, modeType, qtyId, orderCode) {
         return;
     }
 
-    // Parse IDs like "cb-diff-ce-22000"
+    // Simple list of selected checkbox IDs: ["ce-22000", "pe-23500"]
     const orderList = Array.from(checkedBoxes).map(cb => {
         const parts = cb.id.split('-'); 
-        return {
-            cb_id: cb.id,  // checkbox ID
-            type: parts[2].toUpperCase(), // "ce" -> "CE"
-            strike: parseInt(parts[3])    // "22000" -> 22000
-        };
+        return parts[2] + '-' + parts[3];  // "ce-22000"
     });
 
     const payload = {

@@ -115,19 +115,20 @@ async def place_order_endpoint(payload: dict = Body(...)):
 
         # 2. Reverse Lookup for Symbols
         rows_to_process = []
-        for item in incoming_orders:
+        for item in incoming_orders:  # item is like "ce-22000"
+            item_type, item_strike = item.split('-')
+            item_strike = int(item_strike)
+            
             token = next(
                 (
                     t
                     for t, data in app.state.METADATA.items()
-                    if data["strike"] == item["strike"] and data["type"] == item["type"]
+                    if data["strike"] == item_strike and data["type"].upper() == item_type.upper()
                 ),
                 None,
             )
 
             if token:
-                # We extract the 'symbol' and 'stag' from your METADATA
-                # Ensure your update_metadata function stores these!
                 rows_to_process.append(
                     {
                         "symbol": app.state.METADATA[token].get("symbol", "UNKNOWN"),
