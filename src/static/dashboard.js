@@ -277,15 +277,30 @@ async function processBatchOrders(tableId, modeType, qtyId, orderCode) {
     
     const checkedBoxes = table.querySelectorAll('tbody input[type="checkbox"]:checked');
     const lotsElement = document.getElementById(qtyId);
-    const numStrikesElement = document.getElementById(modeType + '-num');
-    
-    if (!lotsElement || !numStrikesElement) {
-        showToast("Required input elements not found!", false);
+    if (!lotsElement) {
+        showToast("Quantity input not found!", false);
         document.querySelectorAll('.action-btn').forEach(b => b.disabled = false);
         return;
     }
-    
     const lots = lotsElement.value;
+    
+    // Determine the num input ID based on modeType
+    let numId;
+    if (modeType === 'diff') {
+        numId = 'main-num';
+    } else if (modeType === 'hedge') {
+        numId = 'hedge-num';
+    } else {
+        showToast("Invalid table type!", false);
+        document.querySelectorAll('.action-btn').forEach(b => b.disabled = false);
+        return;
+    }
+    const numStrikesElement = document.getElementById(numId);
+    if (!numStrikesElement) {
+        showToast("Number of strikes input not found!", false);
+        document.querySelectorAll('.action-btn').forEach(b => b.disabled = false);
+        return;
+    }
     const numStrikes = numStrikesElement.value;
     
     // Derive side from orderCode first letter
