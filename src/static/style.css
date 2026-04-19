@@ -177,14 +177,9 @@ a {
 }
 
 /* Make Tables */
-.table-wrapper {
-    overflow-x: auto;
-}
-
 .diff-table-container table,
 .ltp-table-container table {
     width: 100%;
-    table-layout: fixed;
 }
 
 .table-container {
