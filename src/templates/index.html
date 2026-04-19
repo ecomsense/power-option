@@ -9,10 +9,10 @@
     <body>
         <div class="dashboard-container">
             <div class="tables-wrapper">
-                <div class="table-container diff-table-container">
+                <div class="table-container">
                     <div class="top-control-bar">
                         <table class="control-table">
-<tr class="label-row">
+                            <tr class="label-row">
                                 <th>Symbol</th>
                                 <th>Expiry</th>
                                 <th>Call</th>
@@ -62,30 +62,32 @@
                             </tr>
                         </table>
                     </div>
-                    <table id="diffTable">
-                        <thead>
-                            <tr>
-                                <th class="cb-cell"><input type="checkbox" id="diff-ce-checkall" onchange="toggleColumn('diffTable', 0, this.checked)"></th>
-                                <th>Total Diff</th>
-                                <th>CE %</th>
-                                <th>CE Diff</th>
-                                <th>CE LTP</th>
-                                <th>Prev CE</th>
-                                <th>CE Strike</th>
-                                <th>PE Strike</th>
-                                <th>Prev PE</th>
-                                <th>PE LTP</th>
-                                <th>PE Diff</th>
-                                <th>PE %</th>
-                                <th>Total %</th>
-                                <th class="cb-cell"><input type="checkbox" id="diff-pe-checkall" onchange="toggleColumn('diffTable', 13, this.checked)"></th>
-                            </tr>
-                        </thead>
-                        <tbody id="diffBody"></tbody>
-                    </table>
+                    <div class="diff-table-container">
+                        <table id="diffTable">
+                            <thead>
+                                <tr>
+                                    <th class="cb-cell"><input type="checkbox" id="diff-ce-checkall" onchange="toggleColumn('diffTable', 0, this.checked)"></th>
+                                    <th>Total Diff</th>
+                                    <th>CE %</th>
+                                    <th>CE Diff</th>
+                                    <th>CE LTP</th>
+                                    <th>Prev CE</th>
+                                    <th>CE Strike</th>
+                                    <th>PE Strike</th>
+                                    <th>Prev PE</th>
+                                    <th>PE LTP</th>
+                                    <th>PE Diff</th>
+                                    <th>PE %</th>
+                                    <th>Total %</th>
+                                    <th class="cb-cell"><input type="checkbox" id="diff-pe-checkall" onchange="toggleColumn('diffTable', 13, this.checked)"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="diffBody"></tbody>
+                        </table>
+                    </div>
                 </div>
 
-                <div class="table-container ltp-table-container">
+                <div class="table-container">
                     <div class="top-control-bar">
                         <table class="control-table">
                             <tr class="label-row">
@@ -134,19 +136,21 @@
                             </tr>
                         </table>
                     </div>
-                    <table id="hedgeTable">
-                        <thead>
-                            <tr>
-                                <th class="cb-cell"><input type="checkbox" id="hedge-ce-checkall" onchange="toggleColumn('hedgeTable', 0, this.checked)"></th>
-                                <th>CE LTP</th>
-                                <th>CE Strike</th>
-                                <th>PE Strike</th>
-                                <th>PE LTP</th>
-                                <th class="cb-cell"><input type="checkbox" id="hedge-pe-checkall" onchange="toggleColumn('hedgeTable', 5, this.checked)"></th>
-                            </tr>
-                        </thead>
-                        <tbody id="hedgeBody"></tbody>
-                    </table>
+                    <div class="ltp-table-container">
+                        <table id="hedgeTable">
+                            <thead>
+                                <tr>
+                                    <th class="cb-cell"><input type="checkbox" id="hedge-ce-checkall" onchange="toggleColumn('hedgeTable', 0, this.checked)"></th>
+                                    <th>CE LTP</th>
+                                    <th>CE Strike</th>
+                                    <th>PE Strike</th>
+                                    <th>PE LTP</th>
+                                    <th class="cb-cell"><input type="checkbox" id="hedge-pe-checkall" onchange="toggleColumn('hedgeTable', 5, this.checked)"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="hedgeBody"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
