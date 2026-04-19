@@ -47,7 +47,7 @@
                                 </td>
                                 <td>
                                     <label class="toggle-switch">
-                                        <input type="checkbox" id="main-side-toggle" onchange="toggleSide('diff')">
+                                        <input type="checkbox" id="main-side-toggle" onchange="toggleSide('main')">
                                         <span class="slider">
                                             <span class="label buy">B</span>
                                             <span class="label sell">S</span>
@@ -56,17 +56,17 @@
                                 </td>
                                 <td class="actions-cell">
                                     <button class="btn" onclick="updateSubscription('main')">update</button>
-                                    <button class="btn violet-btn action-btn" onclick="diffFire()">fire</button>
-                                    <button class="btn orange-btn action-btn" onclick="diffSquare()">square</button>
+                                    <button class="btn violet-btn action-btn" onclick="mainFire()">fire</button>
+                                    <button class="btn orange-btn action-btn" onclick="mainSquare()">square</button>
                                 </td>
                             </tr>
                         </table>
                     </div>
                     <div class="data-tables">
-                        <table id="diffTable">
+                        <table id="mainTable">
                             <thead>
                                 <tr>
-                                    <th class="cb-cell"><input type="checkbox" id="diff-ce-checkall" onchange="toggleColumn('diffTable', 0, this.checked)"></th>
+                                    <th class="cb-cell"><input type="checkbox" id="main-ce-checkall" onchange="toggleColumn('mainTable', 0, this.checked)"></th>
                                     <th>Total Diff</th>
                                     <th>CE %</th>
                                     <th>CE Diff</th>
@@ -79,7 +79,7 @@
                                     <th>PE Diff</th>
                                     <th>PE %</th>
                                     <th>Total %</th>
-                                    <th class="cb-cell"><input type="checkbox" id="diff-pe-checkall" onchange="toggleColumn('diffTable', 13, this.checked)"></th>
+                                    <th class="cb-cell"><input type="checkbox" id="main-pe-checkall" onchange="toggleColumn('mainTable', 13, this.checked)"></th>
                                 </tr>
                             </thead>
                             <tbody id="diffBody"></tbody>

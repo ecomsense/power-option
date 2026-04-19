@@ -16,9 +16,9 @@ document.addEventListener("DOMContentLoaded", () => {
     // Sync initial state from toggles
     const mainToggle = document.getElementById("main-side-toggle");
     const hedgeToggle = document.getElementById("hedge-side-toggle");
-    if (mainToggle) tableModes.diff = mainToggle.checked ? 'SELL' : 'BUY';
+    if (mainToggle) tableModes.main = mainToggle.checked ? 'SELL' : 'BUY';
     if (hedgeToggle) tableModes.hedge = hedgeToggle.checked ? 'SELL' : 'BUY';
-    console.log(`Initial modes: diff=${tableModes.diff}, hedge=${tableModes.hedge}`);
+    console.log(`Initial modes: main=${tableModes.main}, hedge=${tableModes.hedge}`);
     
     const chartElement = document.getElementById("chart-container");
     if (chartElement) {
@@ -118,8 +118,8 @@ function renderDashboard(diffRows, hedgeRows, mainFresh, hedgeFresh) {
         sPeLtp += row.curr_pe;
 
         // Unique IDs for Left (Call) and Right (Put)
-        const leftId = `cb-diff-ce-${row.ce_strike}`;
-        const rightId = `cb-diff-pe-${row.pe_strike}`;
+        const leftId = `cb-main-ce-${row.ce_strike}`;
+        const rightId = `cb-main-pe-${row.pe_strike}`;
         
         // Lookup existing state
         const exLeft = document.getElementById(leftId);
@@ -293,7 +293,7 @@ async function processBatchOrders(tableId, modeType, qtyId, orderCode) {
     
     // Determine the num input ID based on modeType
     let numId;
-    if (modeType === 'diff') {
+    if (modeType === 'main') {
         numId = 'main-num';
     } else if (modeType === 'hedge') {
         numId = 'hedge-num';
@@ -325,7 +325,7 @@ async function processBatchOrders(tableId, modeType, qtyId, orderCode) {
         return;
     }
 
-    // Simple list of selected checkbox IDs: ["cb-diff-ce-22000", "cb-diff-pe-23500"]
+    // Simple list of selected checkbox IDs: ["cb-main-ce-22000", "cb-main-pe-23500"]
     const orderList = Array.from(checkedBoxes).map(cb => cb.id);
 
     const payload = {
@@ -358,14 +358,14 @@ try {
 
 
 // Button Mappings - simplified
-function diffFire()   { placeOrder('diff', 'main-qty', false); }
-function diffSquare() { placeOrder('diff', 'main-qty', true); }
+function mainFire()   { placeOrder('main', 'main-qty', false); }
+function mainSquare() { placeOrder('main', 'main-qty', true); }
 function hedgeFire()  { placeOrder('hedge', 'hedge-qty', false); }
 function hedgeSquare(){ placeOrder('hedge', 'hedge-qty', true); }
 
 // Unified order function
 function placeOrder(tableTag, qtyId, isSquareOff) {
-    const tableId = tableTag === 'diff' ? 'diffTable' : 'hedgeTable';
+    const tableId = tableTag === 'main' ? 'mainTable' : 'hedgeTable';
     if (!document.getElementById(tableId)) {
         showToast("Table not found!", false);
         return;
@@ -435,23 +435,23 @@ function updateCheckAllState(tableId, colIndex) {
     });
     
     const checkallId = tableId === "diffTable" 
-        ? (colIndex === 0 ? "diff-ce-checkall" : "diff-pe-checkall")
+        ? (colIndex === 0 ? "main-ce-checkall" : "main-pe-checkall")
         : (colIndex === 0 ? "hedge-ce-checkall" : "hedge-pe-checkall");
     const checkall = document.getElementById(checkallId);
     if (checkall) checkall.checked = allChecked;
 }
 
 function resetCheckAllBoxes() {
-    document.getElementById("diff-ce-checkall").checked = false;
-    document.getElementById("diff-pe-checkall").checked = false;
+    document.getElementById("main-ce-checkall").checked = false;
+    document.getElementById("main-pe-checkall").checked = false;
     document.getElementById("hedge-ce-checkall").checked = false;
     document.getElementById("hedge-pe-checkall").checked = false;
 }
 
 function resetCheckAllForSide(side, checked = false) {
     if (side === "main") {
-        document.getElementById("diff-ce-checkall").checked = checked;
-        document.getElementById("diff-pe-checkall").checked = checked;
+        document.getElementById("main-ce-checkall").checked = checked;
+        document.getElementById("main-pe-checkall").checked = checked;
     } else if (side === "hedge") {
         document.getElementById("hedge-ce-checkall").checked = checked;
         document.getElementById("hedge-pe-checkall").checked = checked;
