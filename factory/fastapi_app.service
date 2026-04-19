@@ -6,9 +6,9 @@ After=network.target
 Type=simple
 User=trader
 Group=trader
-WorkingDirectory=/home/trader/no_venv/power-option
+WorkingDirectory=/home/trader/no_venv/power-option/src
 Environment="PATH=/home/trader/no_venv/venv/bin"
-ExecStart=/bin/bash -c "cd /home/trader/no_venv/power-option && /home/trader/no_venv/venv/bin/python -m uvicorn main:app --host 127.0.0.1 --port 8000"
+ExecStart=/bin/bash -c "cd /home/trader/no_venv/power-option/src && /home/trader/no_venv/venv/bin/python -m uvicorn main:app --host 127.0.0.1 --port 8000"
 Restart=always
 RestartSec=5
 
