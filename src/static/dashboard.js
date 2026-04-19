@@ -269,13 +269,28 @@ async function processBatchOrders(tableId, modeType, qtyId, orderCode) {
     document.querySelectorAll('.action-btn').forEach(b => b.disabled = true);
 
     const table = document.getElementById(tableId);
+    if (!table) {
+        showToast("Table not found!", false);
+        document.querySelectorAll('.action-btn').forEach(b => b.disabled = false);
+        return;
+    }
+    
     const checkedBoxes = table.querySelectorAll('tbody input[type="checkbox"]:checked');
-    const lots = document.getElementById(qtyId).value;
-    const numStrikes = document.getElementById(modeType + '-num').value;
+    const lotsElement = document.getElementById(qtyId);
+    const numStrikesElement = document.getElementById(modeType + '-num');
+    
+    if (!lotsElement || !numStrikesElement) {
+        showToast("Required input elements not found!", false);
+        document.querySelectorAll('.action-btn').forEach(b => b.disabled = false);
+        return;
+    }
+    
+    const lots = lotsElement.value;
+    const numStrikes = numStrikesElement.value;
     
     // Derive side from orderCode first letter
     const side = orderCode.startsWith('L') ? 'BUY' : 'SELL';
-
+    
     if (checkedBoxes.length === 0) {
         showToast("Select at least one strike!", false);
         document.querySelectorAll('.action-btn').forEach(b => b.disabled = false);
