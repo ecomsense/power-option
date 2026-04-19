@@ -30,15 +30,16 @@ def update_metadata(kwargs):
     if expiry_str:
         try:
             from datetime import datetime
+
             dt = datetime.strptime(expiry_str, "%Y-%m-%d")
             expiry_formatted = dt.strftime("%y%m%d")
         except:
             expiry_formatted = expiry_str.replace("-", "")[:6]
 
     # Get basename for symbol prefix
-    basename = kwargs.get("basename", "NIFTY")
+    basename = kwargs.get("basename")
 
-    # Populate initial metadata and tokens
+# Populate initial metadata and tokens
     new_tokens = []
     for _, row in df_ce.iterrows():
         t = row["instrument_token"]
@@ -46,15 +47,14 @@ def update_metadata(kwargs):
         hist = Helper.history(t)
         if hist > 0:
             strike = row.get("strike", 0)
-            # Format: {Symbol}{yymmdd}{5-digit strike}{CE/PE} e.g., NIFTY26042122000CE
             symbol = f"{basename}{expiry_formatted}{strike:05d}CE"
-            
             app.state.METADATA[t] = {
                 "strike": strike,
                 "type": "CE",
                 "prev": hist,
                 "symbol": symbol,
             }
+            app.state.SYMBOL_LOOKUP[(strike, "CE")] = symbol
 
     for _, row in df_pe.iterrows():
         t = row["instrument_token"]
@@ -62,15 +62,15 @@ def update_metadata(kwargs):
         hist = Helper.history(t)
         if hist > 0:
             strike = row.get("strike", 0)
-            # Format: {Symbol}{yymmdd}{5-digit strike}{CE/PE} e.g., NIFTY26042122000PE
             symbol = f"{basename}{expiry_formatted}{strike:05d}PE"
-            
             app.state.METADATA[t] = {
                 "strike": strike,
                 "type": "PE",
                 "prev": hist,
                 "symbol": symbol,
             }
+            app.state.SYMBOL_LOOKUP[(strike, "PE")] = symbol
+    
     return new_tokens
 
 
@@ -88,11 +88,12 @@ async def lifespan(app: FastAPI):
         for kwargs in D_SYMBOL.values():
             dump_basename_from_exchange(kwargs["name"], kwargs["exchange"])
 
-        # 2. Setup Global State Registry
+# 2. Setup Global State Registry
         # METADATA stores: {token: {"strike": 26100, "type": "CE", "prev": 145.0}}
         app.state.SUBSCRIBED = {"main": [], "hedge": []}
 
         app.state.METADATA = {}
+        app.state.SYMBOL_LOOKUP = {}  # Direct lookup: (strike, type) -> symbol
 
         app.state.checkbox = {"main": 1, "hedge": 1}
 
@@ -134,31 +135,27 @@ async def place_order_endpoint(payload: dict = Body(...)):
         incoming_orders = payload.get("orders", [])
         quantity = payload.get("quantity")
         order_type = payload.get("order_code")  # LE, SE, LX, SX
-        table_tag = payload.get("tag", "NO_TAG")
+        table_tag = payload.get("tag", "main")
         
-        # Get STAG from table_tag (main/hedge table identifier)
-        # main table -> MAIN, hedge table -> HEDGE
-        table_id = table_tag.lower() if table_tag else "main"
-        stag = "MAIN" if table_id == "main" else "HEDGE"
-        
-        # Build order parts - lookup symbol from METADATA
+        # Get STAG from table_tag: main -> MAIN, hedge -> HEDGE
+        stag = "MAIN" if table_tag.lower() == "main" else "HEDGE"
+
+        # Build order parts - direct lookup from SYMBOL_LOOKUP
         parts = []
         for order_id in incoming_orders:
-            # Parse checkbox ID: cb-{table}-{type}-{strike}
+            # Parse checkbox ID: cb-{table}-{type}-{strike} e.g., cb-main-ce-22000
             parts_id = order_id.split("-")
             if len(parts_id) >= 4:
                 option_type = parts_id[2].upper()  # CE or PE
                 strike = int(parts_id[3])
-                
-                # Find matching token in METADATA
-                symbol = "UNKNOWN"
-                for token, data in app.state.METADATA.items():
-                    if data.get("strike") == strike and data.get("type", "").upper() == option_type:
-                        symbol = data.get("symbol", "UNKNOWN")
-                        break
-                
-                parts.append(f"TYPE:{order_type},SYMBOL:{symbol},STAG:{stag},QTY:{quantity}")
-        
+
+                # Direct lookup: (strike, type) -> symbol
+                symbol = app.state.SYMBOL_LOOKUP.get((strike, option_type), "UNKNOWN")
+
+                parts.append(
+                    f"TYPE:{order_type},SYMBOL:{symbol},STAG:{stag},QTY:{quantity}"
+                )
+
         msg = ";".join(parts)
         await send_to_webhook_async(msg)
         logging.info(f"Entry: {msg}")
