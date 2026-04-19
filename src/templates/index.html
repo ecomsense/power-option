@@ -101,20 +101,20 @@
                             </tr>
                             <tr class="control-row">
                                 <td>
-                                    <select id="ltp-call-base" name="ltp-call-base"></select>
+                                    <select id="hedge-call-base" name="hedge-call-base"></select>
                                 </td>
                                 <td>
-                                    <select id="ltp-put-base" name="ltp-put-base"></select>
+                                    <select id="hedge-put-base" name="hedge-put-base"></select>
                                 </td>
                                 <td>
-                                    <input id="ltp-num" class="qty" type="number" value="10" min="1" />
+                                    <input id="hedge-num" class="qty" type="number" value="10" min="1" />
                                 </td>
                                 <td>
-                                    <input id="ltp-qty" class="qty" type="number" value="10" min="1" />
+                                    <input id="hedge-qty" class="qty" type="number" value="10" min="1" />
                                 </td>
                                 <td>
                                     <label class="toggle-switch">
-                                        <input type="checkbox" id="ltp-side-toggle" onchange="toggleSide('ltp')">
+                                        <input type="checkbox" id="hedge-side-toggle" onchange="toggleSide('hedge')">
                                         <span class="slider">
                                             <span class="label buy">B</span>
                                             <span class="label sell">S</span>
@@ -122,9 +122,9 @@
                                     </label>
                                 </td>
                                 <td class="actions-cell">
-                                    <button class="btn" onclick="updateSubscription('ltp')">update</button>
-                                    <button class="btn violet-btn action-btn" onclick="ltpFire()">hedge</button>
-                                    <button class="btn orange-btn action-btn" onclick="ltpSquare()">square</button>
+                                    <button class="btn" onclick="updateSubscription('hedge')">update</button>
+                                    <button class="btn violet-btn action-btn" onclick="hedgeFire()">hedge</button>
+                                    <button class="btn orange-btn action-btn" onclick="hedgeSquare()">square</button>
                                     <button class="btn" onclick="showLogsModal()">logs</button>
                                 </td>
                                 <td id="ws-status" class="ws-status connected ws-status-col">
@@ -137,15 +137,15 @@
                         </table>
                     </div>
                     <div class="data-tables">
-                        <table id="ltpTable">
+                        <table id="hedgeTable">
                             <thead>
                                 <tr>
-                                    <th class="cb-cell"><input type="checkbox" id="ltp-ce-checkall" onchange="toggleColumn('ltpTable', 0, this.checked)"></th>
+                                    <th class="cb-cell"><input type="checkbox" id="hedge-ce-checkall" onchange="toggleColumn('hedgeTable', 0, this.checked)"></th>
                                     <th>CE LTP</th>
                                     <th>CE Strike</th>
                                     <th>PE Strike</th>
                                     <th>PE LTP</th>
-                                    <th class="cb-cell"><input type="checkbox" id="ltp-pe-checkall" onchange="toggleColumn('ltpTable', 5, this.checked)"></th>
+                                    <th class="cb-cell"><input type="checkbox" id="hedge-pe-checkall" onchange="toggleColumn('hedgeTable', 5, this.checked)"></th>
                                 </tr>
                             </thead>
                             <tbody id="hedgeBody"></tbody>

@@ -6,7 +6,7 @@
 // Global state to track if we are in Buy or Sell mode for each table
 window.tableModes = {
     main: 'BUY',
-    ltp: 'BUY'
+    hedge: 'BUY'
 };
 
 /**
@@ -14,7 +14,7 @@ window.tableModes = {
  * Handles visual classes and internal state.
  */
 function toggleSide(type) {
-    const checkboxId = type === 'main' ? 'main-side-toggle' : 'ltp-side-toggle';
+    const checkboxId = type === 'main' ? 'main-side-toggle' : 'hedge-side-toggle';
     const checkbox = document.getElementById(checkboxId);
     
     if (!checkbox) {
