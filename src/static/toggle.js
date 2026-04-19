@@ -4,7 +4,7 @@
  */
 
 // Global state to track if we are in Buy or Sell mode for each table
-const tableModes = {
+window.tableModes = {
     diff: 'BUY',
     hedge: 'BUY'
 };
@@ -17,20 +17,23 @@ function toggleSide(type) {
     const checkboxId = type === 'diff' ? 'main-side-toggle' : 'hedge-side-toggle';
     const checkbox = document.getElementById(checkboxId);
     
-    if (!checkbox) return;
+    if (!checkbox) {
+        console.log(`toggleSide: checkbox not found for ${type}`);
+        return;
+    }
     
     const isChecked = checkbox.checked;
     
     if (isChecked) {
-        tableModes[type] = 'SELL';
+        window.tableModes[type] = 'SELL';
     } else {
-        tableModes[type] = 'BUY';
+        window.tableModes[type] = 'BUY';
     }
     
-    console.log(`${type} table updated to: ${tableModes[type]}`);
+    console.log(`toggleSide: ${type} checkbox.checked=${isChecked}, mode=${window.tableModes[type]}`);
 }
 
 // Optional: Global helper to check mode from other scripts
 function getTableMode(type) {
-    return tableModes[type] || 'BUY';
+    return window.tableModes[type] || 'BUY';
 }

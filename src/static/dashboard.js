@@ -9,9 +9,16 @@ let currentLine;
 let socket;
 
 document.addEventListener("DOMContentLoaded", () => {
-    // Initialize toggles to unchecked (buy mode)
+    // Initialize toggles to unchecked (buy mode) and sync state
     document.getElementById("main-side-toggle").checked = false;
     document.getElementById("hedge-side-toggle").checked = false;
+    
+    // Sync initial state from toggles
+    const mainToggle = document.getElementById("main-side-toggle");
+    const hedgeToggle = document.getElementById("hedge-side-toggle");
+    if (mainToggle) tableModes.diff = mainToggle.checked ? 'SELL' : 'BUY';
+    if (hedgeToggle) tableModes.hedge = hedgeToggle.checked ? 'SELL' : 'BUY';
+    console.log(`Initial modes: diff=${tableModes.diff}, hedge=${tableModes.hedge}`);
     
     const chartElement = document.getElementById("chart-container");
     if (chartElement) {
@@ -374,6 +381,7 @@ function placeOrder(tableTag, qtyId, isSquareOff) {
     
     // Order code: L/S + E/X
     let code = (side === 'BUY' ? 'L' : 'S') + (isSquareOff ? 'X' : 'E');
+    console.log(`placeOrder: tableTag=${tableTag}, side=${side}, isSquareOff=${isSquareOff}, code=${code}`);
     
     processBatchOrders(tableId, tableTag, qtyId, code);
 }
