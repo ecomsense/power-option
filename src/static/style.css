@@ -354,6 +354,12 @@ th {
 
 #ws-status svg {
     vertical-align: middle;
+    stroke: var(--red);  /* Disconnected */
+    fill: none;
+}
+
+#ws-status.connected svg {
+    stroke: var(--green);  /* Connected */
 }
 
 #ws-status.connected .disconnected-line {
