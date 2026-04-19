@@ -1,5 +1,4 @@
 webhook_url: http://api.algobaba.com/tv/QHC1C-Q5AHT-4MXN5-2UKHK
-stag: DEFAULT
 timeout: 30
 log:
   show: False

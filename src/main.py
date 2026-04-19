@@ -83,7 +83,6 @@ async def lifespan(app: FastAPI):
 
         app.state.webhook_url = O_SETG["webhook_url"]
         app.state.timeout = O_SETG["timeout"]
-        app.state.stag = O_SETG.get("stag", "DEFAULT")
 
         # 1. Initialize symbols
         for kwargs in D_SYMBOL.values():
@@ -137,8 +136,10 @@ async def place_order_endpoint(payload: dict = Body(...)):
         order_type = payload.get("order_code")  # LE, SE, LX, SX
         table_tag = payload.get("tag", "NO_TAG")
         
-        # Get STAG from config
-        stag = getattr(app.state, "stag", "DEFAULT")
+        # Get STAG from table_tag (diff/hedge table identifier)
+        # diff table -> DIFF, hedge table -> HEDGE
+        table_id = table_tag.lower() if table_tag else "diff"
+        stag = "DIFF" if table_id == "diff" else "HEDGE"
         
         # Build order parts - lookup symbol from METADATA
         parts = []
