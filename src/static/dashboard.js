@@ -264,7 +264,7 @@ function showToast(message, isSuccess = true) {
 /**
  * Collects checked strikes by parsing existing element IDs
  */
-async function processBatchOrders(tableId, modeType, qtyId, isSquareOff = false) {
+async function processBatchOrders(tableId, modeType, qtyId, orderCode) {
     // Disable action buttons during processing
     document.querySelectorAll('.action-btn').forEach(b => b.disabled = true);
 
@@ -273,8 +273,8 @@ async function processBatchOrders(tableId, modeType, qtyId, isSquareOff = false)
     const lots = document.getElementById(qtyId).value;
     const numStrikes = document.getElementById(modeType + '-num').value;
     
-    let side = getTableMode(modeType); // From toggle.js
-    if (isSquareOff) side = (side === 'BUY') ? 'SELL' : 'BUY';
+    // Derive side from orderCode first letter
+    const side = orderCode.startsWith('L') ? 'BUY' : 'SELL';
 
     if (checkedBoxes.length === 0) {
         showToast("Select at least one strike!", false);
@@ -300,7 +300,7 @@ async function processBatchOrders(tableId, modeType, qtyId, isSquareOff = false)
     const payload = {
         orders: orderList,
         quantity: parseInt(lots),
-        transaction_type: side,
+        order_code: orderCode,
         tag: modeType
     };
 
@@ -326,11 +326,23 @@ try {
 }
 
 
-// Button Mappings
-function diffFire()   { processBatchOrders('diffTable', 'diff', 'main-qty', false); }
-function diffSquare() { processBatchOrders('diffTable', 'diff', 'main-qty', true); }
-function hedgeFire()  { processBatchOrders('hedgeTable', 'hedge', 'hedge-qty', false); }
-function hedgeSquare(){ processBatchOrders('hedgeTable', 'hedge', 'hedge-qty', true); }
+// Button Mappings - simplified
+function diffFire()   { placeOrder('diff', 'main-qty', false); }
+function diffSquare() { placeOrder('diff', 'main-qty', true); }
+function hedgeFire()  { placeOrder('hedge', 'hedge-qty', false); }
+function hedgeSquare(){ placeOrder('hedge', 'hedge-qty', true); }
+
+// Unified order function
+function placeOrder(tableTag, qtyId, isSquareOff) {
+    const tableId = tableTag === 'diff' ? 'diffTable' : 'hedgeTable';
+    const side = getTableMode(tableTag);
+    const qty = document.getElementById(qtyId).value;
+    
+    // Order code: L/S + E/X
+    let code = (side === 'BUY' ? 'L' : 'S') + (isSquareOff ? 'X' : 'E');
+    
+    processBatchOrders(tableId, tableTag, qtyId, code);
+}
 
 
 async function showLogsModal() {

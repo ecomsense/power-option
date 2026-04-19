@@ -104,19 +104,14 @@ async def send_to_webhook_async(message: str):
 
 
 @app.post("/order_place")
-async def order_place(payload: dict = Body(...)):
+async def place_order_endpoint(payload: dict = Body(...)):
     try:
         incoming_orders = payload.get("orders", [])
         lots = payload.get("quantity")
-        side = payload.get("transaction_type")  # 'BUY' or 'SELL'
-        is_square = payload.get("is_square", False)  # New flag from JS
-
-        # 1. Map to your specific Order Codes
-        # LE: Long Entry, SE: Short Entry, LX: Long Exit, SX: Short Exit
-if side == "BUY":
-    order_type = "LX" if is_square else "LE"
-else:
-    order_type = "SX" if is_square else "SE"
+        order_code = payload.get("order_code")  # LE, SE, LX, SX
+        
+        # Use order_code directly from JS
+        order_type = order_code
 
         # 2. Reverse Lookup for Symbols
         rows_to_process = []
