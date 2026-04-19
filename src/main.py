@@ -294,7 +294,7 @@ def assemble_table_rows(side, ticks):
         return rows
 
     if not ticks:
-        print(f"DEBUG: Have {len(tokens)} tokens for {side} but 0 ticks received yet.")
+        pass  # No ticks received yet
 
     # Calculate the midpoint (half are CE, half are PE)
     half = len(tokens) // 2
