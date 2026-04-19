@@ -246,16 +246,13 @@ th {
 
 /* -- Buttons -- */
 .btn {
-    padding: 0 16px;
+    padding: var(--space-3);
     border-radius: var(--radius-sm);
     cursor: pointer;
     color: var(--white);
     border: none;
-    font-weight: bold;
-    font-size: var(--text-xs);
     background-color: var(--btn);
     height: 28px;
-    line-height: 28px;
     margin-right: var(--space-1);
 }
 
