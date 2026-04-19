@@ -292,6 +292,7 @@ async function processBatchOrders(tableId, modeType, qtyId, orderCode) {
     const orderList = Array.from(checkedBoxes).map(cb => {
         const parts = cb.id.split('-'); 
         return {
+            cb_id: cb.id,  // checkbox ID
             type: parts[2].toUpperCase(), // "ce" -> "CE"
             strike: parseInt(parts[3])    // "22000" -> 22000
         };
