@@ -168,27 +168,29 @@ a {
 .diff-table-container {
     flex: 0 0 55%;
     border-right: var(--border-w2) solid var(--border-main);
+    overflow: visible;
 }
 
 .ltp-table-container {
     flex: 0 0 45%;
-}
-
-/* Make tables fill container width */
-.diff-table-container,
-.ltp-table-container {
     overflow: visible;
 }
 
+/* Make Tables */
 .diff-table-container table,
 .ltp-table-container table {
     width: 100%;
-    table-layout: fixed;
+    table-layout: auto;
 }
 
 .table-container {
+    overflow-y: auto;
     position: relative;
     background-color: var(--bg-header);
+}
+
+.top-control-bar {
+    overflow-x: visible;
 }
 
 table {
