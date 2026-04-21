@@ -129,6 +129,38 @@ async def send_to_webhook_async(message: str):
     return response
 
 
+@app.post("/order_place_one")
+async def place_order_one_endpoint(payload: dict = Body(...)):
+    try:
+        order_id = payload.get("trading_symbol")
+        quantity = payload.get("quantity")
+        order_type = payload.get("order_type")
+        table_tag = payload.get("tag", "main")
+
+        if not order_id:
+            return {"status": "error", "message": "trading_symbol is required"}
+
+        stag = "MAIN" if table_tag.lower() == "main" else "HEDGE"
+
+        parts_id = order_id.split("-")
+        if len(parts_id) >= 4:
+            option_type = parts_id[2].upper()
+            strike = int(parts_id[3])
+            symbol = app.state.SYMBOL_LOOKUP.get((strike, option_type), "UNKNOWN")
+        else:
+            symbol = "UNKNOWN"
+
+        msg = f"TYPE:{order_type},SYMBOL:{symbol},STAG:{stag},QTY:{quantity}"
+        await send_to_webhook_async(msg)
+        logging.info(f"Entry One: {msg}")
+
+        return {"status": "success", "order_type": order_type, "symbol": symbol}
+
+    except Exception as e:
+        logging.error(f"Webhook Order One Error: {e}")
+        return {"status": "error", "message": str(e)}
+
+
 @app.post("/order_place")
 async def place_order_endpoint(payload: dict = Body(...)):
     try:

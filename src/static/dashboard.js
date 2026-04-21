@@ -359,9 +359,69 @@ try {
 
 // Button Mappings - simplified
 function mainFire()   { placeOrder('main', 'main-qty', false); }
-function mainSquare() { placeOrder('main', 'main-qty', true); }
+function mainSquare() { placeSquareOrder('main', 'main-qty', true); }
 function hedgeFire()  { placeOrder('hedge', 'hedge-qty', false); }
-function hedgeSquare(){ placeOrder('hedge', 'hedge-qty', true); }
+function hedgeSquare(){ placeSquareOrder('hedge', 'hedge-qty', true); }
+
+async function placeSquareOrder(tableTag, qtyId, isSquareOff) {
+    const tableId = tableTag === 'main' ? 'mainTable' : 'hedgeTable';
+    if (!document.getElementById(tableId)) {
+        showToast("Table not found!", false);
+        return;
+    }
+
+    const side = getTableMode(tableTag);
+    const qtyElement = document.getElementById(qtyId);
+    if (!qtyElement) {
+        showToast("Quantity input not found!", false);
+        return;
+    }
+    const qty = qtyElement.value;
+
+    const table = document.getElementById(tableId);
+    const checkedBoxes = table.querySelectorAll('tbody input[type="checkbox"]:checked');
+    if (checkedBoxes.length === 0) {
+        showToast("Select at least one strike!", false);
+        return;
+    }
+
+    const orderCode = (side === 'BUY' ? 'S' : 'L') + 'X';
+    const numStrikesElement = document.getElementById(tableTag === 'main' ? 'main-num' : 'hedge-num');
+    const numStrikes = numStrikesElement ? numStrikesElement.value : 1;
+
+    const tag = tableTag;
+
+    document.querySelectorAll('.action-btn').forEach(b => b.disabled = true);
+
+    for (let i = 0; i < checkedBoxes.length; i++) {
+        const cb = checkedBoxes[i];
+        const orderId = cb.id;
+
+        try {
+            const res = await fetch('/order_place_one', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    trading_symbol: orderId,
+                    quantity: parseInt(qty),
+                    order_type: orderCode,
+                    tag: tag
+                })
+            });
+            const result = await res.json();
+            if (result.status !== 'success') {
+                showToast(`Order ${i+1} failed: ${result.message || 'error'}`, false);
+            }
+        } catch (error) {
+            showToast(`Order ${i+1} request failed`, false);
+            console.error("Order request failed:", error);
+        }
+
+        }
+
+    document.querySelectorAll('.action-btn').forEach(b => b.disabled = false);
+    showToast(`${checkedBoxes.length} ${side === 'BUY' ? 'BUY' : 'SELL'} orders sent (one-by-one)`, true);
+}
 
 // Unified order function
 function placeOrder(tableTag, qtyId, isSquareOff) {
