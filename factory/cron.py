@@ -15,7 +15,7 @@ def log(msg):
     with open(log_file, "a") as f:
         f.write(f"[{timestamp}] {msg}\n")
 
-CMD = ["/usr/bin/systemctl"]
+CMD = ["sudo", "/usr/bin/systemctl"]
 
 def is_running():
     result = subprocess.run(CMD + ["is-active", service], capture_output=True, text=True)
