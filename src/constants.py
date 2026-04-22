@@ -86,13 +86,15 @@ def set_logger():
             level = O_SETG["log"].get("level", 10)
         root = _logging.getLogger()
         root.setLevel(level)
-        root.handlers.clear()
+        for h in root.handlers[:]:
+            h.setLevel(level)
         if O_SETG and O_SETG.get("log", {}).get("show"):
-            fmt = _logging.Formatter("[%(asctime)s] %(levelname)s: %(message)s]")
-            fh = _logging.FileHandler(S_LOG)
-            fh.setLevel(level)
-            fh.setFormatter(fmt)
-            root.addHandler(fh)
+            if not any(isinstance(h, _logging.FileHandler) for h in root.handlers):
+                fmt = _logging.Formatter("[%(asctime)s] %(levelname)s: %(message)s]")
+                fh = _logging.FileHandler(S_LOG)
+                fh.setLevel(level)
+                fh.setFormatter(fmt)
+                root.addHandler(fh)
         return root
     except Exception as e:
         print(f"set logger error: {e}")
