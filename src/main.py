@@ -343,7 +343,7 @@ async def get_logs():
 async def get_settings():
     try:
         import yaml
-        with open("data/settings.yml", "r") as f:
+        with open("../data/settings.yml", "r") as f:
             settings = yaml.safe_load(f)
         return settings
     except Exception as e:
@@ -355,7 +355,7 @@ async def get_settings():
 async def update_settings(request: Request, payload: dict = Body(...)):
     try:
         import yaml
-        settings_path = "data/settings.yml"
+        settings_path = "../data/settings.yml"
         
         new_settings = {
             "webhook_url": payload.get("webhook_url", ""),
