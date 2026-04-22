@@ -86,8 +86,10 @@ def set_logger():
             level = O_SETG["log"].get("level", 10)
         log = Logger(level, S_LOG) if (O_SETG and O_SETG.get("log", {}).get("show")) else Logger(level)
         _logging.getLogger().setLevel(level)
-        # Also set the toolkit logger (which is what we import from)
         _logging.getLogger("toolkit").setLevel(level)
+        # Also set handler level to match
+        for h in log.handlers:
+            h.setLevel(level)
         return log
     except Exception as e:
         print(f"set logger error: {e}")
