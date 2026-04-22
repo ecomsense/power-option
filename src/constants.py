@@ -102,8 +102,6 @@ def set_logger():
         print(f"set logger error: {e}")
         print_exc()
         __import__("sys").exit(1)
-    finally:
-        return Logger(10)
 
 
 logging = set_logger()
