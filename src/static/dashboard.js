@@ -107,7 +107,7 @@ socket = new WebSocket(`ws://${window.location.host}/ws`);
         document.addEventListener("mousemove", (e) => {
             if (!isResizing) return;
             
-            const deltaY = e.clientY - startY;
+            const deltaY = startY - e.clientY;  // Flip direction
             const containerHeight = dashboardContainer.offsetHeight;
             let newChartHeight = startChartHeight + deltaY;
             

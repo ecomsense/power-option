@@ -131,9 +131,14 @@ a {
 
 .app-title {
     margin: 0;
-    font-size: 24px;
-    color: #ffd700;
-    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+    font-size: 28px;
+    font-weight: bold;
+    background: linear-gradient(90deg, #9c27b0 0%, #ff9800 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: 0 0 20px rgba(156, 39, 176, 0.4);
+    letter-spacing: 1px;
 }
 
 .settings-btn {
