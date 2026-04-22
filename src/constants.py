@@ -80,23 +80,12 @@ def set_logger():
     """
     try:
         O_SETG = yml_to_obj("settings.yml")
-        print(f"set_logger O_SETG: {O_SETG}")
-        if O_SETG is None:
-            print("O_SETG is None!")
-            return Logger(10)
-        if O_SETG.get("log", None) is None:
-            print("O_SETG.log is None!")
-            return Logger(10)
-        level = O_SETG["log"].get("level", 10)
-        print(f"set_logger level: {level}")
-        if not O_SETG["log"].get("show", None):
-            lg = Logger(level)
-            print(f"returning Logger without file, level={lg.level}")
-            return lg
-        else:
-            lg = Logger(level, S_LOG)
-            print(f"returning Logger with file, level={lg.level}")
-            return lg
+        if O_SETG.get("log", None):
+            level = O_SETG["log"].get("level", 10)
+            if not O_SETG["log"].get("show", None):
+                return Logger(level)
+            else:
+                return Logger(level, S_LOG)
         return Logger(10)
     except Exception as e:
         print(f"set logger error: {e}")
