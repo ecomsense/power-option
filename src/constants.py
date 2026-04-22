@@ -84,9 +84,9 @@ def set_logger():
         level = 10
         if O_SETG and O_SETG.get("log", None):
             level = O_SETG["log"].get("level", 10)
-        # Configure root logger WITH file handler
         root = _logging.getLogger()
         root.setLevel(level)
+        root.handlers.clear()
         if O_SETG and O_SETG.get("log", {}).get("show"):
             fmt = _logging.Formatter("[%(asctime)s] %(levelname)s: %(message)s]")
             fh = _logging.FileHandler(S_LOG)
