@@ -85,7 +85,10 @@ def set_logger():
             if not O_SETG["log"].get("show", None):
                 return Logger(level)
             else:
-                return Logger(level, S_LOG)
+                lg = Logger(level, S_LOG)
+                for h in lg.handlers:
+                    h.setLevel(level)
+                return lg
         return Logger(10)
     except Exception as e:
         print(f"set logger error: {e}")
