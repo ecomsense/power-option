@@ -136,9 +136,9 @@ a {
     letter-spacing: 1px;
 }
 
-.logo-lightning { color: #ff9800; }
-.logo-power { color: #9c27b0; margin-left: 4px; }
-.logo-option { color: #9c27b0; margin-left: 4px; }
+.logo-lightning { color: var(--orange); }
+.logo-power { color: var(--purple); margin-left: 4px; }
+.logo-option { color: var(--orange); margin-left: 4px; }
 
 .settings-btn {
     background: transparent;
