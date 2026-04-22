@@ -517,3 +517,64 @@ function resetCheckAllForSide(side, checked = false) {
         document.getElementById("hedge-pe-checkall").checked = checked;
     }
 }
+
+// Settings Modal Functions
+function showSettingsModal() {
+    loadSettings();
+    document.getElementById("settingsModal").style.display = "block";
+}
+
+function closeSettingsModal() {
+    document.getElementById("settingsModal").style.display = "none";
+}
+
+async function loadSettings() {
+    try {
+        const response = await fetch("/settings");
+        const settings = await response.json();
+        
+        document.getElementById("settingsWebhook").value = settings.webhook_url || "";
+        document.getElementById("settingsTag").value = settings.tag || "poweroption";
+        document.getElementById("settingsTimeout").value = settings.timeout || 30;
+        
+        if (settings.log) {
+            document.getElementById("settingsLogLevel").value = settings.log.level || 20;
+            document.getElementById("settingsLogShow").checked = settings.log.show !== false;
+        } else {
+            document.getElementById("settingsLogLevel").value = 20;
+            document.getElementById("settingsLogShow").checked = true;
+        }
+        
+        showToast("Settings loaded", true);
+    } catch (e) {
+        showToast("Error loading settings: " + e.message, false);
+    }
+}
+
+async function saveSettings() {
+    const payload = {
+        webhook_url: document.getElementById("settingsWebhook").value,
+        tag: document.getElementById("settingsTag").value,
+        timeout: parseInt(document.getElementById("settingsTimeout").value),
+        log_level: parseInt(document.getElementById("settingsLogLevel").value),
+        log_show: document.getElementById("settingsLogShow").checked,
+    };
+    
+    try {
+        const response = await fetch("/settings", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+        });
+        const result = await response.json();
+        
+        if (result.status === "success") {
+            showToast("Settings saved. Session restarted.", true);
+            closeSettingsModal();
+        } else {
+            showToast("Error: " + result.message, false);
+        }
+    } catch (e) {
+        showToast("Error saving settings: " + e.message, false);
+    }
+}

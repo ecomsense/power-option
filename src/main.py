@@ -339,6 +339,48 @@ async def get_logs():
         return Response(content=f"Error reading logs: {e}", media_type="text/plain")
 
 
+@app.get("/settings")
+async def get_settings():
+    try:
+        import yaml
+        with open("data/settings.yml", "r") as f:
+            settings = yaml.safe_load(f)
+        return settings
+    except Exception as e:
+        logging.error(f"Error reading settings: {e}")
+        return {"status": "error", "message": str(e)}
+
+
+@app.post("/settings")
+async def update_settings(request: Request, payload: dict = Body(...)):
+    try:
+        import yaml
+        settings_path = "data/settings.yml"
+        
+        new_settings = {
+            "webhook_url": payload.get("webhook_url", ""),
+            "tag": payload.get("tag", "poweroption"),
+            "timeout": int(payload.get("timeout", 30)),
+            "log": {
+                "show": payload.get("log_show", True),
+                "level": int(payload.get("log_level", 20)),
+            }
+        }
+        
+        with open(settings_path, "w") as f:
+            yaml.dump(new_settings, f)
+        
+        logging.info("Settings saved. Restarting trading session.")
+        
+        await trading_session_stop(request.app)
+        await trading_session_start(request.app)
+        
+        return {"status": "success", "message": "Settings saved. Session restarted."}
+    except Exception as e:
+        logging.error(f"Error saving settings: {e}")
+        return {"status": "error", "message": str(e)}
+
+
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()

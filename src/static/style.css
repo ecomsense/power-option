@@ -96,8 +96,8 @@
 }
 
 /* --------------------------------------------------------------------------
-   2. Reset & Base
-   -------------------------------------------------------------------------- */
+    2. Reset & Base
+    -------------------------------------------------------------------------- */
 *, *::before, *::after {
     box-sizing: border-box;
 }
@@ -118,8 +118,56 @@ a {
 }
 
 /* --------------------------------------------------------------------------
-   3. Layout
-   -------------------------------------------------------------------------- */
+    3. Layout
+    -------------------------------------------------------------------------- */
+.app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-4) var(--space-8);
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    border-bottom: var(--border-w2) solid var(--border-main);
+}
+
+.app-title {
+    margin: 0;
+    font-size: 24px;
+    color: #ffd700;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+.settings-btn {
+    background: transparent;
+    border: var(--border-w1) solid var(--border-main);
+    font-size: 20px;
+}
+
+/* Settings Form */
+.form-group {
+    margin-bottom: var(--space-8);
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: var(--space-2);
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+
+.settings-input {
+    width: 100%;
+    padding: var(--space-3);
+    background-color: var(--bg-input);
+    border: var(--border-w1) solid var(--border-sub);
+    color: var(--text-main);
+    border-radius: var(--radius-sm);
+}
+
+.form-actions {
+    display: flex;
+    gap: var(--space-4);
+    margin-top: var(--space-10);
+}
 .dashboard-container {
     display: flex;
     flex-direction: column;
