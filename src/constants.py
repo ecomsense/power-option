@@ -85,14 +85,19 @@ def set_logger():
         display or write to file
         based on user choice from settings
     """
+    import logging as _logging
     try:
         O_SETG = yml_to_obj("settings.yml")
-        if O_SETG.get("log", None):
+        if O_SETG and O_SETG.get("log", None):
             level = O_SETG["log"].get("level", 10)
-            if not O_SETG["log"].get("show", None):
-                return Logger(level)
-            else:
-                return Logger(level, S_LOG)
+            if O_SETG["log"].get("show", None):
+                log = Logger(level, S_LOG)
+                for h in log.handlers:
+                    h.setLevel(level)
+                return log
+            return Logger(level)
+        return Logger(10)
+    except Exception as e:
         return Logger(10)
     except Exception as e:
         print(f"set logger error: {e}")
