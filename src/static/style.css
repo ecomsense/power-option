@@ -139,7 +139,9 @@ a {
 .settings-btn {
     background: transparent;
     border: var(--border-w1) solid var(--border-main);
-    font-size: 20px;
+    font-size: 14px;
+    padding: 4px 8px;
+    height: auto;
 }
 
 /* Settings Form */
@@ -189,6 +191,25 @@ a {
     flex: 0 0 30%;
     background-color: var(--bg-header);
     border-top: var(--border-w2) solid var(--border-main);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+#resize-handle {
+    height: 8px;
+    background: var(--border-main);
+    cursor: ns-resize;
+    flex-shrink: 0;
+}
+
+#resize-handle:hover {
+    background: var(--purple);
+}
+
+#chart-container {
+    flex: 1;
+    min-height: 0;
 }
 
 #chart-container {

@@ -84,6 +84,56 @@ socket = new WebSocket(`ws://${window.location.host}/ws`);
         console.log("WebSocket closed");
         updateConnectionStatus(false);
     };
+
+    // Resizable chart section
+    const resizeHandle = document.getElementById("resize-handle");
+    const chartSection = document.getElementById("chart-section");
+    const tablesWrapper = document.getElementById("tables-wrapper");
+    const dashboardContainer = document.querySelector(".dashboard-container");
+    
+    if (resizeHandle && chartSection && tablesWrapper) {
+        let isResizing = false;
+        let startY = 0;
+        let startChartHeight = 0;
+        
+        resizeHandle.addEventListener("mousedown", (e) => {
+            isResizing = true;
+            startY = e.clientY;
+            startChartHeight = chartSection.offsetHeight;
+            document.body.style.cursor = "ns-resize";
+            document.body.style.userSelect = "none";
+        });
+        
+        document.addEventListener("mousemove", (e) => {
+            if (!isResizing) return;
+            
+            const deltaY = e.clientY - startY;
+            const newChartHeight = Math.max(100, startChartHeight + deltaY);
+            const containerHeight = dashboardContainer.offsetHeight;
+            const chartPercent = (newChartHeight / containerHeight) * 100;
+            
+            chartSection.style.flex = `0 0 ${chartPercent}%`;
+            if (chart) {
+                chart.resize(chartSection.offsetWidth, chartSection.offsetHeight - 8);
+            }
+        });
+        
+        document.addEventListener("mouseup", () => {
+            if (isResizing) {
+                isResizing = false;
+                document.body.style.cursor = "";
+                document.body.style.userSelect = "";
+            }
+        });
+    }
+    
+    // Window resize handler
+    window.addEventListener("resize", () => {
+        const chartSection = document.getElementById("chart-section");
+        if (chart && chartSection) {
+            chart.resize(chartSection.offsetWidth, chartSection.offsetHeight - 8);
+        }
+    });
 });
 
 function updateConnectionStatus(connected) {
