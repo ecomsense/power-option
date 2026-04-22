@@ -84,13 +84,16 @@ def set_logger():
         level = 10
         if O_SETG and O_SETG.get("log", None):
             level = O_SETG["log"].get("level", 10)
-        log = Logger(level, S_LOG) if (O_SETG and O_SETG.get("log", {}).get("show")) else Logger(level)
-        _logging.getLogger().setLevel(level)
-        _logging.getLogger("toolkit").setLevel(level)
-        # Also set handler level to match
-        for h in log.handlers:
-            h.setLevel(level)
-        return log
+        # Configure root logger WITH file handler
+        root = _logging.getLogger()
+        root.setLevel(level)
+        if O_SETG and O_SETG.get("log", {}).get("show"):
+            fmt = _logging.Formatter("[%(asctime)s] %(levelname)s: %(message)s]")
+            fh = _logging.FileHandler(S_LOG)
+            fh.setLevel(level)
+            fh.setFormatter(fmt)
+            root.addHandler(fh)
+        return root
     except Exception as e:
         print(f"set logger error: {e}")
         print_exc()
