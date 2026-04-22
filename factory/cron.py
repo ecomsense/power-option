@@ -24,9 +24,10 @@ def is_running():
 log(f"Cron action: {action}")
 
 if action == "start":
+    log(f"Checking {service} status...")
     if is_running():
-        log(f"{service} already running")
-        print(f"{service} already running")
+        log(f"{service} was running at cron time - no action needed")
+        print(f"{service} was running - no action needed")
     else:
         result = subprocess.run(CMD + ["start", service], capture_output=True, text=True)
         log(f"Start result: {result.returncode}, stdout: {result.stdout}, stderr: {result.stderr}")
