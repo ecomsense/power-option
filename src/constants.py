@@ -80,8 +80,10 @@ def set_logger():
     """
     try:
         O_SETG = yml_to_obj("settings.yml")
+        print(f"set_logger O_SETG: {O_SETG}")
         if O_SETG.get("log", None):
             level = O_SETG["log"].get("level", 10)
+            print(f"set_logger level: {level}")
             if not O_SETG["log"].get("show", None):
                 return Logger(level)
             else:
