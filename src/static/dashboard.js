@@ -108,8 +108,10 @@ socket = new WebSocket(`ws://${window.location.host}/ws`);
             if (!isResizing) return;
             
             const deltaY = e.clientY - startY;
-            const newChartHeight = Math.max(100, startChartHeight + deltaY);
             const containerHeight = dashboardContainer.offsetHeight;
+            const startTableHeight = containerHeight - startChartHeight;
+            const newTableHeight = Math.max(100, startTableHeight - deltaY);
+            const newChartHeight = containerHeight - newTableHeight;
             const chartPercent = (newChartHeight / containerHeight) * 100;
             
             chartSection.style.flex = `0 0 ${chartPercent}%`;
