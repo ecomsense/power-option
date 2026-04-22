@@ -11,6 +11,8 @@ Environment="PATH=/home/trader/no_venv/venv/bin"
 ExecStart=/bin/bash -c "cd /home/trader/no_venv/power-option/src && /home/trader/no_venv/venv/bin/python -m uvicorn main:app --host 127.0.0.1 --port 8000"
 Restart=always
 RestartSec=5
+StandardOutput=append:/home/trader/no_venv/power-option/data/log.txt
+StandardError=append:/home/trader/no_venv/power-option/data/log.txt
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=default.target

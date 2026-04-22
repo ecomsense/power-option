@@ -3,8 +3,9 @@ from contextlib import asynccontextmanager
 
 import httpx  # Ensure you run: pip install httpx
 import uvicorn
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
 
-# Assuming these are your existing local modules
 from api import Helper
 from constants import D_SYMBOL, S_LOG, logging, yml_to_obj
 from fastapi import Body, FastAPI, Request, Response, WebSocket, WebSocketDisconnect
@@ -18,6 +19,51 @@ from symbols import (
     find_call_and_put_from_dropdown,
 )
 from wsocket import Wsocket
+
+
+SCHEDULER = AsyncIOScheduler()
+
+
+async def trading_session_start(app: FastAPI):
+    """Start trading session - called by scheduler or settings change."""
+    if hasattr(app.state, "runner_task") and app.state.runner_task is not None:
+        logging.info("Trading session already running")
+        return
+
+    async def run_session():
+        try:
+            app.state.ws = Wsocket(Helper.api(), [256265, 265, 260105])
+
+            while not any(app.state.ws.ltp()):
+                await asyncio.sleep(1)
+
+            logging.info("Trading Session Started - HAPPY TRADING")
+            
+            while True:
+                await asyncio.sleep(60)
+        except asyncio.CancelledError:
+            logging.info("Trading session cancelled")
+            raise
+        except Exception as e:
+            logging.error(f"Trading session error: {e}")
+
+    app.state.runner_task = asyncio.create_task(run_session())
+    logging.info("Trading session task created")
+
+
+async def trading_session_stop(app: FastAPI):
+    """Stop trading session - cleanup positions, cancel tasks."""
+    if hasattr(app.state, "runner_task") and app.state.runner_task is not None:
+        app.state.runner_task.cancel()
+        try:
+            await app.state.runner_task
+        except asyncio.CancelledError:
+            pass
+        app.state.runner_task = None
+        logging.info("Trading session stopped")
+    
+    if hasattr(app.state, "ws"):
+        app.state.ws = None
 
 
 def update_metadata(kwargs):
@@ -88,26 +134,44 @@ async def lifespan(app: FastAPI):
         for kwargs in D_SYMBOL.values():
             dump_basename_from_exchange(kwargs["name"], kwargs["exchange"])
 
-# 2. Setup Global State Registry
-        # METADATA stores: {token: {"strike": 26100, "type": "CE", "prev": 145.0}}
+        # 2. Setup Global State Registry
         app.state.SUBSCRIBED = {"main": [], "hedge": []}
-
         app.state.METADATA = {}
-        app.state.SYMBOL_LOOKUP = {}  # Direct lookup: (strike, type) -> symbol
-
+        app.state.SYMBOL_LOOKUP = {}
         app.state.checkbox = {"main": 1, "hedge": 1}
+        app.state.runner_task = None
 
-        # 4. Initialize WebSocket Manager
-        # We assign it to app.state.ws so the broadcaster can find it
-        index_tokens = [256265, 265, 260105]  # NIFTY, SENSEX, BANKNIFTY
-        app.state.ws = Wsocket(Helper.api(), index_tokens)
+        # 3. Schedule trading session (9:14 - 15:31 Mon-Fri)
+        SCHEDULER.add_job(
+            trading_session_start,
+            trigger=CronTrigger(day_of_week="mon-fri", hour=9, minute=14),
+            id="start_session",
+            args=[app],
+        )
+        SCHEDULER.add_job(
+            trading_session_stop,
+            trigger=CronTrigger(day_of_week="mon-fri", hour=15, minute=31),
+            id="stop_session",
+            args=[app],
+        )
+        SCHEDULER.start()
 
-        # Wait for first ticks to ensure app.state.ws.ltp() isn't empty
-        while not any(app.state.ws.ltp()):
-            await asyncio.sleep(1)
+        # Auto-start if within market hours
+        from datetime import datetime
+        now = datetime.now()
+        if now.weekday() < 5:  # Mon-Fri
+            hour_min = now.hour * 60 + now.minute
+            market_start = 9 * 60 + 14  # 9:14
+            market_end = 15 * 60 + 31   # 15:31
+            if market_start <= hour_min < market_end:
+                await trading_session_start(app)
 
-        logging.info("Login Successful - HAPPY TRADING")
+        logging.info("Server Started - Trading scheduled 9:14-15:31 Mon-Fri")
         yield
+
+        # Cleanup
+        await trading_session_stop(app)
+        SCHEDULER.shutdown()
     except Exception as e:
         logging.error(f"Startup Error: {e}")
         yield
@@ -295,7 +359,7 @@ async def market_broadcaster(websocket: WebSocket):
     try:
         while True:
             # Safely get current LTP cache
-            ticks = app.state.ws.ltp() if hasattr(app.state, "ws") else {}
+            ticks = app.state.ws.ltp() if hasattr(app.state, "ws") and app.state.ws is not None else {}
 
             if ticks:
                 payload = {
