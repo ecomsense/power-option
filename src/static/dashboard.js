@@ -109,12 +109,12 @@ socket = new WebSocket(`ws://${window.location.host}/ws`);
             
             const deltaY = e.clientY - startY;
             const containerHeight = dashboardContainer.offsetHeight;
-            const startTableHeight = containerHeight - startChartHeight;
-            const newTableHeight = Math.max(100, startTableHeight - deltaY);
-            const newChartHeight = containerHeight - newTableHeight;
-            const chartPercent = (newChartHeight / containerHeight) * 100;
+            let newChartHeight = startChartHeight + deltaY;
             
-            chartSection.style.flex = `0 0 ${chartPercent}%`;
+            // Constrain between 10% and 80%
+            newChartHeight = Math.max(containerHeight * 0.1, Math.min(containerHeight * 0.8, newChartHeight));
+            
+            chartSection.style.height = newChartHeight + "px";
             if (chart) {
                 chart.resize(chartSection.offsetWidth, chartSection.offsetHeight - 8);
             }
