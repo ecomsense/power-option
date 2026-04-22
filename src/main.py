@@ -32,12 +32,9 @@ async def trading_session_start(app: FastAPI):
 
     async def run_session():
         try:
-            app.state.ws = Wsocket(Helper.api(), [256265, 265, 260105])
-
-            while not any(app.state.ws.ltp()):
-                await asyncio.sleep(1)
-
-            logging.info("Trading Session Started - HAPPY TRADING")
+            # WebSocket already exists in app.state.ws from lifespan
+            # Just log that trading is active
+            logging.info("Trading Session Active - HAPPY TRADING")
             
             while True:
                 await asyncio.sleep(60)
@@ -141,7 +138,14 @@ async def lifespan(app: FastAPI):
         app.state.checkbox = {"main": 1, "hedge": 1}
         app.state.runner_task = None
 
-        # 3. Schedule trading session (9:14 - 15:31 Mon-Fri)
+        # 3. Initialize WebSocket for real-time data (always running)
+        app.state.ws = Wsocket(Helper.api(), [256265, 265, 260105])
+        
+        # Wait for first ticks
+        while not any(app.state.ws.ltp()):
+            await asyncio.sleep(1)
+
+        # 4. Schedule trading session (9:14 - 15:31 Mon-Fri)
         SCHEDULER.add_job(
             trading_session_start,
             trigger=CronTrigger(day_of_week="mon-fri", hour=9, minute=14),
