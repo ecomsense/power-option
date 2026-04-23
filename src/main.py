@@ -26,41 +26,44 @@ SCHEDULER = AsyncIOScheduler()
 
 async def trading_session_start(app: FastAPI):
     """Start trading session - called by scheduler or settings change."""
-    if hasattr(app.state, "runner_task") and app.state.runner_task is not None:
+    if app.state.trading_active:
         logging.info("Trading session already running")
         return
 
-    async def run_session():
-        try:
-            # WebSocket already exists in app.state.ws from lifespan
-            # Just log that trading is active
-            logging.info("Trading Session Active - HAPPY TRADING")
-            
-            while True:
-                await asyncio.sleep(60)
-        except asyncio.CancelledError:
-            logging.info("Trading session cancelled")
-            raise
-        except Exception as e:
-            logging.error(f"Trading session error: {e}")
+    app.state.trading_active = True
+    app.state.runner_task = asyncio.create_task(trading_loop(app))
+    logging.info("Trading session started")
 
-    app.state.runner_task = asyncio.create_task(run_session())
-    logging.info("Trading session task created")
+
+async def trading_loop(app: FastAPI):
+    """Trading loop that runs during market hours."""
+    try:
+        logging.info("Trading Session Active - HAPPY TRADING")
+        
+        while app.state.trading_active:
+            await asyncio.sleep(60)
+    except asyncio.CancelledError:
+        logging.info("Trading session cancelled")
+        raise
+    except Exception as e:
+        logging.error(f"Trading session error: {e}")
 
 
 async def trading_session_stop(app: FastAPI):
     """Stop trading session - cleanup positions, cancel tasks."""
-    if hasattr(app.state, "runner_task") and app.state.runner_task is not None:
+    if not app.state.trading_active:
+        return
+    
+    app.state.trading_active = False
+    
+    if app.state.runner_task is not None:
         app.state.runner_task.cancel()
         try:
             await app.state.runner_task
         except asyncio.CancelledError:
             pass
         app.state.runner_task = None
-        logging.info("Trading session stopped")
-    
-    if hasattr(app.state, "ws"):
-        app.state.ws = None
+    logging.info("Trading session stopped")
 
 
 def update_metadata(kwargs):
@@ -137,13 +140,23 @@ async def lifespan(app: FastAPI):
         app.state.SYMBOL_LOOKUP = {}
         app.state.checkbox = {"main": 1, "hedge": 1}
         app.state.runner_task = None
+        app.state.trading_active = False  # Track if trading session is active
 
-        # 3. Initialize WebSocket for real-time data (always running)
-        app.state.ws = Wsocket(Helper.api(), [256265, 265, 260105])
-        
-        # Wait for first ticks
-        while not any(app.state.ws.ltp()):
-            await asyncio.sleep(1)
+        # 3. Initialize WebSocket for real-time data (don't crash if broker fails)
+        try:
+            broker_api = Helper.api()
+            if broker_api is not None:
+                app.state.ws = Wsocket(broker_api, [256265, 265, 260105])
+                # Wait for first ticks
+                while not any(app.state.ws.ltp()):
+                    await asyncio.sleep(1)
+                logging.info("WebSocket connected successfully")
+            else:
+                app.state.ws = None
+                logging.warning("Broker not authenticated - WebSocket disabled. Will retry on subscription.")
+        except Exception as e:
+            app.state.ws = None
+            logging.warning(f"WebSocket initialization failed: {e}. Continuing without real-time data.")
 
         # 4. Schedule trading session (9:14 - 15:31 Mon-Fri)
         SCHEDULER.add_job(
@@ -279,6 +292,20 @@ async def update_subscription(payload: dict = Body(...)):
             num_of_strikes=int(payload.get("num_of_strikes")),
         )
         new_tokens = update_metadata(kwargs)
+        
+        # Check if WebSocket is available
+        if app.state.ws is None:
+            # Try to initialize broker connection
+            broker_api = Helper.api()
+            if broker_api is not None:
+                try:
+                    app.state.ws = Wsocket(broker_api, [256265, 265, 260105])
+                    await asyncio.sleep(2)
+                except Exception as e:
+                    return {"status": "error", "message": f"Broker connection failed: {e}"}
+            else:
+                return {"status": "error", "message": "Broker not authenticated. Please check credentials."}
+        
         # Handle Subscriptions
         stale_list = app.state.SUBSCRIBED[side]
         other_side = "hedge" if side == "main" else "main"
@@ -288,10 +315,10 @@ async def update_subscription(payload: dict = Body(...)):
         unsubscribe = list(set(stale_list) - set(other_list))
 
         if unsubscribe:
-            app.state.ws.unsubscribe(unsubscribe)  #
+            app.state.ws.unsubscribe(unsubscribe)
 
         # 4. Subscribe to new tokens
-        app.state.ws.subscribe(new_tokens)  #
+        app.state.ws.subscribe(new_tokens)
 
         # 5. Update global state for next comparison
         app.state.SUBSCRIBED[side] = new_tokens
@@ -383,6 +410,55 @@ async def update_settings(request: Request, payload: dict = Body(...)):
     except Exception as e:
         logging.error(f"Error saving settings: {e}")
         return {"status": "error", "message": str(e)}
+
+
+@app.get("/trading-status")
+async def get_trading_status():
+    from datetime import datetime, timedelta
+    
+    now = datetime.now()
+    is_trading = hasattr(app.state, 'trading_active') and app.state.trading_active
+    
+    # Calculate next market open/close
+    market_start = now.replace(hour=9, minute=14, second=0, microsecond=0)
+    market_end = now.replace(hour=15, minute=31, second=0, microsecond=0)
+    
+    if now.weekday() >= 5:  # Weekend
+        # Find next Monday
+        days_until_monday = 7 - now.weekday()
+        market_start += timedelta(days=days_until_monday)
+        market_end += timedelta(days=days_until_monday)
+    elif now < market_start:
+        pass  # Before market open today
+    elif now >= market_end:
+        # After market close, move to next day
+        market_start += timedelta(days=1)
+        market_end += timedelta(days=1)
+        # Handle weekend transition
+        while market_start.weekday() >= 5:
+            market_start += timedelta(days=1)
+            market_end += timedelta(days=1)
+    
+    next_open = market_start if now < market_start else market_start + timedelta(days=1)
+    next_close = market_end if now < market_end else market_end + timedelta(days=1)
+    
+    if is_trading:
+        target = next_close
+        label = "Market closes in"
+    else:
+        target = next_open
+        label = "Market opens in"
+    
+    remaining = target - now
+    hours = remaining.seconds // 3600
+    minutes = (remaining.seconds % 3600) // 60
+    
+    return {
+        "trading_active": is_trading,
+        "countdown_label": label,
+        "countdown_hours": hours,
+        "countdown_minutes": minutes,
+    }
 
 
 @app.websocket("/ws")

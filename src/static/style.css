@@ -148,6 +148,27 @@ a {
     height: auto;
 }
 
+.trading-status-banner {
+    padding: var(--space-3) var(--space-8);
+    background: var(--bg-header);
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    display: flex;
+    justify-content: center;
+    gap: var(--space-4);
+    border-bottom: var(--border-w1) solid var(--border-main);
+}
+
+.trading-status-banner.active {
+    background: var(--green);
+    color: var(--white);
+}
+
+.trading-status-banner.inactive {
+    background: var(--bg2);
+    color: var(--text-muted);
+}
+
 /* Settings Form */
 .form-group {
     margin-bottom: var(--space-8);
@@ -181,6 +202,28 @@ a {
     height: 100%;
     overflow: hidden;
     border: var(--border-w4) solid var(--border-main);
+}
+
+.outside-hours-overlay {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    background: var(--bg-main);
+    color: var(--text-muted);
+}
+
+.outside-hours-overlay h2 {
+    font-size: 32px;
+    color: var(--purple);
+    margin-bottom: var(--space-4);
+}
+
+.outside-hours-overlay .countdown {
+    font-size: 24px;
+    color: var(--orange);
+    margin-top: var(--space-4);
 }
 
 .tables-wrapper {

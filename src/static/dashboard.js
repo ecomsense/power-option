@@ -8,10 +8,9 @@ let mainLine;
 let currentLine;
 let socket;
 
-document.addEventListener("DOMContentLoaded", () => {
-    // Initialize toggles to unchecked (buy mode) and sync state
-    document.getElementById("main-side-toggle").checked = false;
-    document.getElementById("hedge-side-toggle").checked = false;
+// Initialize chart and socket
+    const chartElement = document.getElementById("chart-container");
+    if (chartElement) {
     
     // Sync initial state from toggles
     const mainToggle = document.getElementById("main-side-toggle");

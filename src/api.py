@@ -1,4 +1,5 @@
 import pendulum as pdlm
+import sys
 
 from stock_brokers.zerodha.zerodha import Zerodha
 from kiteconnect import KiteTicker
@@ -13,7 +14,6 @@ def login():
         zera = None
         if isinstance(O_CNFG, dict):
             dct = O_CNFG["zerodha"]
-            # tokpath = S_DATA + dct["userid"] + ".txt"
             zera = Zerodha(
                 userid=dct["userid"],
                 password=dct["password"],
@@ -21,21 +21,40 @@ def login():
                 api_key=dct["api_key"],
                 secret=dct["secret"],
             )
-            if not zera.authenticate():
-                raise Exception("unable to authenticate")
-            else:
-                zera.kws = KiteTicker(zera.api_key, zera.enctoken)
+            try:
+                if not zera.authenticate():
+                    raise Exception("unable to authenticate")
+                else:
+                    zera.kws = KiteTicker(zera.api_key, zera.enctoken)
+            except SystemExit:
+                print("Zerodha authentication failed - will retry later")
+                return None
 
+    except SystemExit:
+        print("Zerodha authentication failed - will retry later")
+        return None
     except Exception as e:
         print(f"exception while creating zerodha object {e}")
-        remove_token(tokpath)
-        login()
+        try:
+            remove_token(tokpath)
+            login()
+        except SystemExit:
+            print("Zerodha authentication failed - will retry later")
+            return None
     else:
         return zera
 
 
 def remove_token(tokpath):
     __import__("os").remove(tokpath)
+
+
+def is_broker_authenticated():
+    """Check if broker is authenticated and available."""
+    try:
+        return Helper.api() is not None
+    except:
+        return False
 
 
 class Helper:
