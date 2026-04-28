@@ -13,7 +13,7 @@ def login():
         O_CNFG = yml_to_obj()
 
         zera = None
-        if isinstance(O_CNFG, dict):
+        if isinstance(O_CNFG, dict) and "zerodha" in O_CNFG:
             dct = O_CNFG["zerodha"]
             zera = Zerodha(
                 userid=dct["userid"],
@@ -27,9 +27,13 @@ def login():
                     raise Exception("unable to authenticate")
                 else:
                     zera.kws = KiteTicker(zera.api_key, zera.enctoken)
+                    logging.info("Zerodha authentication successful")
             except SystemExit:
                 logging.warning("Zerodha authentication failed - will retry later")
                 return None
+        else:
+            logging.error("Zerodha credentials not found in settings.yml")
+            return None
 
     except SystemExit:
         logging.warning("Zerodha authentication failed - will retry later")
