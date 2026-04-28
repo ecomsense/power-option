@@ -9,6 +9,10 @@ let currentLine;
 let socket;
 
 document.addEventListener("DOMContentLoaded", function() {
+    // Restore saved theme before initializing chart
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) document.documentElement.setAttribute('data-theme', savedTheme);
+
     const chartElement = document.getElementById("chart-container");
     if (chartElement) {
         const mainToggle = document.getElementById("main-side-toggle");
@@ -16,11 +20,18 @@ document.addEventListener("DOMContentLoaded", function() {
         if (mainToggle) window.tableModes.main = mainToggle.checked ? 'SELL' : 'BUY';
         if (hedgeToggle) window.tableModes.hedge = hedgeToggle.checked ? 'SELL' : 'BUY';
 
+        const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+        const colors = isDark ? {
+            background: '#131722', text: '#d1d4dc', grid: '#1e222d'
+        } : {
+            background: '#ffffff', text: '#333333', grid: '#e0e0e0'
+        };
+
         chart = LightweightCharts.createChart(chartElement, {
             width: chartElement.clientWidth,
             height: chartElement.clientHeight,
-            layout: { background: { color: "#131722" }, textColor: "#d1d4dc" },
-            grid: { vertLines: { color: "#1e222d" }, horzLines: { color: "#1e222d" } },
+            layout: { background: { color: colors.background }, textColor: colors.text },
+            grid: { vertLines: { color: colors.grid }, horzLines: { color: colors.grid } },
         });
         mainLine = chart.addLineSeries({ color: "#9c27b0", title: "Baseline" });
         currentLine = chart.addLineSeries({ color: "#ff9800", title: "Total Diff" });
