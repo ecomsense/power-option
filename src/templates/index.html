@@ -308,6 +308,7 @@
             html.setAttribute('data-theme', isDark ? 'light' : 'dark');
             localStorage.setItem('theme', isDark ? 'light' : 'dark');
             document.getElementById('themeToggle').textContent = isDark ? '☀️' : '🌙';
+            if (window.updateChartTheme) window.updateChartTheme();
         }
 
         (function() {

@@ -111,6 +111,24 @@ function toggleColumn(tableId, colIndex, checked) {
     });
 }
 
+window.updateChartTheme = function() {
+    if (!chart) return;
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const colors = isDark ? {
+        background: '#131722',
+        text: '#d1d4dc',
+        grid: '#1e222d'
+    } : {
+        background: '#ffffff',
+        text: '#333333',
+        grid: '#e0e0e0'
+    };
+    chart.applyOptions({
+        layout: { background: { color: colors.background }, textColor: colors.text },
+        grid: { vertLines: { color: colors.grid }, horzLines: { color: colors.grid } }
+    });
+};
+
 function resetCheckAllForSide(side, checked) {
     if (side === "main") {
         document.getElementById("main-ce-checkall").checked = checked;
