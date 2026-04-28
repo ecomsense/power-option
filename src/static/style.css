@@ -204,7 +204,7 @@ a {
     display: flex;
     flex-direction: column;
     width: 100%;
-    height: 100%;
+    flex: 1;
     overflow: hidden;
     border: var(--border-w4) solid var(--border-main);
 }
@@ -236,7 +236,7 @@ a {
     flex: 1;
     overflow: hidden;
     gap: var(--space-2);
-    min-height: 0;
+    min-height: 300px;
 }
 
 #chart-section {
@@ -706,6 +706,15 @@ tbody tr:hover {
     justify-content: center;
     padding: 2rem;
     text-align: center;
+}
+
+/* Main body wrapper for dashboard */
+.main-body {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
 }
 
 /* Modal */
