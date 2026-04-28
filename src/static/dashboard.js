@@ -7,129 +7,69 @@ let chart;
 let mainLine;
 let currentLine;
 let socket;
-document.addEventListener("DOMContentLoaded", () => {
-// Initialize chart and socket
+
+document.addEventListener("DOMContentLoaded", function() {
     const chartElement = document.getElementById("chart-container");
     if (chartElement) {
-    
-    // Sync initial state from toggles
-    const mainToggle = document.getElementById("main-side-toggle");
-    const hedgeToggle = document.getElementById("hedge-side-toggle");
-    if (mainToggle) tableModes.main = mainToggle.checked ? 'SELL' : 'BUY';
-    if (hedgeToggle) tableModes.hedge = hedgeToggle.checked ? 'SELL' : 'BUY';
-    console.log(`Initial modes: main=${tableModes.main}, hedge=${tableModes.hedge}`);
-    
-    const chartElement = document.getElementById("chart-container");
-    if (chartElement) {
+        const mainToggle = document.getElementById("main-side-toggle");
+        const hedgeToggle = document.getElementById("hedge-side-toggle");
+        if (mainToggle) window.tableModes.main = mainToggle.checked ? 'SELL' : 'BUY';
+        if (hedgeToggle) window.tableModes.hedge = hedgeToggle.checked ? 'SELL' : 'BUY';
 
         chart = LightweightCharts.createChart(chartElement, {
-    width: chartElement.clientWidth,
-    height: chartElement.clientHeight,
-    layout: { background: { color: "#131722" }, textColor: "#d1d4dc" },
-    grid: {
-        vertLines: { color: "#1e222d" },
-        horzLines: { color: "#1e222d" },
-    },
-    localization: {
-        // This formats the price/time in the floating tooltip
-timeFormatter: timestamp => {
-            const d = new Date(timestamp * 1000);
-            return d.toLocaleTimeString("en-IN", {
-                timeZone: "Asia/Kolkata",
-                hour12: false,
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-            });
-        },
-    },
-    timeScale: { 
-        timeVisible: true, 
-        secondsVisible: true,
-        shiftVisibleRangeOnNewBar: true,
-
-// This forces the axis labels to use your local time
-        tickMarkFormatter: (time, tickMarkType, locale) => {
-            const date = new Date(time * 1000);
-            return date.toLocaleTimeString("en-IN", {
-                timeZone: "Asia/Kolkata",
-                hour12: false,
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-            });
-        },
-    },
+            width: chartElement.clientWidth,
+            height: chartElement.clientHeight,
+            layout: { background: { color: "#131722" }, textColor: "#d1d4dc" },
+            grid: { vertLines: { color: "#1e222d" }, horzLines: { color: "#1e222d" } },
         });
-
         mainLine = chart.addLineSeries({ color: "#9c27b0", title: "Baseline" });
-        currentLine = chart.addLineSeries({
-            color: "#ff9800",
-            title: "Total Diff",
-        });
+        currentLine = chart.addLineSeries({ color: "#ff9800", title: "Total Diff" });
     }
 
-socket = new WebSocket(`ws://${window.location.host}/ws`);
-    socket.onopen = () => {
-        updateConnectionStatus(true);
-    };
-    socket.onmessage = (event) => {
+    socket = new WebSocket("ws://" + window.location.host + "/ws");
+    socket.onopen = function() { updateConnectionStatus(true); };
+    socket.onmessage = function(event) {
         const data = JSON.parse(event.data);
         if (data.type === "UPDATE") {
             renderDashboard(data.diff_rows || [], data.hedge_rows || [], data.main_fresh || 0, data.hedge_fresh || 0);
         }
     };
-    socket.onclose = () => {
-        console.log("WebSocket closed");
-        updateConnectionStatus(false);
-    };
+    socket.onclose = function() { updateConnectionStatus(false); };
 
-    // Resizable chart section
+    // Resizable chart
     const resizeHandle = document.getElementById("resize-handle");
     const chartSection = document.getElementById("chart-section");
-    const tablesWrapper = document.getElementById("tables-wrapper");
     const dashboardContainer = document.querySelector(".dashboard-container");
     
-    if (resizeHandle && chartSection && tablesWrapper) {
+    if (resizeHandle && chartSection && dashboardContainer) {
         let isResizing = false;
         let startY = 0;
         let startChartHeight = 0;
         
-        resizeHandle.addEventListener("mousedown", (e) => {
+        resizeHandle.addEventListener("mousedown", function(e) {
             isResizing = true;
             startY = e.clientY;
             startChartHeight = chartSection.offsetHeight;
             document.body.style.cursor = "ns-resize";
-            document.body.style.userSelect = "none";
         });
         
-        document.addEventListener("mousemove", (e) => {
+        document.addEventListener("mousemove", function(e) {
             if (!isResizing) return;
-            
-            const deltaY = startY - e.clientY;  // Flip direction
-            const containerHeight = dashboardContainer.offsetHeight;
-            let newChartHeight = startChartHeight + deltaY;
-            
-            // Constrain between 10% and 80%
-            newChartHeight = Math.max(containerHeight * 0.1, Math.min(containerHeight * 0.8, newChartHeight));
-            
+            const deltaY = startY - e.clientY;
+            const newChartHeight = Math.max(startChartHeight * 0.1, Math.min(startChartHeight * 0.8, startChartHeight + deltaY));
             chartSection.style.height = newChartHeight + "px";
-            if (chart) {
-                chart.resize(chartSection.offsetWidth, chartSection.offsetHeight - 8);
-            }
+            if (chart) chart.resize(chartSection.offsetWidth, chartSection.offsetHeight - 8);
         });
         
-        document.addEventListener("mouseup", () => {
+        document.addEventListener("mouseup", function() {
             if (isResizing) {
                 isResizing = false;
                 document.body.style.cursor = "";
-                document.body.style.userSelect = "";
             }
         });
     }
     
-    // Window resize handler
-    window.addEventListener("resize", () => {
+    window.addEventListener("resize", function() {
         const chartSection = document.getElementById("chart-section");
         if (chart && chartSection) {
             chart.resize(chartSection.offsetWidth, chartSection.offsetHeight - 8);
@@ -144,148 +84,159 @@ function updateConnectionStatus(connected) {
     }
 }
 
-window.addEventListener("beforeunload", () => {
-    if (socket) {
-        socket.close();
-    }
+window.addEventListener("beforeunload", function() {
+    if (socket) socket.close();
 });
 
+window.tableModes = { main: 'BUY', hedge: 'BUY' };
 
-/**
- * Fully Optimized renderDashboard
- * Independently tracks Call and Put checkboxes for both Diff and Hedge tables.
- */
+function getColorClass(val) {
+    return val < 0 ? "neg" : "pos";
+}
+
+function getTableMode(type) {
+    return window.tableModes[type] || 'BUY';
+}
+
+function toggleColumn(tableId, colIndex, checked) {
+    const table = document.getElementById(tableId);
+    if (!table) return;
+    const rows = table.querySelectorAll("tbody tr");
+    rows.forEach(function(row) {
+        const cell = row.children[colIndex];
+        if (cell) {
+            const checkbox = cell.querySelector("input[type='checkbox']");
+            if (checkbox) checkbox.checked = checked;
+        }
+    });
+}
+
+function resetCheckAllForSide(side, checked) {
+    if (side === "main") {
+        document.getElementById("main-ce-checkall").checked = checked;
+        document.getElementById("main-pe-checkall").checked = checked;
+    } else if (side === "hedge") {
+        document.getElementById("hedge-ce-checkall").checked = checked;
+        document.getElementById("hedge-pe-checkall").checked = checked;
+    }
+}
+
 function renderDashboard(diffRows, hedgeRows, mainFresh, hedgeFresh) {
-    const now = Math.floor(Date.now() / 1000);
+    var now = Math.floor(Date.now() / 1000);
+    var diffHtml = "";
+    var sCeLtp = 0, sPrCe = 0, sPrPe = 0, sPeLtp = 0;
 
-    // --- 1. Render DIFF TABLE (14 Columns) ---
-    let diffHtml = "";
-    let sCeLtp = 0, sPrCe = 0, sPrPe = 0, sPeLtp = 0;
-
-    diffRows.forEach((row) => {
+    diffRows.forEach(function(row) {
         sCeLtp += row.curr_ce;
         sPrCe += row.prev_ce;
         sPrPe += row.prev_pe;
         sPeLtp += row.curr_pe;
+        var leftId = "cb-main-ce-" + row.ce_strike;
+        var rightId = "cb-main-pe-" + row.pe_strike;
+        var exLeft = document.getElementById(leftId);
+        var exRight = document.getElementById(rightId);
+        var isLeftChecked = mainFresh ? true : (exLeft ? exLeft.checked : true);
+        var isRightChecked = mainFresh ? true : (exRight ? exRight.checked : true);
 
-        // Unique IDs for Left (Call) and Right (Put)
-        const leftId = `cb-main-ce-${row.ce_strike}`;
-        const rightId = `cb-main-pe-${row.pe_strike}`;
-        
-        // Lookup existing state
-        const exLeft = document.getElementById(leftId);
-        const exRight = document.getElementById(rightId);
-
-        // State logic: Fresh flag > Existing DOM state > Default true
-        const isLeftChecked = mainFresh ? true : (exLeft ? exLeft.checked : true);
-        const isRightChecked = mainFresh ? true : (exRight ? exRight.checked : true);
-
-diffHtml += `
-      <tr>
-        <td class="cb-cell"><input type="checkbox" id="${leftId}" ${isLeftChecked ? 'checked' : ''} onchange="updateCheckAllState('diffTable', 0)"></td>
-        <td class="${getColorClass(row.total_diff)}">${row.total_diff.toFixed(2)}</td>
-        <td class="${getColorClass(row.ce_diff_pct)}">${row.ce_diff_pct.toFixed(2)}</td>
-        <td class="${getColorClass(row.ce_diff)}">${row.ce_diff.toFixed(2)}</td>
-        <td>${row.curr_ce.toFixed(2)}</td>
-        <td>${row.prev_ce.toFixed(2)}</td>
-        <td>${row.ce_strike}</td>
-        <td>${row.pe_strike}</td>
-        <td>${row.prev_pe.toFixed(2)}</td>
-        <td>${row.curr_pe.toFixed(2)}</td>
-        <td class="${getColorClass(row.pe_diff)}">${row.pe_diff.toFixed(2)}</td>
-        <td class="${getColorClass(row.pe_diff_pct)}">${row.pe_diff_pct.toFixed(2)}</td>
-        <td class="${getColorClass(row.total_diff_pct)}">${row.total_diff_pct}</td>
-        <td class="cb-cell"><input type="checkbox" id="${rightId}" ${isRightChecked ? 'checked' : ''} onchange="updateCheckAllState('diffTable', 13)"></td>
-      </tr>`;
+        diffHtml += '<tr>' +
+            '<td class="cb-cell"><input type="checkbox" id="' + leftId + '" ' + (isLeftChecked ? 'checked' : '') + ' onchange="updateCheckAllState(\'diffTable\', 0)"></td>' +
+            '<td class="' + getColorClass(row.total_diff) + '">' + row.total_diff.toFixed(2) + '</td>' +
+            '<td class="' + getColorClass(row.ce_diff_pct) + '">' + row.ce_diff_pct.toFixed(2) + '</td>' +
+            '<td class="' + getColorClass(row.ce_diff) + '">' + row.ce_diff.toFixed(2) + '</td>' +
+            '<td>' + row.curr_ce.toFixed(2) + '</td>' +
+            '<td>' + row.prev_ce.toFixed(2) + '</td>' +
+            '<td>' + row.ce_strike + '</td>' +
+            '<td>' + row.pe_strike + '</td>' +
+            '<td>' + row.prev_pe.toFixed(2) + '</td>' +
+            '<td>' + row.curr_pe.toFixed(2) + '</td>' +
+            '<td class="' + getColorClass(row.pe_diff) + '">' + row.pe_diff.toFixed(2) + '</td>' +
+            '<td class="' + getColorClass(row.pe_diff_pct) + '">' + row.pe_diff_pct.toFixed(2) + '</td>' +
+            '<td class="' + getColorClass(row.total_diff_pct) + '">' + row.total_diff_pct + '</td>' +
+            '<td class="cb-cell"><input type="checkbox" id="' + rightId + '" ' + (isRightChecked ? 'checked' : '') + ' onchange="updateCheckAllState(\'diffTable\', 13)"></td>' +
+            '</tr>';
     });
 
-    const diffFooter = `
-    <tr class="footer-row">
-      <td colspan="4"></td>
-      <td>${sCeLtp.toFixed(2)}</td><td>${sPrCe.toFixed(2)}</td>
-      <td colspan="2" style="text-align:center; font-weight:bold;">TOTALS</td>
-      <td>${sPrPe.toFixed(2)}</td><td>${sPeLtp.toFixed(2)}</td>
-      <td colspan="4"></td>
-    </tr>`;
+    var diffFooter = '<tr class="footer-row"><td colspan="4"></td><td>' + sCeLtp.toFixed(2) + '</td><td>' + sPrCe.toFixed(2) + '</td>' +
+        '<td colspan="2" style="text-align:center; font-weight:bold;">TOTALS</td><td>' + sPrPe.toFixed(2) + '</td><td>' + sPeLtp.toFixed(2) + '</td><td colspan="4"></td></tr>';
 
-const mainBody = document.getElementById("mainBody");
+    var mainBody = document.getElementById("mainBody");
     if (mainBody) mainBody.innerHTML = diffHtml + diffFooter;
 
-    // --- 2. Render HEDGE TABLE (6 Columns) ---
-    let hedgeHtml = "";
-    hedgeRows.forEach((row) => {
-        // Unique IDs for Hedge Left (Call) and Right (Put)
-        const hLeftId = `cb-hedge-ce-${row.ce_strike}`;
-        const hRightId = `cb-hedge-pe-${row.pe_strike}`;
+    var hedgeHtml = "";
+    hedgeRows.forEach(function(row) {
+        var hLeftId = "cb-hedge-ce-" + row.ce_strike;
+        var hRightId = "cb-hedge-pe-" + row.pe_strike;
+        var exHLeft = document.getElementById(hLeftId);
+        var exHRight = document.getElementById(hRightId);
+        var isHLeftChecked = hedgeFresh ? true : (exHLeft ? exHLeft.checked : true);
+        var isHRightChecked = hedgeFresh ? true : (exHRight ? exHRight.checked : true);
 
-        const exHLeft = document.getElementById(hLeftId);
-        const exHRight = document.getElementById(hRightId);
-
-        const isHLeftChecked = hedgeFresh ? true : (exHLeft ? exHLeft.checked : true);
-        const isHRightChecked = hedgeFresh ? true : (exHRight ? exHRight.checked : true);
-
-        hedgeHtml += `
-      <tr>
-<td class="cb-cell"><input type="checkbox" id="${hLeftId}" ${isHLeftChecked ? 'checked' : ''} onchange="updateCheckAllState('hedgeTable', 0)"></td>
-        <td>${row.curr_ce.toFixed(2)}</td>
-        <td>${row.ce_strike}</td>
-        <td>${row.pe_strike}</td>
-        <td>${row.curr_pe.toFixed(2)}</td>
-        <td class="cb-cell"><input type="checkbox" id="${hRightId}" ${isHRightChecked ? 'checked' : ''} onchange="updateCheckAllState('hedgeTable', 5)"></td>
-      </tr>`;
+        hedgeHtml += '<tr>' +
+            '<td class="cb-cell"><input type="checkbox" id="' + hLeftId + '" ' + (isHLeftChecked ? 'checked' : '') + ' onchange="updateCheckAllState(\'hedgeTable\', 0)"></td>' +
+            '<td>' + row.curr_ce.toFixed(2) + '</td>' +
+            '<td>' + row.ce_strike + '</td>' +
+            '<td>' + row.pe_strike + '</td>' +
+            '<td>' + row.curr_pe.toFixed(2) + '</td>' +
+            '<td class="cb-cell"><input type="checkbox" id="' + hRightId + '" ' + (isHRightChecked ? 'checked' : '') + ' onchange="updateCheckAllState(\'hedgeTable\', 5)"></td>' +
+            '</tr>';
     });
 
-    const hedgeBody = document.getElementById("hedgeBody");
+    var hedgeBody = document.getElementById("hedgeBody");
     if (hedgeBody) hedgeBody.innerHTML = hedgeHtml;
 
-    // --- 3. Update Chart ---
     if (diffRows.length > 0) {
         if (currentLine) currentLine.update({ time: now, value: sCeLtp + sPeLtp });
         if (mainLine) mainLine.update({ time: now, value: sPrCe + sPrPe });
     }
 }
 
-
-function getColorClass(val) {
-    return val < 0 ? "neg" : "pos";
+function updateCheckAllState(tableId, colIndex) {
+    var table = document.getElementById(tableId);
+    if (!table) return;
+    var rows = table.querySelectorAll("tbody tr:not(.footer-row)");
+    var allChecked = true;
+    rows.forEach(function(row) {
+        var cell = row.children[colIndex];
+        if (cell) {
+            var checkbox = cell.querySelector("input[type='checkbox']");
+            if (checkbox && !checkbox.checked) allChecked = false;
+        }
+    });
+    var checkallId = (tableId === "mainTable") ? 
+        (colIndex === 0 ? "main-ce-checkall" : "main-pe-checkall") :
+        (colIndex === 0 ? "hedge-ce-checkall" : "hedge-pe-checkall");
+    var checkall = document.getElementById(checkallId);
+    if (checkall) checkall.checked = allChecked;
 }
 
-/**
- * Unified subscription updater
- * @param {string} side - Must be 'main' or 'hedge' to match HTML IDs
- */
 async function updateSubscription(side) {
-    // Validate all required fields are selected
-    const symbol = document.getElementById("symbol-select").value;
-    const expiry = document.getElementById("expiry-select").value;
-    const ce_start = document.getElementById(`${side}-call-base`).value;
-    const pe_start = document.getElementById(`${side}-put-base`).value;
+    var symbol = document.getElementById("symbol-select").value;
+    var expiry = document.getElementById("expiry-select").value;
+    var ce_start = document.getElementById(side + "-call-base").value;
+    var pe_start = document.getElementById(side + "-put-base").value;
 
     if (!symbol || !expiry || !ce_start || !pe_start) {
         alert("Please select Symbol, Expiry, Call Strike, and Put Strike");
         return;
     }
 
-    // Collecting values manually using the side as the ID prefix
-    const payload = {
+    var payload = {
         side: side,
         basename: symbol,
         expiry: expiry,
-        ce_start: ce_start,
-        pe_start: pe_start,
-        num_of_strikes: document.getElementById(`${side}-num`).value, // Assuming same count for both
+        ce_start: parseInt(ce_start),
+        pe_start: parseInt(pe_start),
+        num_of_strikes: parseInt(document.getElementById(side + "-num").value)
     };
 
     try {
-        const response = await fetch("/update-subscription", {
+        var response = await fetch("/api/logic/update-subscription", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
+            body: JSON.stringify(payload)
         });
-
-        const result = await response.json();
+        var result = await response.json();
         if (result.status === "success") {
-            console.log(`Successfully updated ${side} tokens.`);
             resetCheckAllForSide(side, true);
         }
     } catch (error) {
@@ -293,13 +244,10 @@ async function updateSubscription(side) {
     }
 }
 
-/**
- * Play beep sound
- */
 function playBeep() {
     try {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = ctx.createOscillator();
+        var ctx = new (window.AudioContext || window.webkitAudioContext)();
+        var osc = ctx.createOscillator();
         osc.connect(ctx.destination);
         osc.frequency.value = 800;
         osc.start();
@@ -307,151 +255,115 @@ function playBeep() {
     } catch(e) {}
 }
 
-/**
- * Show toast notification
- */
-function showToast(message, isSuccess = true) {
-    const toast = document.createElement('div');
-    toast.className = `toast ${isSuccess ? 'success' : 'error'}`;
+function showToast(message, isSuccess) {
+    var toast = document.createElement("div");
+    toast.className = "toast " + (isSuccess ? "success" : "error");
     toast.textContent = message;
     document.body.appendChild(toast);
     playBeep();
-    setTimeout(() => toast.remove(), 3000);
+    setTimeout(function() { toast.remove(); }, 3000);
 }
 
-/**
- * Collects checked strikes by parsing existing element IDs
- */
 async function processBatchOrders(tableId, modeType, qtyId, orderCode) {
-    // Disable action buttons during processing
-    document.querySelectorAll('.action-btn').forEach(b => b.disabled = true);
+    document.querySelectorAll(".action-btn").forEach(function(b) { b.disabled = true; });
 
-    const table = document.getElementById(tableId);
+    var table = document.getElementById(tableId);
     if (!table) {
         showToast("Table not found!", false);
-        document.querySelectorAll('.action-btn').forEach(b => b.disabled = false);
+        document.querySelectorAll(".action-btn").forEach(function(b) { b.disabled = false; });
         return;
     }
     
-    const checkedBoxes = table.querySelectorAll('tbody input[type="checkbox"]:checked');
-    const qtyElement = document.getElementById(qtyId);
+    var checkedBoxes = table.querySelectorAll("tbody input[type='checkbox']:checked");
+    var qtyElement = document.getElementById(qtyId);
     if (!qtyElement) {
         showToast("Quantity input not found!", false);
-        document.querySelectorAll('.action-btn').forEach(b => b.disabled = false);
+        document.querySelectorAll(".action-btn").forEach(function(b) { b.disabled = false; });
         return;
     }
-    const qty = qtyElement.value;
+    var qty = parseInt(qtyElement.value);
     
-    // Determine the num input ID based on modeType
-    let numId;
-    if (modeType === 'main') {
-        numId = 'main-num';
-    } else if (modeType === 'hedge') {
-        numId = 'hedge-num';
-    } else {
-        showToast("Invalid table type!", false);
-        document.querySelectorAll('.action-btn').forEach(b => b.disabled = false);
-        return;
-    }
-    const numStrikesElement = document.getElementById(numId);
+    var numStrikesElement = document.getElementById(modeType + "-num");
     if (!numStrikesElement) {
         showToast("Number of strikes input not found!", false);
-        document.querySelectorAll('.action-btn').forEach(b => b.disabled = false);
+        document.querySelectorAll(".action-btn").forEach(function(b) { b.disabled = false; });
         return;
     }
-    const numStrikes = numStrikesElement.value;
+    var numStrikes = parseInt(numStrikesElement.value);
     
-    // Derive side from orderCode first letter
-    const side = orderCode.startsWith('L') ? 'BUY' : 'SELL';
-    
+    var side = orderCode.startsWith("L") ? "BUY" : "SELL";
+
     if (checkedBoxes.length === 0) {
         showToast("Select at least one strike!", false);
-        document.querySelectorAll('.action-btn').forEach(b => b.disabled = false);
-        return;
-    }
-    
-    if (parseInt(qty) < 1 || parseInt(numStrikes) < 1) {
-        showToast("Qty and strikes must be at least 1!", false);
-        document.querySelectorAll('.action-btn').forEach(b => b.disabled = false);
+        document.querySelectorAll(".action-btn").forEach(function(b) { b.disabled = false; });
         return;
     }
 
-    // Simple list of selected checkbox IDs: ["cb-main-ce-22000", "cb-main-pe-23500"]
-    const orderList = Array.from(checkedBoxes).map(cb => cb.id);
-
-    const payload = {
+    var orderList = Array.from(checkedBoxes).map(function(cb) { return cb.id; });
+    var payload = {
         orders: orderList,
-        quantity: parseInt(qty),
+        quantity: qty,
         order_code: orderCode,
         tag: modeType
     };
 
-try {
-        const res = await fetch('/api/logic/order_place', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+    try {
+        var res = await fetch("/api/logic/order_place", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)
         });
-        const result = await res.json();
-        if (result.status === 'success') {
-            showToast(`${orderList.length} ${side} orders sent`, true);
+        var result = await res.json();
+        if (result.status === "success") {
+            showToast(orderList.length + " " + side + " orders sent", true);
         } else {
-            showToast(result.message || 'Order failed', false);
+            showToast(result.message || "Order failed", false);
         }
     } catch (error) {
-        showToast('Order request failed', false);
-        console.error("Order request failed:", error);
+        showToast("Order request failed", false);
     } finally {
-        // Re-enable buttons
-        document.querySelectorAll('.action-btn').forEach(b => b.disabled = false);
+        document.querySelectorAll(".action-btn").forEach(function(b) { b.disabled = false; });
     }
 }
 
-
-// Button Mappings - simplified
-function mainFire()   { placeOrder('main', 'main-qty', false); }
-function mainSquare() { placeSquareOrder('main', 'main-qty', true); }
-function hedgeFire()  { placeOrder('hedge', 'hedge-qty', false); }
-function hedgeSquare(){ placeSquareOrder('hedge', 'hedge-qty', true); }
+function mainFire() { placeOrder("main", "main-qty", false); }
+function mainSquare() { placeSquareOrder("main", "main-qty", true); }
+function hedgeFire() { placeOrder("hedge", "hedge-qty", false); }
+function hedgeSquare() { placeSquareOrder("hedge", "hedge-qty", true); }
 
 async function placeSquareOrder(tableTag, qtyId, isSquareOff) {
-    const tableId = tableTag === 'main' ? 'mainTable' : 'hedgeTable';
+    var tableId = tableTag === "main" ? "mainTable" : "hedgeTable";
     if (!document.getElementById(tableId)) {
         showToast("Table not found!", false);
         return;
     }
 
-    const side = getTableMode(tableTag);
-    const qtyElement = document.getElementById(qtyId);
+    var side = getTableMode(tableTag);
+    var qtyElement = document.getElementById(qtyId);
     if (!qtyElement) {
         showToast("Quantity input not found!", false);
         return;
     }
-    const qty = qtyElement.value;
-
-    const table = document.getElementById(tableId);
-    const checkedBoxes = table.querySelectorAll('tbody input[type="checkbox"]:checked');
+    var qty = qtyElement.value;
+    var table = document.getElementById(tableId);
+    var checkedBoxes = table.querySelectorAll("tbody input[type='checkbox']:checked");
     if (checkedBoxes.length === 0) {
         showToast("Select at least one strike!", false);
         return;
     }
 
-    const orderCode = (side === 'BUY' ? 'S' : 'L') + 'X';
-    const numStrikesElement = document.getElementById(tableTag === 'main' ? 'main-num' : 'hedge-num');
-    const numStrikes = numStrikesElement ? numStrikesElement.value : 1;
+    var orderCode = (side === "BUY" ? "S" : "L") + "X";
+    var tag = tableTag;
 
-    const tag = tableTag;
+    document.querySelectorAll(".action-btn").forEach(function(b) { b.disabled = true; });
 
-    document.querySelectorAll('.action-btn').forEach(b => b.disabled = true);
-
-    for (let i = 0; i < checkedBoxes.length; i++) {
-        const cb = checkedBoxes[i];
-        const orderId = cb.id;
-
+    for (var i = 0; i < checkedBoxes.length; i++) {
+        var cb = checkedBoxes[i];
+        var orderId = cb.id;
         try {
-            const res = await fetch('/api/logic/order_place_one', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+            var res = await fetch("/api/logic/order_place_one", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     trading_symbol: orderId,
                     quantity: parseInt(qty),
@@ -459,54 +371,46 @@ async function placeSquareOrder(tableTag, qtyId, isSquareOff) {
                     tag: tag
                 })
             });
-            const result = await res.json();
-            if (result.status !== 'success') {
-                showToast(`Order ${i+1} failed: ${result.message || 'error'}`, false);
+            var result = await res.json();
+            if (result.status !== "success") {
+                showToast("Order " + (i+1) + " failed", false);
             }
         } catch (error) {
-            showToast(`Order ${i+1} request failed`, false);
-            console.error("Order request failed:", error);
+            showToast("Order " + (i+1) + " request failed", false);
         }
+    }
 
-        }
-
-    document.querySelectorAll('.action-btn').forEach(b => b.disabled = false);
-    showToast(`${checkedBoxes.length} ${side === 'BUY' ? 'BUY' : 'SELL'} orders sent (one-by-one)`, true);
+    document.querySelectorAll(".action-btn").forEach(function(b) { b.disabled = false; });
+    showToast(checkedBoxes.length + (side === "BUY" ? "BUY" : "SELL") + " orders sent", true);
 }
 
-// Unified order function
 function placeOrder(tableTag, qtyId, isSquareOff) {
-    const tableId = tableTag === 'main' ? 'mainTable' : 'hedgeTable';
+    var tableId = tableTag === "main" ? "mainTable" : "hedgeTable";
     if (!document.getElementById(tableId)) {
         showToast("Table not found!", false);
         return;
     }
     
-    const side = getTableMode(tableTag);
-    const qtyElement = document.getElementById(qtyId);
+    var side = getTableMode(tableTag);
+    var qtyElement = document.getElementById(qtyId);
     if (!qtyElement) {
         showToast("Quantity input not found!", false);
         return;
     }
-    const qty = qtyElement.value;
+    var qty = qtyElement.value;
     
-    // Order code: L/S + E/X
-    // BUY toggle -> L (LE/LX), SELL toggle -> S (SE/SX)
-    // Invert: BUY -> S, SELL -> L
-    let code = (side === 'BUY' ? 'S' : 'L') + (isSquareOff ? 'X' : 'E');
-    console.log(`placeOrder: tableTag=${tableTag}, side=${side}, isSquareOff=${isSquareOff}, code=${code}`);
+    var code = (side === "BUY" ? "S" : "L") + (isSquareOff ? "X" : "E");
     
     processBatchOrders(tableId, tableTag, qtyId, code);
 }
 
-
 async function showLogsModal() {
-    const modal = document.getElementById("logsModal");
-    const content = document.getElementById("logsContent");
+    var modal = document.getElementById("logsModal");
+    var content = document.getElementById("logsContent");
     modal.style.display = "block";
     content.textContent = "Loading...";
     try {
-        const resp = await fetch("/logs");
+        var resp = await fetch("/logs");
         content.textContent = await resp.text();
     } catch(e) {
         content.textContent = "Error loading logs: " + e;
@@ -517,59 +421,6 @@ function closeLogsModal() {
     document.getElementById("logsModal").style.display = "none";
 }
 
-function toggleColumn(tableId, colIndex, checked) {
-    const table = document.getElementById(tableId);
-    if (!table) return;
-    
-    const rows = table.querySelectorAll("tbody tr");
-    rows.forEach(row => {
-        // Check if the row has enough columns
-        if (row.children.length > colIndex) {
-            const cell = row.children[colIndex];
-            const checkbox = cell.querySelector("input[type='checkbox']");
-            if (checkbox) checkbox.checked = checked;
-        }
-    });
-    updateCheckAllState(tableId, colIndex);
-}
-
-function updateCheckAllState(tableId, colIndex) {
-    const table = document.getElementById(tableId);
-    const rows = table.querySelectorAll("tbody tr:not(.footer-row)");
-    let allChecked = true;
-    rows.forEach(row => {
-        const cell = row.children[colIndex];
-        const checkbox = cell.querySelector("input[type='checkbox']");
-        if (checkbox && !checkbox.checked) {
-            allChecked = false;
-        }
-    });
-    
-    const checkallId = tableId === "diffTable" 
-        ? (colIndex === 0 ? "main-ce-checkall" : "main-pe-checkall")
-        : (colIndex === 0 ? "hedge-ce-checkall" : "hedge-pe-checkall");
-    const checkall = document.getElementById(checkallId);
-    if (checkall) checkall.checked = allChecked;
-}
-
-function resetCheckAllBoxes() {
-    document.getElementById("main-ce-checkall").checked = false;
-    document.getElementById("main-pe-checkall").checked = false;
-    document.getElementById("hedge-ce-checkall").checked = false;
-    document.getElementById("hedge-pe-checkall").checked = false;
-}
-
-function resetCheckAllForSide(side, checked = false) {
-    if (side === "main") {
-        document.getElementById("main-ce-checkall").checked = checked;
-        document.getElementById("main-pe-checkall").checked = checked;
-    } else if (side === "hedge") {
-        document.getElementById("hedge-ce-checkall").checked = checked;
-        document.getElementById("hedge-pe-checkall").checked = checked;
-    }
-}
-
-// Settings Modal Functions
 function showSettingsModal() {
     loadSettings();
     document.getElementById("settingsModal").style.display = "block";
@@ -581,53 +432,46 @@ function closeSettingsModal() {
 
 async function loadSettings() {
     try {
-        const response = await fetch("/settings");
-        const settings = await response.json();
-        
+        var response = await fetch("/api/logic/settings");
+        var settings = await response.json();
         document.getElementById("settingsWebhook").value = settings.webhook_url || "";
         document.getElementById("settingsTag").value = settings.tag || "poweroption";
         document.getElementById("settingsTimeout").value = settings.timeout || 30;
-        
-        if (settings.log) {
-            document.getElementById("settingsLogLevel").value = settings.log.level || 20;
-            document.getElementById("settingsLogShow").checked = settings.log.show !== false;
-        } else {
-            document.getElementById("settingsLogLevel").value = 20;
-            document.getElementById("settingsLogShow").checked = true;
-        }
-        
-        showToast("Settings loaded", true);
     } catch (e) {
-        showToast("Error loading settings: " + e.message, false);
+        console.error("Error loading settings: " + e.message);
     }
 }
 
 async function saveSettings() {
-    const payload = {
+    var payload = {
         webhook_url: document.getElementById("settingsWebhook").value,
         tag: document.getElementById("settingsTag").value,
         timeout: parseInt(document.getElementById("settingsTimeout").value),
-        log_level: parseInt(document.getElementById("settingsLogLevel").value),
-        log_show: document.getElementById("settingsLogShow").checked,
     };
-    
     try {
-        const response = await fetch("/settings", {
+        await fetch("/api/logic/settings", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
         });
-        const result = await response.json();
-        
-        if (result.status === "success") {
-            showToast("Settings saved. Session restarted.", true);
-            closeSettingsModal();
-        } else {
-            showToast("Error: " + result.message, false);
-        }
+        closeSettingsModal();
+        window.location.reload();
     } catch (e) {
-        showToast("Error saving settings: " + e.message, false);
+        console.error("Error saving settings: " + e.message);
     }
 }
 
-});
+function toggleSide(type) {
+    var checkboxId = type === "main" ? "main-side-toggle" : "hedge-side-toggle";
+    var checkbox = document.getElementById(checkboxId);
+    if (checkbox) {
+        window.tableModes[type] = checkbox.checked ? "SELL" : "BUY";
+    }
+}
+
+async function restartLogic() {
+    await fetch("/api/logic/stop", { method: "POST" });
+    await new Promise(function(r) { setTimeout(r, 500); });
+    await fetch("/api/logic/start", { method: "POST" });
+    window.location.reload();
+}
