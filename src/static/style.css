@@ -665,6 +665,32 @@ tbody tr:hover {
     text-decoration: underline;
 }
 
+/* Common Header (shared by index.html and sleeping.html) */
+.app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    background: var(--bg-header);
+    border-bottom: 1px solid var(--border-main);
+}
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.logo {
+    font-size: 1.5rem;
+}
+.title {
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+.header-right {
+    display: flex;
+    gap: 0.5rem;
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar {
     width: var(--space-4);
