@@ -255,18 +255,10 @@
                 <div class="schedule-title">Market Schedule</div>
                 <div class="countdown-time" id="countdownTime">--:--:--</div>
                 <div class="schedule-info">
-                    <span class="schedule-badge">Opens: 09:14</span>
-                    <span class="schedule-badge">Closes: 15:31</span>
+                    <span class="schedule-badge" id="opensTime">Opens: --:--</span>
+                    <span class="schedule-badge" id="closesTime">Closes: --:--</span>
                 </div>
-                <div class="trading-days">
-                    <span class="day-badge" data-day="0">Mon</span>
-                    <span class="day-badge" data-day="1">Tue</span>
-                    <span class="day-badge" data-day="2">Wed</span>
-                    <span class="day-badge" data-day="3">Thu</span>
-                    <span class="day-badge" data-day="4">Fri</span>
-                    <span class="day-badge" data-day="5">Sat</span>
-                    <span class="day-badge" data-day="6">Sun</span>
-                </div>
+                <div class="trading-days" id="tradingDaysContainer"></div>
             </div>
         </div>
         
@@ -334,30 +326,48 @@
             
             setInterval(rotateContent, 8000);
             
-            function updateTradingDays() {
-                const today = new Date().getDay();
-                document.querySelectorAll('.day-badge').forEach(badge => {
-                    const day = parseInt(badge.dataset.day);
-                    badge.classList.toggle('active', day === today);
-                });
-            }
-            
-            updateTradingDays();
-            
-            async function updateCountdown() {
+            async function updateScheduleInfo() {
                 try {
-                    const resp = await fetch('/api/logic/trading-status');
+                    const resp = await fetch('/api/schedule');
                     const data = await resp.json();
-                    const hours = String(data.countdown_hours).padStart(2, '0');
-                    const mins = String(data.countdown_minutes).padStart(2, '0');
-                    document.getElementById('countdownTime').textContent = `${hours}:${mins}:00`;
+                    
+                    const [open, close] = (data.schedule_times || '--:-- - --:--').split(' - ');
+                    document.getElementById('opensTime').textContent = 'Opens: ' + open;
+                    document.getElementById('closesTime').textContent = 'Closes: ' + close;
+                    
+                    const daysMap = {Mon:0, Tue:1, Wed:2, Thu:3, Fri:4, Sat:5, Sun:6};
+                    const today = new Date().getDay();
+                    const daysEl = document.getElementById('tradingDaysContainer');
+                    if (data.trading_days) {
+                        daysEl.innerHTML = data.trading_days.map(d => 
+                            `<span class="day-badge ${today === daysMap[d] ? 'active' : ''}">${d}</span>`
+                        ).join('');
+                    }
+                    
+                    if (data.within_schedule) {
+                        document.getElementById('countdownTime').textContent = 'MARKET OPEN!';
+                    } else {
+                        const now = new Date();
+                        let nextOpen = new Date();
+                        const [h, m] = (data.start_time || '09:14').split(':').map(Number);
+                        nextOpen.setHours(h, m, 0, 0);
+                        if (now > nextOpen) nextOpen.setDate(nextOpen.getDate() + 1);
+                        while ([0, 6].includes(nextOpen.getDay())) nextOpen.setDate(nextOpen.getDate() + 1);
+                        
+                        const diff = nextOpen - now;
+                        const hours = Math.floor(diff / (1000*60*60));
+                        const mins = Math.floor((diff % (1000*60*60)) / (1000*60));
+                        const secs = Math.floor((diff % (1000*60)) / 1000);
+                        document.getElementById('countdownTime').textContent = 
+                            `${String(hours).padStart(2,'0')}:${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+                    }
                 } catch(e) {
-                    console.error('Countdown error:', e);
+                    console.error('Schedule error:', e);
                 }
             }
             
-            updateCountdown();
-            setInterval(updateCountdown, 60000);
+            updateScheduleInfo();
+            setInterval(updateScheduleInfo, 3000);
             
             function openSettingsModal() {
                 document.getElementById('settingsModal').style.display = 'flex';
