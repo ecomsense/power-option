@@ -237,6 +237,7 @@ a {
     overflow: hidden;
     gap: var(--space-2);
     min-height: 300px;
+    width: 100%;
 }
 
 #chart-section {
@@ -291,16 +292,21 @@ a {
 .data-tables {
     flex: 1;
     overflow: visible;
+    display: flex;
+    min-width: 0;
 }
 
 .data-tables table {
     width: 100%;
+    min-width: 100%;
 }
 
 .table-container {
+    flex: 1;
     overflow-y: auto;
     position: relative;
     background-color: var(--bg-header);
+    min-width: 0;
 }
 
 .top-control-bar {
