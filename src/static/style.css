@@ -241,7 +241,7 @@ a {
 
 #chart-section {
     flex-shrink: 0;
-    height: 30%;
+    height: 200px;
     background-color: var(--bg-header);
     border-top: var(--border-w2) solid var(--border-main);
     position: relative;
