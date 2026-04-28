@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 
-from constants import D_SYMBOL, logging, yml_to_obj
+from constants import D_SYMBOL, yml_to_obj
 from symbols import (
     dump_basename_from_exchange,
     find_call_and_put_from_dropdown,
@@ -18,7 +18,7 @@ from symbols import (
 from state import _logic_state, get_logic_state
 from webhook import send_to_webhook_async
 
-logger = logging.getLogger(__name__)
+logger = __import__('logging').getLogger(__name__)
 
 
 def load_template(name: str) -> str:
