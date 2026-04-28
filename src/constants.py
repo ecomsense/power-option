@@ -18,7 +18,7 @@ if not O_FUTL.is_file_exists(S_LOG):
     input:
          file name with full path
     """
-    print("creating data dir")
+    logging.info("creating data dir")
     O_FUTL.add_path(S_LOG)
     ce_path = S_DATA + "CE/ce.txt"
     O_FUTL.is_mk_filepath(ce_path)
@@ -39,9 +39,9 @@ def yml_to_obj(arg=None):
         if not arg:
             # return the parent folder name
             parent = path.dirname(path.abspath(__file__))
-            print(f"{parent=}")
+            logging.debug(f"{parent=}")
             grand_parent_path = path.dirname(parent)
-            print(f"{grand_parent_path=}")
+            logging.debug(f"{grand_parent_path=}")
             folder = path.basename(grand_parent_path)
             # reverse the words seperated by -
             lst = folder.split("_")
@@ -53,13 +53,13 @@ def yml_to_obj(arg=None):
         flag = O_FUTL.is_file_exists(file)
 
         if not flag and arg:
-            print(f"using default {file=}")
+            logging.info(f"using default {file=}")
             O_FUTL.copy_file("../factory/", "../data/", "settings.yml")
         elif not flag and arg is None:
-            print(f"fill the {file=} file and try again")
+            logging.error(f"fill the {file=} file and try again")
             __import__("sys").exit()
     except Exception as e:
-        print(e)
+        logging.error(e)
         print_exc()
         __import__("sys").exit(1)
     else:
@@ -67,8 +67,9 @@ def yml_to_obj(arg=None):
 
 
 D_SYMBOL = O_FUTL.get_lst_fm_yml(S_SYM)
-print("symbols " + "\n" + "*****************")
-pprint(D_SYMBOL)
+logging.info("symbols \n*****************")
+import pprint
+pprint.pprint(D_SYMBOL)
 
 
 def set_logger():
@@ -91,7 +92,7 @@ def set_logger():
                 return lg
         return Logger(10)
     except Exception as e:
-        print(f"set logger error: {e}")
+        logging.error(f"set logger error: {e}")
         print_exc()
         __import__("sys").exit(1)
 

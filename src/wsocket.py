@@ -51,7 +51,7 @@ class Wsocket:
                 self._ltp = self._ltp | new_data
 
         except Exception as e:
-            print(f"Error processing ticks: {e}")
+            logging.error(f"Error processing ticks: {e}")
 
         # Handle subscription changes
         if self._unsubscribe:
@@ -64,7 +64,7 @@ class Wsocket:
 
     def on_connect(self, ws, response):
         if response:
-            print(f"on connect: {response}")
+            logging.info(f"on connect: {response}")
 
         ws.subscribe(self.tokens)
         # Set RELIANCE to tick in `full` mode.
@@ -77,14 +77,14 @@ class Wsocket:
         logging.error(
             "Wsocket close: {code} - {reason}".format(code=code, reason=reason)
         )
-        print("wsocket closed")
+        logging.info("wsocket closed")
 
     def on_error(self, ws, code, reason):
         # Callback when connection closed with error.
         logging.error(
             "Connection error: {code} - {reason}".format(code=code, reason=reason)
         )
-        print("error in websocket")
+        logging.error("error in websocket")
 
     def on_reconnect(self, ws, attempts_count):
         # Callback when reconnect is on progress
@@ -112,4 +112,4 @@ if __name__ == "__main__":
         ticks = ws.ltp()
         __import__("time").sleep(5)
     else:
-        print(ticks)
+        logging.debug(ticks)

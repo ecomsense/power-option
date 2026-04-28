@@ -2,6 +2,7 @@ import pendulum as pdlm
 import sys
 
 from stock_brokers.zerodha.zerodha import Zerodha
+from constants import logging
 from kiteconnect import KiteTicker
 from constants import S_DATA, yml_to_obj
 
@@ -27,19 +28,19 @@ def login():
                 else:
                     zera.kws = KiteTicker(zera.api_key, zera.enctoken)
             except SystemExit:
-                print("Zerodha authentication failed - will retry later")
+                logging.warning("Zerodha authentication failed - will retry later")
                 return None
 
     except SystemExit:
-        print("Zerodha authentication failed - will retry later")
+        logging.warning("Zerodha authentication failed - will retry later")
         return None
     except Exception as e:
-        print(f"exception while creating zerodha object {e}")
+        logging.error(f"exception while creating zerodha object {e}")
         try:
             remove_token(tokpath)
             login()
         except SystemExit:
-            print("Zerodha authentication failed - will retry later")
+            logging.warning("Zerodha authentication failed - will retry later")
             return None
     else:
         return zera
@@ -84,7 +85,7 @@ class Helper:
                 return cls.baseline[instrument_token]
             return 0
         except Exception as e:
-            print(f"{e} exception while getting history")
+            logging.error(f"{e} exception while getting history")
 
     @classmethod
     def history(cls, instrument_token):

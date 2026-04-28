@@ -201,7 +201,7 @@ def find_symbolinfo(
         matching_indices = df.index[df["strike"] == start].tolist()
 
         if not matching_indices:
-            print(f"Strike {start} not found for {expiry}")
+            logging.warning(f"Strike {start} not found for {expiry}")
             return pd.DataFrame()
 
         start_idx = matching_indices[0]
@@ -274,10 +274,10 @@ if __name__ == "__main__":
         ticks = ws.ltp()
         __import__("time").sleep(5)
     else:
-        print(ticks)
+        logging.debug(ticks)
 
     """
 
     base_expiry = "BANKNIFTY (2026-02-24)"
     resp = find_strike_from_base_expiry(base_expiry)
-    print(resp)
+    logging.debug(resp)
