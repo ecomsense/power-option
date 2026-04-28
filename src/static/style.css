@@ -650,6 +650,21 @@ tbody tr:hover {
     to { transform: translateX(0); opacity: 1; }
 }
 
+/* Footer */
+.app-footer {
+    text-align: center;
+    padding: var(--space-4);
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+.app-footer a {
+    color: var(--blue);
+    text-decoration: none;
+}
+.app-footer a:hover {
+    text-decoration: underline;
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar {
     width: var(--space-4);
