@@ -678,6 +678,8 @@ tbody tr:hover {
     display: flex;
     align-items: center;
     justify-content: center;
+    background-color: var(--bg-header);
+    border-top: 1px solid var(--border-main);
 }
 .app-footer a {
     color: var(--accent-blue);
