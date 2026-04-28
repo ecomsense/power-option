@@ -655,10 +655,13 @@ tbody tr:hover {
 /* Footer */
 .app-footer {
     text-align: center;
-    padding: var(--space-4);
     color: var(--text-muted);
     font-size: var(--text-sm);
     flex-shrink: 0;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 .app-footer a {
     color: var(--accent-blue);
