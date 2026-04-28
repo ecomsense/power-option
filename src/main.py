@@ -20,7 +20,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 
-from constants import S_LOG, logging, yml_to_obj
+from constants import S_LOG, yml_to_obj
 from logic_app import create_logic_router, start_logic, stop_logic
 from state import _logic_state, get_logic_state
 from webhook import send_to_webhook_async
@@ -28,15 +28,6 @@ from webhook import send_to_webhook_async
 log_dir = Path(__file__).parent.parent / "data"
 log_dir.mkdir(exist_ok=True)
 log_file = log_dir / "log.txt"
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    handlers=[
-        logging.FileHandler(log_file),
-        logging.StreamHandler(sys.stdout),
-    ],
-)
 
 logger = logging.getLogger(__name__)
 
