@@ -281,7 +281,8 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
+static_dir = Path(__file__).parent / "static"
+app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 templates = Jinja2Templates(directory="templates")
 
 _is_lock_enabled = os.environ.get("SKIP_PID_LOCK", "") != "1"
