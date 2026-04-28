@@ -619,7 +619,7 @@ tbody tr:hover {
 #mainBody tr:last-child td,
 #hedgeBody tr:last-child td {
     font-weight: bold;
-    color: var(--white);
+    color: var(--text-main);
     padding: var(--space-5) var(--space-2);
 }
 
