@@ -10,14 +10,14 @@
     <body>
         <header class="app-header">
             <div class="header-left">
-                <span class="logo">⚡</span>
-                <span class="title">Power Option</span>
+                <span class="logo" style="color: var(--orange);">⚡</span>
+                <span class="title" style="color: var(--purple);">Power Option</span>
             </div>
             <div class="header-right">
-                <button class="icon-btn" onclick="restartLogic()">🔄</button>
-                <button class="icon-btn" onclick="openSettingsModal()">⚙️</button>
-                <button class="icon-btn" onclick="openLogsModal()">📋</button>
-                <button class="icon-btn" onclick="toggleTheme()" id="themeToggle">🌙</button>
+                <button class="icon-btn" onclick="restartLogic()" title="Reset">🔄</button>
+                <button class="icon-btn" onclick="openSettingsModal()" title="Settings">⚙️</button>
+                <button class="icon-btn" onclick="openLogsModal()" title="Logs">📋</button>
+                <button class="icon-btn" onclick="toggleTheme()" id="themeToggle" title="Theme">🌙</button>
             </div>
         </header>
         <div id="trading-status-banner" class="trading-status-banner" style="display: none;">
