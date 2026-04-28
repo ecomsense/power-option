@@ -7,7 +7,7 @@ let chart;
 let mainLine;
 let currentLine;
 let socket;
-
+document.addEventListener("DOMContentLoaded", () => {
 // Initialize chart and socket
     const chartElement = document.getElementById("chart-container");
     if (chartElement) {
@@ -629,3 +629,5 @@ async function saveSettings() {
         showToast("Error saving settings: " + e.message, false);
     }
 }
+
+});
