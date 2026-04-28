@@ -658,6 +658,7 @@ tbody tr:hover {
     padding: var(--space-4);
     color: var(--text-muted);
     font-size: var(--text-sm);
+    flex-shrink: 0;
 }
 .app-footer a {
     color: var(--accent-blue);
