@@ -691,6 +691,17 @@ tbody tr:hover {
     gap: 0.5rem;
 }
 
+/* Main Content (for sleeping page) */
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    text-align: center;
+}
+
 /* Modal */
 .modal {
     display: none;
