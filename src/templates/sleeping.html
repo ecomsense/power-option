@@ -202,7 +202,9 @@
                         ).join('');
                     }
                     
-                    if (data.within_schedule) {
+                    if (data.within_schedule && data.running) {
+                        window.location.href = '/';
+                    } else if (data.within_schedule) {
                         document.getElementById('countdownTime').textContent = 'MARKET OPEN!';
                         document.getElementById('sleepingText').textContent = 'Market Open';
                         document.getElementById('sleepingEmoji').textContent = '🚀';
