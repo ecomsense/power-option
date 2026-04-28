@@ -231,6 +231,16 @@ a {
     margin-top: var(--space-4);
 }
 
+/* Trading Status Banner */
+.trading-status-banner {
+    display: none;
+}
+
+/* Refresh Button in Modal */
+.refresh-btn {
+    margin-top: 1rem;
+}
+
 .tables-wrapper {
     display: flex;
     flex: 1;
@@ -693,10 +703,15 @@ tbody tr:hover {
 }
 .logo {
     font-size: 1.5rem;
+    color: var(--orange);
 }
 .title {
     font-size: 1.25rem;
     font-weight: 600;
+}
+.title-btn {
+    color: white !important;
+    padding: 4px 12px;
 }
 .header-right {
     display: flex;

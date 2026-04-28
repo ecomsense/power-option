@@ -10,8 +10,8 @@
     <body>
         <header class="app-header">
             <div class="header-left">
-                <span class="logo" style="color: var(--orange);">⚡</span>
-                <span class="title btn violet-btn" style="padding: 4px 12px; color: white; border-radius: 4px;">Power Option</span>
+                <span class="logo">⚡</span>
+                <span class="title btn violet-btn title-btn">Power Option</span>
             </div>
             <div class="header-right">
                 <button class="icon-btn" onclick="restartLogic()" title="Reset">🔄</button>
@@ -20,7 +20,7 @@
                 <button class="icon-btn" onclick="toggleTheme()" id="themeToggle" title="Theme">🌙</button>
             </div>
         </header>
-        <div id="trading-status-banner" class="trading-status-banner" style="display: none;">
+        <div id="trading-status-banner" class="trading-status-banner">
             <span id="trading-status-text"></span>
             <span id="trading-countdown"></span>
         </div>
@@ -210,7 +210,7 @@
                     <button class="modal-close" onclick="closeLogsModal()">×</button>
                 </div>
                 <pre id="logsContent" class="log-content">Loading...</pre>
-                <button class="icon-btn" onclick="refreshLogs()" style="margin-top: 1rem;">Refresh</button>
+                <button class="icon-btn refresh-btn" onclick="refreshLogs()">Refresh</button>
             </div>
         </div>
         </div>
