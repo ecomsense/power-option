@@ -715,6 +715,7 @@ tbody tr:hover {
     color: var(--white);
     font-weight: 600;
     font-size: 1rem;
+    padding: 6px 16px;
 }
 .header-right {
     display: flex;
