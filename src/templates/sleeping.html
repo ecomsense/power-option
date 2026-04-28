@@ -100,6 +100,7 @@
             <div class='header-right'>
                 <button class='icon-btn' onclick='openSettingsModal()'>⚙️</button>
                 <button class='icon-btn' onclick='openLogsModal()'>📋</button>
+                <button class='icon-btn' onclick='toggleTheme()' id='themeToggle'>🌙</button>
             </div>
         </header>
         
@@ -288,6 +289,21 @@
                     document.getElementById('logContent').textContent = 'Error loading logs';
                 }
             }
+
+            function toggleTheme() {
+                const html = document.documentElement;
+                const isDark = html.getAttribute('data-theme') === 'dark';
+                html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+                localStorage.setItem('theme', isDark ? 'light' : 'dark');
+                document.getElementById('themeToggle').textContent = isDark ? '☀️' : '🌙';
+            }
+
+            (function() {
+                const saved = localStorage.getItem('theme');
+                if (saved) document.documentElement.setAttribute('data-theme', saved);
+                const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+                document.getElementById('themeToggle').textContent = isDark ? '🌙' : '☀️';
+            })();
         </script>
     </body>
 </html>

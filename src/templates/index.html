@@ -17,6 +17,7 @@
                 <button class="icon-btn" onclick="restartLogic()">🔄</button>
                 <button class="icon-btn" onclick="openSettingsModal()">⚙️</button>
                 <button class="icon-btn" onclick="openLogsModal()">📋</button>
+                <button class="icon-btn" onclick="toggleTheme()" id="themeToggle">🌙</button>
             </div>
         </header>
         <div id="trading-status-banner" class="trading-status-banner" style="display: none;">
@@ -299,6 +300,21 @@
             const checkall = document.getElementById(checkallId);
             if (checkall) checkall.checked = allChecked;
         }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const isDark = html.getAttribute('data-theme') === 'dark';
+            html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+            localStorage.setItem('theme', isDark ? 'light' : 'dark');
+            document.getElementById('themeToggle').textContent = isDark ? '☀️' : '🌙';
+        }
+
+        (function() {
+            const saved = localStorage.getItem('theme');
+            if (saved) document.documentElement.setAttribute('data-theme', saved);
+            const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+            document.getElementById('themeToggle').textContent = isDark ? '🌙' : '☀️';
+        })();
         </script>
     </body>
 </html>
