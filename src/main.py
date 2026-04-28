@@ -94,7 +94,7 @@ def verify_basic_auth(request) -> bool:
 
 
 def load_page_template(name: str) -> str:
-    templates_dir = Path(__file__).parent.parent / "templates"
+    templates_dir = Path(__file__).parent / "templates"
     template_path = templates_dir / f"{name}.html"
     return template_path.read_text()
 
