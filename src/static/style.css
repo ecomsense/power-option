@@ -726,7 +726,7 @@ tbody tr:hover {
 
 /* Icon Button */
 .icon-btn {
-    background: rgba(255,255,255,0.1);
+    background: transparent;
     border: none;
     padding: 0;
     margin: 0;
@@ -741,7 +741,7 @@ tbody tr:hover {
     transition: all 0.2s;
 }
 .icon-btn:hover {
-    background: rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.15);
     transform: scale(1.05);
 }
 
