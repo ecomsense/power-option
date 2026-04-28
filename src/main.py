@@ -103,7 +103,7 @@ class ScheduleConfig:
     def __init__(self):
         self.enabled = True
         self.start_hour = 13
-        self.start_minute = 0
+        self.start_minute = 5
         self.end_hour = 15
         self.end_minute = 31
         self.trading_days = [0, 1, 2, 3, 4]
@@ -242,7 +242,7 @@ async def lifespan(app: FastAPI):
 
         scheduler.add_job(
             trading_session_start,
-            trigger=CronTrigger(day_of_week="mon-fri", hour=13, minute=0),
+            trigger=CronTrigger(day_of_week="mon-fri", hour=13, minute=5),
             id="start_session",
             args=[app],
         )
@@ -257,7 +257,7 @@ async def lifespan(app: FastAPI):
         now = datetime.now()
         if now.weekday() < 5:
             hour_min = now.hour * 60 + now.minute
-            market_start = 13 * 60
+            market_start = 13 * 60 + 5
             market_end = 15 * 60 + 31
             if market_start <= hour_min < market_end:
                 await trading_session_start(app)
