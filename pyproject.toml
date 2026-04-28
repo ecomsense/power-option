@@ -18,6 +18,7 @@ dependencies = [
     "pydantic>=2.0.0",
     "stock-brokers @ git+https://github.com/ecomsense/stock-brokers",
     "toolkit @ git+https://github.com/pannet1/toolkit",
+    "pyotp>=2.9.0",
 ]
 
 [tool.uv]
