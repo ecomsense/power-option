@@ -58,7 +58,7 @@ document.addEventListener("DOMContentLoaded", function() {
             const deltaY = startY - e.clientY;
             const newChartHeight = Math.max(startChartHeight * 0.1, Math.min(startChartHeight * 0.8, startChartHeight + deltaY));
             chartSection.style.height = newChartHeight + "px";
-            if (chart) chart.resize(chartSection.offsetWidth, chartSection.offsetHeight - 8);
+            if (chart && chartSection.offsetHeight > 8) chart.resize(chartSection.offsetWidth, chartSection.offsetHeight - 8);
         });
         
         document.addEventListener("mouseup", function() {
