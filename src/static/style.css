@@ -711,9 +711,10 @@ tbody tr:hover {
     font-weight: 600;
 }
 .title-btn {
-    color: white !important;
-    padding: 4px 12px;
-    line-height: 1.5;
+    background: var(--purple);
+    color: var(--white);
+    font-weight: 600;
+    font-size: 1rem;
 }
 .header-right {
     display: flex;
