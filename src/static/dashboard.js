@@ -60,7 +60,7 @@ document.addEventListener("DOMContentLoaded", function() {
             chartSection.style.height = newChartHeight + "px";
             if (chart && chartSection.offsetHeight > 8) chart.resize(chartSection.offsetWidth, chartSection.offsetHeight - 8);
         });
-        
+
         document.addEventListener("mouseup", function() {
             if (isResizing) {
                 isResizing = false;
@@ -71,7 +71,7 @@ document.addEventListener("DOMContentLoaded", function() {
     
     window.addEventListener("resize", function() {
         const chartSection = document.getElementById("chart-section");
-        if (chart && chartSection) {
+        if (chart && chartSection && chartSection.offsetHeight > 8) {
             chart.resize(chartSection.offsetWidth, chartSection.offsetHeight - 8);
         }
     });
