@@ -303,7 +303,7 @@ async def root():
 async def dashboard_page(request: Request):
     from symbols import find_base
     symbols = find_base()
-    return templates.TemplateResponse(request=request, name="dashboard.html", context={"symbols": symbols})
+    return templates.TemplateResponse(request=request, name="index.html", context={"symbols": symbols})
 
 
 @app.get("/sleeping", response_class=HTMLResponse)
