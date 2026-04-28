@@ -292,10 +292,12 @@ async def auth_middleware(request: Request, call_next):
 
 @app.get("/", response_class=HTMLResponse)
 async def root():
+@app.get("/", response_class=HTMLResponse)
+async def root(request: Request):
     if _logic_state.is_running() and schedule_config.is_within_schedule():
         from symbols import find_base
         symbols = find_base()
-        return templates.TemplateResponse(request=None, name="index.html", context={"symbols": symbols})
+        return templates.TemplateResponse(request=request, name="index.html", context={"symbols": symbols})
     return HTMLResponse(load_page_template("sleeping"))
 
 
