@@ -242,7 +242,7 @@ async def lifespan(app: FastAPI):
 
         scheduler.add_job(
             trading_session_start,
-            trigger=CronTrigger(day_of_week="mon-fri", hour=9, minute=14),
+            trigger=CronTrigger(day_of_week="mon-fri", hour=12, minute=55),
             id="start_session",
             args=[app],
         )
@@ -257,12 +257,12 @@ async def lifespan(app: FastAPI):
         now = datetime.now()
         if now.weekday() < 5:
             hour_min = now.hour * 60 + now.minute
-            market_start = 9 * 60 + 14
+            market_start = 12 * 60 + 55
             market_end = 15 * 60 + 31
             if market_start <= hour_min < market_end:
                 await trading_session_start(app)
 
-    logger.info("Server Started - Trading scheduled 9:14-15:31 Mon-Fri")
+    logger.info("Server Started - Trading scheduled 12:55-15:31 Mon-Fri")
     yield
 
     if scheduler.running:
