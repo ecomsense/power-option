@@ -1,362 +1,434 @@
 import asyncio
+import gc
+import logging
+import os
+import signal
+import sys
+from base64 import b64decode
 from contextlib import asynccontextmanager
+from datetime import datetime, timedelta
+from pathlib import Path
+from typing import Optional
 
-import httpx  # Ensure you run: pip install httpx
+import httpx
 import uvicorn
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
-
-from api import Helper
-from constants import D_SYMBOL, S_LOG, logging, yml_to_obj
-from fastapi import Body, FastAPI, Request, Response, WebSocket, WebSocketDisconnect
+from apscheduler.triggers.interval import IntervalTrigger
+from fastapi import FastAPI, Request, Response, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from symbols import (
-    dump_basename_from_exchange,
-    find_base,
-    find_expiry_from_base,
-    find_strike_from_base_expiry,
-    find_call_and_put_from_dropdown,
+from fastapi.responses import HTMLResponse
+
+from constants import S_LOG, logging, yml_to_obj
+from logic_app import create_logic_router, start_logic, stop_logic
+from state import _logic_state, get_logic_state
+from webhook import send_to_webhook_async
+
+log_dir = Path(__file__).parent.parent / "data"
+log_dir.mkdir(exist_ok=True)
+log_file = log_dir / "log.txt"
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[
+        logging.FileHandler(log_file),
+        logging.StreamHandler(sys.stdout),
+    ],
 )
-from wsocket import Wsocket
+
+logger = logging.getLogger(__name__)
+
+LOCK_FILE = Path(__file__).parent.parent / "data" / "app.pid"
 
 
-SCHEDULER = AsyncIOScheduler()
+def check_pid_lock() -> bool:
+    if not LOCK_FILE.exists():
+        return True
+    try:
+        old_pid = int(LOCK_FILE.read_text().strip())
+        try:
+            os.kill(old_pid, 0)
+            logger.error(f"Another instance is running (PID: {old_pid}). Exiting.")
+            return False
+        except OSError:
+            logger.info(f"Stale lock file found (PID: {old_pid}). Proceeding.")
+            return True
+    except (ValueError, IOError):
+        return True
+
+
+def acquire_pid_lock() -> None:
+    LOCK_FILE.write_text(str(os.getpid()))
+    logger.info(f"PID lock acquired: {os.getpid()}")
+
+
+def release_pid_lock() -> None:
+    if LOCK_FILE.exists():
+        try:
+            current_pid = int(LOCK_FILE.read_text().strip())
+            if current_pid == os.getpid():
+                LOCK_FILE.unlink()
+                logger.info("PID lock released")
+        except (ValueError, IOError):
+            pass
+
+
+def get_auth_credentials() -> Optional[tuple[str, str]]:
+    auth = os.environ.get("HTTP_AUTH", "")
+    if not auth:
+        return None
+    try:
+        username, password = auth.split(":", 1)
+        return (username, password)
+    except ValueError:
+        return None
+
+
+def verify_basic_auth(request) -> bool:
+    credentials = get_auth_credentials()
+    if credentials is None:
+        return True
+    auth_header = request.headers.get("Authorization", "")
+    if not auth_header.startswith("Basic "):
+        return False
+    try:
+        encoded = auth_header[6:]
+        decoded = b64decode(encoded).decode("utf-8")
+        provided_user, provided_pass = decoded.split(":", 1)
+        return provided_user == credentials[0] and provided_pass == credentials[1]
+    except Exception:
+        return False
+
+
+def load_page_template(name: str) -> str:
+    templates_dir = Path(__file__).parent.parent / "templates"
+    template_path = templates_dir / f"{name}.html"
+    return template_path.read_text()
+
+
+class ScheduleConfig:
+    def __init__(self):
+        self.enabled = True
+        self.start_hour = 9
+        self.start_minute = 14
+        self.end_hour = 15
+        self.end_minute = 31
+        self.trading_days = [0, 1, 2, 3, 4]
+        self.trading_day_names = ["Mon", "Tue", "Wed", "Thu", "Fri"]
+
+    def is_within_schedule(self) -> bool:
+        if not self.enabled:
+            return True
+        if _logic_state.is_paused():
+            return False
+        now = datetime.now()
+        if now.weekday() not in self.trading_days:
+            return False
+        current_minutes = now.hour * 60 + now.minute
+        start_minutes = self.start_hour * 60 + self.start_minute
+        end_minutes = self.end_hour * 60 + self.end_minute
+        return start_minutes <= current_minutes < end_minutes
+
+    def is_paused(self) -> bool:
+        return _logic_state.is_paused()
+
+    def pause_reason(self) -> str:
+        if _logic_state.paused and _logic_state.pause_until:
+            remaining = (_logic_state.pause_until - datetime.now()).total_seconds()
+            if remaining > 0:
+                return f"{_logic_state.pause_reason} ({int(remaining)}s)"
+        return ""
+
+    def can_start(self) -> bool:
+        return self.is_within_schedule() and not _logic_state.is_running()
+
+    def time_until_start(self) -> str:
+        if not self.enabled or self.is_within_schedule():
+            return "now"
+        now = datetime.now()
+        start_minutes = self.start_hour * 60 + self.start_minute
+        current_minutes = now.hour * 60 + now.minute
+        mins_until = start_minutes - current_minutes
+        if mins_until < 0:
+            mins_until += 1440
+        hours = mins_until // 60
+        mins = mins_until % 60
+        if hours > 0:
+            return f"{hours}h {mins}m"
+        return f"{mins}m"
+
+    def time_until_end(self) -> str:
+        if not self.enabled or not self.is_within_schedule():
+            return "outside"
+        now = datetime.now()
+        end_minutes = self.end_hour * 60 + self.end_minute
+        current_minutes = now.hour * 60 + now.minute
+        mins_until = end_minutes - current_minutes
+        if mins_until <= 0:
+            return "now"
+        hours = mins_until // 60
+        mins = mins_until % 60
+        if hours > 0:
+            return f"{hours}h {mins}m"
+        return f"{mins}m"
+
+
+schedule_config = ScheduleConfig()
+scheduler = AsyncIOScheduler()
+
+
+async def scheduled_start():
+    if schedule_config.can_start():
+        await start_logic()
+
+
+async def scheduled_stop():
+    if _logic_state.is_running() and not schedule_config.is_within_schedule():
+        await stop_logic()
+
+
+async def watchdog_check():
+    if schedule_config.is_within_schedule() and not _logic_state.is_running():
+        await start_logic()
+    elif not schedule_config.is_within_schedule() and _logic_state.is_running():
+        await stop_logic()
+
+
+def get_memory_usage() -> dict:
+    gc.collect()
+    logic_size = sys.getsizeof(_logic_state)
+    startup_size = sys.getsizeof(_logic_state.startup_data)
+    app_size = sys.getsizeof(_logic_state.app_data)
+    ws_size = sys.getsizeof(_logic_state.ws_client)
+    return {
+        "logic_state_bytes": logic_size,
+        "startup_data_bytes": startup_size or 0,
+        "app_data_bytes": app_size or 0,
+        "ws_client_bytes": ws_size or 0,
+        "total_bytes": (startup_size or 0) + (app_size or 0) + (ws_size or 0),
+    }
 
 
 async def trading_session_start(app: FastAPI):
-    """Start trading session - called by scheduler or settings change."""
-    if app.state.trading_active:
+    if _logic_state.is_running():
         logging.info("Trading session already running")
         return
-
-    app.state.trading_active = True
-    app.state.runner_task = asyncio.create_task(trading_loop(app))
-    logging.info("Trading session started")
-
-
-async def trading_loop(app: FastAPI):
-    """Trading loop that runs during market hours."""
-    try:
-        logging.info("Trading Session Active - HAPPY TRADING")
-        
-        while app.state.trading_active:
-            await asyncio.sleep(60)
-    except asyncio.CancelledError:
-        logging.info("Trading session cancelled")
-        raise
-    except Exception as e:
-        logging.error(f"Trading session error: {e}")
+    await start_logic()
 
 
 async def trading_session_stop(app: FastAPI):
-    """Stop trading session - cleanup positions, cancel tasks."""
-    if not app.state.trading_active:
+    if not _logic_state.is_running():
         return
-    
-    app.state.trading_active = False
-    
-    if app.state.runner_task is not None:
-        app.state.runner_task.cancel()
-        try:
-            await app.state.runner_task
-        except asyncio.CancelledError:
-            pass
-        app.state.runner_task = None
-    logging.info("Trading session stopped")
-
-
-def update_metadata(kwargs):
-    # 3. Initial Default Subscription (e.g., BANKNIFTY)
-    df_ce, df_pe = find_call_and_put_from_dropdown(**kwargs)
-
-    # Format expiry as yymmdd
-    expiry_str = kwargs.get("expiry", "")
-    expiry_formatted = ""
-    if expiry_str:
-        try:
-            from datetime import datetime
-
-            dt = datetime.strptime(expiry_str, "%Y-%m-%d")
-            expiry_formatted = dt.strftime("%y%m%d")
-        except:
-            expiry_formatted = expiry_str.replace("-", "")[:6]
-
-    # Get basename for symbol prefix
-    basename = kwargs.get("basename")
-
-# Populate initial metadata and tokens
-    new_tokens = []
-    for _, row in df_ce.iterrows():
-        t = row["instrument_token"]
-        new_tokens.append(t)
-        hist = Helper.history(t)
-        if hist > 0:
-            strike = row.get("strike", 0)
-            symbol = f"{basename}{expiry_formatted}{strike:05d}CE"
-            app.state.METADATA[t] = {
-                "strike": strike,
-                "type": "CE",
-                "prev": hist,
-                "symbol": symbol,
-            }
-            app.state.SYMBOL_LOOKUP[(strike, "CE")] = symbol
-
-    for _, row in df_pe.iterrows():
-        t = row["instrument_token"]
-        new_tokens.append(t)
-        hist = Helper.history(t)
-        if hist > 0:
-            strike = row.get("strike", 0)
-            symbol = f"{basename}{expiry_formatted}{strike:05d}PE"
-            app.state.METADATA[t] = {
-                "strike": strike,
-                "type": "PE",
-                "prev": hist,
-                "symbol": symbol,
-            }
-            app.state.SYMBOL_LOOKUP[(strike, "PE")] = symbol
-    
-    return new_tokens
+    await stop_logic()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    try:
-        await asyncio.sleep(10)
+    app.state.logic = _logic_state
 
-        O_SETG = yml_to_obj("settings.yml")
+    global _is_lock_enabled
+    if _is_lock_enabled:
+        if not check_pid_lock():
+            logger.error("Another instance is running. Exiting.")
+            sys.exit(1)
+        acquire_pid_lock()
 
-        app.state.webhook_url = O_SETG["webhook_url"]
-        app.state.timeout = O_SETG["timeout"]
+    if schedule_config.enabled:
+        scheduler.add_job(
+            watchdog_check,
+            trigger=IntervalTrigger(seconds=60),
+            id="watchdog_check",
+        )
+        scheduler.start()
 
-        # 1. Initialize symbols
-        for kwargs in D_SYMBOL.values():
-            dump_basename_from_exchange(kwargs["name"], kwargs["exchange"])
-
-        # 2. Setup Global State Registry
-        app.state.SUBSCRIBED = {"main": [], "hedge": []}
-        app.state.METADATA = {}
-        app.state.SYMBOL_LOOKUP = {}
-        app.state.checkbox = {"main": 1, "hedge": 1}
-        app.state.runner_task = None
-        app.state.trading_active = False  # Track if trading session is active
-
-        # 3. Initialize WebSocket for real-time data (don't crash if broker fails)
-        try:
-            broker_api = Helper.api()
-            if broker_api is not None:
-                app.state.ws = Wsocket(broker_api, [256265, 265, 260105])
-                # Wait for first ticks
-                while not any(app.state.ws.ltp()):
-                    await asyncio.sleep(1)
-                logging.info("WebSocket connected successfully")
-            else:
-                app.state.ws = None
-                logging.warning("Broker not authenticated - WebSocket disabled. Will retry on subscription.")
-        except Exception as e:
-            app.state.ws = None
-            logging.warning(f"WebSocket initialization failed: {e}. Continuing without real-time data.")
-
-        # 4. Schedule trading session (9:14 - 15:31 Mon-Fri)
-        SCHEDULER.add_job(
+        scheduler.add_job(
             trading_session_start,
             trigger=CronTrigger(day_of_week="mon-fri", hour=9, minute=14),
             id="start_session",
             args=[app],
         )
-        SCHEDULER.add_job(
+        scheduler.add_job(
             trading_session_stop,
             trigger=CronTrigger(day_of_week="mon-fri", hour=15, minute=31),
             id="stop_session",
             args=[app],
         )
-        SCHEDULER.start()
 
-        # Auto-start if within market hours
         from datetime import datetime
         now = datetime.now()
-        if now.weekday() < 5:  # Mon-Fri
+        if now.weekday() < 5:
             hour_min = now.hour * 60 + now.minute
-            market_start = 9 * 60 + 14  # 9:14
-            market_end = 15 * 60 + 31   # 15:31
+            market_start = 9 * 60 + 14
+            market_end = 15 * 60 + 31
             if market_start <= hour_min < market_end:
                 await trading_session_start(app)
 
-        logging.info("Server Started - Trading scheduled 9:14-15:31 Mon-Fri")
-        yield
+    logger.info("Server Started - Trading scheduled 9:14-15:31 Mon-Fri")
+    yield
 
-        # Cleanup
-        await trading_session_stop(app)
-        SCHEDULER.shutdown()
-    except Exception as e:
-        logging.error(f"Startup Error: {e}")
-        yield
+    if scheduler.running:
+        scheduler.shutdown()
+    await trading_session_stop(app)
+    release_pid_lock()
 
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(
+    title="Power Option",
+    description="Real-time option trading terminal",
+    version="1.0.0",
+    lifespan=lifespan,
+)
+
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
-
-async def send_to_webhook_async(message: str):
-    webhook_url = app.state.webhook_url
-    timeout = app.state.timeout
-    async with httpx.AsyncClient() as client:
-        response = await client.post(url=webhook_url, data=message, timeout=timeout)
-    logging.debug(
-        f"WEBHOOK | URL: {webhook_url} | BODY: {message} | STATUS: {response.status_code}"
-    )
-    return response
+_is_lock_enabled = os.environ.get("SKIP_PID_LOCK", "") != "1"
 
 
-@app.post("/order_place_one")
-async def place_order_one_endpoint(payload: dict = Body(...)):
-    try:
-        order_id = payload.get("trading_symbol")
-        quantity = payload.get("quantity")
-        order_type = payload.get("order_type")
-        table_tag = payload.get("tag", "main")
-
-        if not order_id:
-            return {"status": "error", "message": "trading_symbol is required"}
-
-        stag = "MAIN" if table_tag.lower() == "main" else "HEDGE"
-
-        parts_id = order_id.split("-")
-        if len(parts_id) >= 4:
-            option_type = parts_id[2].upper()
-            strike = int(parts_id[3])
-            symbol = app.state.SYMBOL_LOOKUP.get((strike, option_type), "UNKNOWN")
-        else:
-            symbol = "UNKNOWN"
-
-        msg = f"TYPE:{order_type},SYMBOL:{symbol},STAG:{stag},QTY:{quantity}"
-        await send_to_webhook_async(msg)
-        logging.info(f"Entry One: {msg}")
-
-        return {"status": "success", "order_type": order_type, "symbol": symbol}
-
-    except Exception as e:
-        logging.error(f"Webhook Order One Error: {e}")
-        return {"status": "error", "message": str(e)}
-
-
-@app.post("/order_place")
-async def place_order_endpoint(payload: dict = Body(...)):
-    try:
-        incoming_orders = payload.get("orders", [])
-        quantity = payload.get("quantity")
-        order_type = payload.get("order_code")  # LE, SE, LX, SX
-        table_tag = payload.get("tag", "main")
-        
-        # Get STAG from table_tag: main -> MAIN, hedge -> HEDGE
-        stag = "MAIN" if table_tag.lower() == "main" else "HEDGE"
-
-        # Build order parts - direct lookup from SYMBOL_LOOKUP
-        parts = []
-        for order_id in incoming_orders:
-            # Parse checkbox ID: cb-{table}-{type}-{strike} e.g., cb-main-ce-22000
-            parts_id = order_id.split("-")
-            if len(parts_id) >= 4:
-                option_type = parts_id[2].upper()  # CE or PE
-                strike = int(parts_id[3])
-
-                # Direct lookup: (strike, type) -> symbol
-                symbol = app.state.SYMBOL_LOOKUP.get((strike, option_type), "UNKNOWN")
-
-                parts.append(
-                    f"TYPE:{order_type},SYMBOL:{symbol},STAG:{stag},QTY:{quantity}"
-                )
-
-        msg = ";".join(parts)
-        await send_to_webhook_async(msg)
-        logging.info(f"Entry: {msg}")
-
-        return {"status": "success", "order_type": order_type}
-
-    except Exception as e:
-        logging.error(f"Webhook Order Error: {e}")
-        return {"status": "error", "message": str(e)}
-
-
-@app.post("/update-subscription")
-async def update_subscription(payload: dict = Body(...)):
-    try:
-        side = payload.get("side")
-        kwargs = dict(
-            basename=payload.get("basename"),
-            expiry=payload.get("expiry"),
-            ce_start=int(payload.get("ce_start")),
-            pe_start=int(payload.get("pe_start")),
-            num_of_strikes=int(payload.get("num_of_strikes")),
+@app.middleware("http")
+async def auth_middleware(request: Request, call_next):
+    if not verify_basic_auth(request):
+        return Response(
+            content="Unauthorized",
+            status_code=401,
+            headers={"WWW-Authenticate": 'Basic realm="Restricted"'},
         )
-        new_tokens = update_metadata(kwargs)
-        
-        # Check if WebSocket is available
-        if app.state.ws is None:
-            # Try to initialize broker connection
-            broker_api = Helper.api()
-            if broker_api is not None:
-                try:
-                    app.state.ws = Wsocket(broker_api, [256265, 265, 260105])
-                    await asyncio.sleep(2)
-                except Exception as e:
-                    return {"status": "error", "message": f"Broker connection failed: {e}"}
-            else:
-                return {"status": "error", "message": "Broker not authenticated. Please check credentials."}
-        
-        # Handle Subscriptions
-        stale_list = app.state.SUBSCRIBED[side]
-        other_side = "hedge" if side == "main" else "main"
-        other_list = app.state.SUBSCRIBED[other_side]
-
-        # Only unsubscribe if the other side isn't using the token
-        unsubscribe = list(set(stale_list) - set(other_list))
-
-        if unsubscribe:
-            app.state.ws.unsubscribe(unsubscribe)
-
-        # 4. Subscribe to new tokens
-        app.state.ws.subscribe(new_tokens)
-
-        # 5. Update global state for next comparison
-        app.state.SUBSCRIBED[side] = new_tokens
-
-        # 6 set checkbox state
-        app.state.checkbox[side] = 1
-
-        return {"status": "success", "side": side}
-    except Exception as e:
-        logging.error(f"Subscription Error: {e}")
-        return {"status": "error", "message": str(e)}
+    return await call_next(request)
 
 
-@app.get("/")
-async def get(request: Request):
+@app.get("/", response_class=HTMLResponse)
+async def root():
+    if _logic_state.is_running() and schedule_config.is_within_schedule():
+        from symbols import find_base
+        symbols = find_base()
+        return templates.TemplateResponse(request=None, name="dashboard.html", context={"symbols": symbols})
+    return HTMLResponse(load_page_template("sleeping"))
+
+
+@app.get("/dashboard", response_class=HTMLResponse)
+async def dashboard_page(request: Request):
+    from symbols import find_base
     symbols = find_base()
-
-    return templates.TemplateResponse(
-        request=request, name="index.html", context={"symbols": symbols}
-    )
+    return templates.TemplateResponse(request=request, name="dashboard.html", context={"symbols": symbols})
 
 
-@app.get("/get-expiries/{basename}")
-async def get_expiries(basename: str):
+@app.get("/sleeping", response_class=HTMLResponse)
+async def sleeping_page():
+    return HTMLResponse(load_page_template("sleeping"))
+
+
+@app.get("/api/memory")
+async def memory_info():
+    memory = get_memory_usage()
+    return {
+        "running": _logic_state.running,
+        "has_startup_data": _logic_state.startup_data is not None,
+        "has_app_data": _logic_state.app_data is not None,
+        "has_ws_client": _logic_state.ws_client is not None,
+        "schedule_enabled": schedule_config.enabled,
+        "within_schedule": schedule_config.is_within_schedule(),
+        "time_until_end": schedule_config.time_until_end(),
+        **memory,
+    }
+
+
+@app.get("/api/schedule")
+async def schedule_info():
+    return {
+        "enabled": schedule_config.enabled,
+        "start_time": f"{schedule_config.start_hour:02d}:{schedule_config.start_minute:02d}",
+        "end_time": f"{schedule_config.end_hour:02d}:{schedule_config.end_minute:02d}",
+        "within_schedule": schedule_config.is_within_schedule(),
+        "time_until_start": schedule_config.time_until_start(),
+        "time_until_end": schedule_config.time_until_end(),
+        "running": _logic_state.is_running(),
+        "paused": schedule_config.is_paused(),
+        "pause_reason": schedule_config.pause_reason(),
+        "schedule_times": f"{schedule_config.start_hour:02d}:{schedule_config.start_minute:02d} - {schedule_config.end_hour:02d}:{schedule_config.end_minute:02d}",
+        "trading_days": schedule_config.trading_day_names,
+    }
+
+
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    feed_task = asyncio.create_task(market_broadcaster(websocket))
     try:
-        return find_expiry_from_base(basename)
-    except Exception as e:
-        logging.error(f"Error fetching strikes: {e}")
-        return []
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        feed_task.cancel()
 
 
-@app.get("/get-strikes/{basename}/{expiry}")
-async def get_strikes(basename: str, expiry: str):
+async def market_broadcaster(websocket: WebSocket):
     try:
-        return find_strike_from_base_expiry(basename, expiry)
+        while True:
+            app_data = _logic_state.app_data
+            if app_data and app_data.get("ws"):
+                ticks = app_data["ws"].ltp()
+                if ticks:
+                    payload = {
+                        "type": "UPDATE",
+                        "diff_rows": assemble_table_rows("main", ticks, app_data),
+                        "hedge_rows": assemble_table_rows("hedge", ticks, app_data),
+                        "main_fresh": app_data.get("checkbox", {}).get("main", 0),
+                        "hedge_fresh": app_data.get("checkbox", {}).get("hedge", 0),
+                    }
+                    await websocket.send_json(payload)
+                    app_data["checkbox"]["main"] = 0
+                    app_data["checkbox"]["hedge"] = 0
+            await asyncio.sleep(1)
     except Exception as e:
-        logging.error(f"Error fetching strikes: {e}")
-        return {"CE": [], "PE": []}
+        logger.error(f"Broadcaster Error: {e}")
+
+
+def assemble_table_rows(side, ticks, app_data):
+    rows = []
+    subscribed = app_data.get("subscribed", {}).get(side, [])
+    metadata = app_data.get("metadata", {})
+
+    if not subscribed or not ticks:
+        return rows
+
+    half = len(subscribed) // 2
+
+    for i in range(half):
+        ce_t = subscribed[i]
+        pe_t = subscribed[i + half]
+
+        ce_m = metadata.get(ce_t)
+        pe_m = metadata.get(pe_t)
+
+        if not ce_m or not pe_m:
+            continue
+
+        c_ce = ticks.get(ce_t, ce_m["prev"])
+        c_pe = ticks.get(pe_t, pe_m["prev"])
+
+        ce_diff = round(c_ce - ce_m["prev"], 2)
+        pe_diff = round(c_pe - pe_m["prev"], 2)
+        total_diff = round(ce_diff + pe_diff, 2)
+
+        rows.append(
+            {
+                "ce_strike": ce_m["strike"],
+                "pe_strike": pe_m["strike"],
+                "curr_ce": c_ce,
+                "curr_pe": c_pe,
+                "prev_ce": ce_m["prev"],
+                "prev_pe": pe_m["prev"],
+                "ce_diff": ce_diff,
+                "pe_diff": pe_diff,
+                "total_diff": total_diff,
+                "ce_diff_pct": round((ce_diff / ce_m["prev"]) * 100, 2) if ce_m["prev"] else 0,
+                "pe_diff_pct": round((pe_diff / pe_m["prev"]) * 100, 2) if pe_m["prev"] else 0,
+                "total_diff_pct": round((total_diff / (ce_m["prev"] + pe_m["prev"])) * 100, 2)
+                if (ce_m["prev"] + pe_m["prev"]) else 0,
+            }
+        )
+    return rows
 
 
 @app.get("/logs")
@@ -370,204 +442,9 @@ async def get_logs():
         return Response(content=f"Error reading logs: {e}", media_type="text/plain")
 
 
-@app.get("/settings")
-async def get_settings():
-    try:
-        import yaml
-        with open("../data/settings.yml", "r") as f:
-            settings = yaml.safe_load(f)
-        return settings
-    except Exception as e:
-        logging.error(f"Error reading settings: {e}")
-        return {"status": "error", "message": str(e)}
-
-
-@app.post("/settings")
-async def update_settings(request: Request, payload: dict = Body(...)):
-    try:
-        import yaml
-        settings_path = "../data/settings.yml"
-        
-        new_settings = {
-            "webhook_url": payload.get("webhook_url", ""),
-            "tag": payload.get("tag", "poweroption"),
-            "timeout": int(payload.get("timeout", 30)),
-            "log": {
-                "show": payload.get("log_show", True),
-                "level": int(payload.get("log_level", 20)),
-            }
-        }
-        
-        with open(settings_path, "w") as f:
-            yaml.dump(new_settings, f)
-        
-        logging.info("Settings saved. Restarting trading session.")
-        
-        await trading_session_stop(request.app)
-        await trading_session_start(request.app)
-        
-        return {"status": "success", "message": "Settings saved. Session restarted."}
-    except Exception as e:
-        logging.error(f"Error saving settings: {e}")
-        return {"status": "error", "message": str(e)}
-
-
-@app.get("/trading-status")
-async def get_trading_status():
-    from datetime import datetime, timedelta
-    
-    now = datetime.now()
-    is_trading = hasattr(app.state, 'trading_active') and app.state.trading_active
-    
-    # Calculate next market open/close
-    market_start = now.replace(hour=9, minute=14, second=0, microsecond=0)
-    market_end = now.replace(hour=15, minute=31, second=0, microsecond=0)
-    
-    if now.weekday() >= 5:  # Weekend
-        # Find next Monday
-        days_until_monday = 7 - now.weekday()
-        market_start += timedelta(days=days_until_monday)
-        market_end += timedelta(days=days_until_monday)
-    elif now < market_start:
-        pass  # Before market open today
-    elif now >= market_end:
-        # After market close, move to next day
-        market_start += timedelta(days=1)
-        market_end += timedelta(days=1)
-        # Handle weekend transition
-        while market_start.weekday() >= 5:
-            market_start += timedelta(days=1)
-            market_end += timedelta(days=1)
-    
-    next_open = market_start if now < market_start else market_start + timedelta(days=1)
-    next_close = market_end if now < market_end else market_end + timedelta(days=1)
-    
-    if is_trading:
-        target = next_close
-        label = "Market closes in"
-    else:
-        target = next_open
-        label = "Market opens in"
-    
-    remaining = target - now
-    hours = remaining.seconds // 3600
-    minutes = (remaining.seconds % 3600) // 60
-    
-    return {
-        "trading_active": is_trading,
-        "countdown_label": label,
-        "countdown_hours": hours,
-        "countdown_minutes": minutes,
-    }
-
-
-@app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
-    await websocket.accept()
-    # Broadcaster handles all table updates dynamically
-    feed_task = asyncio.create_task(market_broadcaster(websocket))
-    try:
-        while True:
-            await websocket.receive_text()
-    except WebSocketDisconnect:
-        feed_task.cancel()
-
-
-async def market_broadcaster(websocket: WebSocket):
-    """
-    Look up tokens from SUBSCRIBED, find their LTP from app.state.ws,
-    and send paired row data to the UI.
-    """
-    try:
-        while True:
-            # Safely get current LTP cache
-            ticks = app.state.ws.ltp() if hasattr(app.state, "ws") and app.state.ws is not None else {}
-
-            if ticks:
-                payload = {
-                    "type": "UPDATE",
-                    "diff_rows": assemble_table_rows("main", ticks),
-                    "hedge_rows": assemble_table_rows("hedge", ticks),
-                    "main_fresh": app.state.checkbox["main"],
-                    "hedge_fresh": app.state.checkbox["hedge"],
-                }
-
-                await websocket.send_json(payload)
-                app.state.checkbox["main"] = 0
-                app.state.checkbox["hedge"] = 0
-            await asyncio.sleep(1)
-    except Exception as e:
-        logging.error(f"Broadcaster Error: {e}")
-
-
-def assemble_table_rows(side, ticks):
-    """
-    Pairs CE and PE tokens correctly.
-    Assumes the tokens list is: [CE1, CE2... PE1, PE2...]
-    """
-    rows = []
-    tokens = app.state.SUBSCRIBED.get(side, [])
-
-    if not tokens:
-        return rows
-
-    if not ticks:
-        pass  # No ticks received yet
-
-    # Calculate the midpoint (half are CE, half are PE)
-    half = len(tokens) // 2
-
-    for i in range(half):
-        ce_t = tokens[i]  # CE token
-        pe_t = tokens[i + half]  # Corresponding PE token
-
-        ce_m = app.state.METADATA.get(ce_t)
-        pe_m = app.state.METADATA.get(pe_t)
-
-        if not ce_m or not pe_m:
-            continue
-
-        # 1. Fetch live LTP from the ws.ltp() dictionary
-        # Fallback to metadata 'prev' if the token hasn't ticked yet
-        c_ce = ticks.get(ce_t, ce_m["prev"])
-        c_pe = ticks.get(pe_t, pe_m["prev"])
-
-        # 2. Calculate Diffs
-        ce_diff = round(c_ce - ce_m["prev"], 2)
-        pe_diff = round(c_pe - pe_m["prev"], 2)
-        total_diff = round(ce_diff + pe_diff, 2)
-
-        # 3. Build row for the frontend renderDashboard()
-        rows.append(
-            {
-                "ce_strike": ce_m["strike"],
-                "pe_strike": pe_m["strike"],
-                "curr_ce": c_ce,
-                "curr_pe": c_pe,
-                "prev_ce": ce_m["prev"],
-                "prev_pe": pe_m["prev"],
-                "ce_diff": ce_diff,
-                "pe_diff": pe_diff,
-                "total_diff": total_diff,
-                "ce_diff_pct": round((ce_diff / ce_m["prev"]) * 100, 2)
-                if ce_m["prev"]
-                else 0,
-                "pe_diff_pct": round((pe_diff / pe_m["prev"]) * 100, 2)
-                if pe_m["prev"]
-                else 0,
-                "total_diff_pct": round(
-                    (total_diff / (ce_m["prev"] + pe_m["prev"])) * 100, 2
-                )
-                if (ce_m["prev"] + pe_m["prev"])
-                else 0,
-            }
-        )
-    return rows
+logic_router = create_logic_router()
+app.include_router(logic_router, prefix="/api/logic")
 
 
 if __name__ == "__main__":
-    # With nginx proxy: python -m uvicorn main:app --host 127.0.0.1 --port 8000
-    # Without proxy (direct access): python -m uvicorn main:app --host 0.0.0.0 --port 8000
-    import uvicorn
-
     uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=False)

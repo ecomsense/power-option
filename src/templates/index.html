@@ -5,17 +5,60 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.development.js"></script>
+        <style>
+            :root {
+                --bg-gradient: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+                --header-bg: rgba(0,0,0,0.3);
+                --card-bg: rgba(255,255,255,0.05);
+                --accent-green: #00ff88;
+                --accent-red: #ff4757;
+                --accent-blue: #00d9ff;
+                --text-muted: #6b7280;
+            }
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                background: var(--bg-gradient);
+                color: #eaeaea;
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+            }
+            .app-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 1rem 2rem;
+                background: var(--header-bg);
+            }
+            .header-left { display: flex; align-items: center; gap: 0.5rem; }
+            .logo { font-size: 1.5rem; }
+            .title { font-size: 1.25rem; font-weight: 600; }
+            .header-right { display: flex; gap: 0.5rem; }
+            .icon-btn {
+                background: rgba(255,255,255,0.1);
+                border: none;
+                padding: 0.5rem;
+                border-radius: 8px;
+                cursor: pointer;
+                font-size: 1.2rem;
+                transition: all 0.2s;
+            }
+            .icon-btn:hover { background: rgba(255,255,255,0.2); transform: scale(1.05); }
+        </style>
     </head>
     <body>
-        <div class="app-header">
-            <button class="btn settings-btn" onclick="showSettingsModal()">⚙️ Settings</button>
-            <button class="btn settings-btn" onclick="showLogsModal()">📋 Logs</button>
-            <h1 class="app-title">
-                <span class="logo-lightning">⚡</span>
-                <span class="logo-power">Power</span>
-                <span class="logo-option">Option</span>
-            </h1>
-        </div>
+        <header class="app-header">
+            <div class="header-left">
+                <span class="logo">⚡</span>
+                <span class="title">Power Option</span>
+            </div>
+            <div class="header-right">
+                <button class="icon-btn" onclick="openSettingsModal()">⚙️</button>
+                <button class="icon-btn" onclick="restartLogic()">🔄</button>
+                <button class="icon-btn" onclick="openLogsModal()">📋</button>
+            </div>
+        </header>
         <div id="trading-status-banner" class="trading-status-banner" style="display: none;">
             <span id="trading-status-text"></span>
             <span id="trading-countdown"></span>
@@ -173,57 +216,129 @@
             </div>
         </div>
 
-        <div id="settingsModal" class="modal">
+        <div id="settingsModal" class="modal-overlay">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h2>Settings</h2>
-                    <button class="modal-close" onclick="closeSettingsModal()">X</button>
+                    <span>⚙️ Settings</span>
+                    <button class="modal-close" onclick="closeSettingsModal()">×</button>
                 </div>
                 <form id="settingsForm">
                     <div class="form-group">
-                        <label for="settingsWebhook">Webhook URL:</label>
-                        <input type="text" id="settingsWebhook" name="webhook_url" class="settings-input">
+                        <label>Webhook URL:</label>
+                        <input type="text" id="settingsWebhook" class="settings-input">
                     </div>
                     <div class="form-group">
-                        <label for="settingsTag">Tag:</label>
-                        <input type="text" id="settingsTag" name="tag" class="settings-input">
+                        <label>Tag:</label>
+                        <input type="text" id="settingsTag" class="settings-input">
                     </div>
                     <div class="form-group">
-                        <label for="settingsTimeout">Timeout (seconds):</label>
-                        <input type="number" id="settingsTimeout" name="timeout" class="settings-input">
-                    </div>
-                    <div class="form-group">
-                        <label for="settingsLogLevel">Log Level:</label>
-                        <select id="settingsLogLevel" name="log_level" class="settings-input">
-                            <option value="10">DEBUG</option>
-                            <option value="20">INFO</option>
-                            <option value="30">WARN</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="settingsLogShow">Show Logs:</label>
-                        <input type="checkbox" id="settingsLogShow" name="log_show">
+                        <label>Timeout:</label>
+                        <input type="number" id="settingsTimeout" class="settings-input">
                     </div>
                     <div class="form-actions">
-                        <button type="button" class="btn" onclick="loadSettings()">Load</button>
-                        <button type="button" class="btn violet-btn" onclick="saveSettings()">Save & Restart</button>
+                        <button type="button" class="icon-btn" onclick="saveSettings()">Save & Restart</button>
                     </div>
                 </form>
             </div>
         </div>
 
-        <div id="logsModal" class="modal">
+        <div id="logsModal" class="modal-overlay">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h2>Logs</h2>
-                    <button class="modal-close" onclick="closeLogsModal()">X</button>
+                    <span>📋 Logs</span>
+                    <button class="modal-close" onclick="closeLogsModal()">×</button>
                 </div>
-                <pre id="logsContent"></pre>
+                <pre id="logsContent" class="log-content">Loading...</pre>
+                <button class="icon-btn" onclick="refreshLogs()" style="margin-top: 1rem;">Refresh</button>
             </div>
         </div>
-        <link rel="stylesheet" href="/static/style.css" />
+
+        <footer class="app-footer">
+            Made with ❤️ by <a href="https://ecomsense.in">ecomsense.in</a>
+        </footer>
         <script src="/static/toggle.js"></script>
         <script src="/static/dashboard.js"></script>
         <script src="/static/dropdown.js"></script>
+        <script>
+        async function restartLogic() {
+            await fetch('/api/logic/stop', {method:'POST'});
+            await new Promise(r => setTimeout(r, 500));
+            await fetch('/api/logic/start', {method:'POST'});
+            location.reload();
+        }
+        
+        function openSettingsModal() {
+            loadSettings();
+            document.getElementById('settingsModal').style.display = 'flex';
+        }
+        
+        function closeSettingsModal() {
+            document.getElementById('settingsModal').style.display = 'none';
+        }
+        
+        async function loadSettings() {
+            try {
+                const resp = await fetch('/api/logic/settings');
+                const data = await resp.json();
+                document.getElementById('settingsWebhook').value = data.webhook_url || '';
+                document.getElementById('settingsTag').value = data.tag || 'poweroption';
+                document.getElementById('settingsTimeout').value = data.timeout || 30;
+            } catch(e) { console.error(e); }
+        }
+        
+        async function saveSettings() {
+            const payload = {
+                webhook_url: document.getElementById('settingsWebhook').value,
+                tag: document.getElementById('settingsTag').value,
+                timeout: parseInt(document.getElementById('settingsTimeout').value),
+            };
+            try {
+                await fetch('/api/logic/settings', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload),
+                });
+                closeSettingsModal();
+                restartLogic();
+            } catch(e) { console.error(e); }
+        }
+        
+        function openLogsModal() {
+            document.getElementById('logsModal').style.display = 'flex';
+            refreshLogs();
+        }
+        
+        function closeLogsModal() {
+            document.getElementById('logsModal').style.display = 'none';
+        }
+        
+        async function refreshLogs() {
+            try {
+                const resp = await fetch('/logs');
+                document.getElementById('logsContent').textContent = await resp.text();
+            } catch(e) {
+                document.getElementById('logsContent').textContent = 'Error loading logs';
+            }
+        }
+        
+        // Update checkbox IDs from diffTable to mainTable for consistency
+        function updateCheckAllState(tableId, colIndex) {
+            if (tableId === 'diffTable') tableId = 'mainTable';
+            const table = document.getElementById(tableId);
+            if (!table) return;
+            const rows = table.querySelectorAll("tbody tr:not(.footer-row)");
+            let allChecked = true;
+            rows.forEach(row => {
+                const cell = row.children[colIndex];
+                const checkbox = cell?.querySelector("input[type='checkbox']");
+                if (checkbox && !checkbox.checked) allChecked = false;
+            });
+            const checkallId = tableId === 'mainTable' 
+                ? (colIndex === 0 ? 'main-ce-checkall' : 'main-pe-checkall')
+                : (colIndex === 0 ? 'hedge-ce-checkall' : 'hedge-pe-checkall');
+            const checkall = document.getElementById(checkallId);
+            if (checkall) checkall.checked = allChecked;
+        }
+        </script>
     </body>
 </html>

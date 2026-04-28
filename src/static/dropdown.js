@@ -40,7 +40,7 @@ async function updateExpiryDropdown() {
     clearExpiryAndStrikes();
 
     try {
-        const response = await fetch(`/get-expiries/${encodeURIComponent(symbol)}`);
+        const response = await fetch(`/api/logic/expiries/${encodeURIComponent(symbol)}`);
         const expiries = await response.json();
 
         // 1. Populate the Expiry dropdown with empty first
@@ -66,7 +66,7 @@ async function updateStrikeDropdowns() {
 
     try {
         const response = await fetch(
-            `/get-strikes/${encodeURIComponent(symbol)}/${encodeURIComponent(expiry)}`
+            `/api/logic/strikes/${encodeURIComponent(symbol)}/${encodeURIComponent(expiry)}`
         );
         const data = await response.json(); // Expected: { CE: [...], PE: [...] }
 

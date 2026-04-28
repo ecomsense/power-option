@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+    <head>
+        <title>Power Option - Sleeping</title>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <style>
+            :root {
+                --bg-gradient: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+                --header-bg: rgba(0,0,0,0.3);
+                --card-bg: rgba(255,255,255,0.05);
+                --accent-green: #00ff88;
+                --accent-red: #ff4757;
+                --accent-blue: #00d9ff;
+                --text-muted: #6b7280;
+            }
+            
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                background: var(--bg-gradient);
+                color: #eaeaea;
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+            }
+            
+            .app-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 1rem 2rem;
+                background: var(--header-bg);
+            }
+            
+            .header-left {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+            }
+            
+            .logo {
+                font-size: 1.5rem;
+            }
+            
+            .title {
+                font-size: 1.25rem;
+                font-weight: 600;
+            }
+            
+            .header-right {
+                display: flex;
+                gap: 0.5rem;
+            }
+            
+            .icon-btn {
+                background: rgba(255,255,255,0.1);
+                border: none;
+                padding: 0.5rem;
+                border-radius: 8px;
+                cursor: pointer;
+                font-size: 1.2rem;
+                transition: all 0.2s;
+            }
+            
+            .icon-btn:hover {
+                background: rgba(255,255,255,0.2);
+                transform: scale(1.05);
+            }
+            
+            .main-content {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                padding: 2rem;
+                text-align: center;
+            }
+            
+            .sleeping-emoji {
+                font-size: 5rem;
+                margin-bottom: 1rem;
+                animation: float 3s ease-in-out infinite;
+            }
+            
+            @keyframes float {
+                0%, 100% { transform: translateY(0); }
+                50% { transform: translateY(-20px); }
+            }
+            
+            .sleeping-text {
+                font-size: 2rem;
+                font-weight: 700;
+                margin-bottom: 1rem;
+                color: var(--accent-blue);
+            }
+            
+            .quote {
+                font-style: italic;
+                color: var(--text-muted);
+                margin-bottom: 2rem;
+                max-width: 500px;
+            }
+            
+            .schedule-card {
+                background: var(--card-bg);
+                border-radius: 12px;
+                padding: 2rem;
+                margin-bottom: 2rem;
+                min-width: 300px;
+            }
+            
+            .schedule-title {
+                font-size: 1.25rem;
+                font-weight: 600;
+                margin-bottom: 1rem;
+                color: var(--accent-blue);
+            }
+            
+            .countdown-time {
+                font-size: 3rem;
+                font-weight: 700;
+                color: #00d9ff;
+                font-family: monospace;
+                margin: 1rem 0;
+            }
+            
+            .schedule-info {
+                display: flex;
+                gap: 1rem;
+                justify-content: center;
+                margin-top: 1rem;
+            }
+            
+            .schedule-badge {
+                background: rgba(255,255,255,0.1);
+                padding: 0.5rem 1rem;
+                border-radius: 8px;
+                font-size: 0.9rem;
+            }
+            
+            .schedule-badge.highlight {
+                background: var(--accent-green);
+                color: #1a1a2e;
+            }
+            
+            .trading-days {
+                display: flex;
+                gap: 0.5rem;
+                justify-content: center;
+                margin-top: 1rem;
+            }
+            
+            .day-badge {
+                padding: 0.5rem;
+                border-radius: 8px;
+                background: rgba(255,255,255,0.05);
+                font-size: 0.8rem;
+                min-width: 45px;
+            }
+            
+            .day-badge.active {
+                background: var(--accent-blue);
+                color: #1a1a2e;
+            }
+            
+            .modal-overlay {
+                position: fixed;
+                top: 0; left: 0; right: 0; bottom: 0;
+                background: rgba(0,0,0,0.8);
+                display: none;
+                align-items: center;
+                justify-content: center;
+                z-index: 1000;
+            }
+            
+            .modal-content {
+                background: #1a1a2e;
+                border-radius: 12px;
+                padding: 2rem;
+                max-width: 600px;
+                width: 90%;
+                max-height: 80vh;
+                overflow-y: auto;
+            }
+            
+            .modal-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 1rem;
+            }
+            
+            .modal-header span {
+                font-size: 1.25rem;
+            }
+            
+            .modal-close {
+                background: none;
+                border: none;
+                color: #eaeaea;
+                font-size: 1.5rem;
+                cursor: pointer;
+            }
+            
+            .log-content {
+                background: rgba(0,0,0,0.3);
+                border-radius: 8px;
+                padding: 1rem;
+                font-family: monospace;
+                font-size: 0.85rem;
+                max-height: 400px;
+                overflow-y: auto;
+                white-space: pre-wrap;
+                word-break: break-all;
+            }
+            
+            .app-footer {
+                text-align: center;
+                padding: 1rem;
+                color: var(--text-muted);
+                font-size: 0.9rem;
+            }
+            
+            .app-footer a {
+                color: var(--accent-blue);
+                text-decoration: none;
+            }
+        </style>
+    </head>
+    <body>
+        <header class="app-header">
+            <div class="header-left">
+                <span class="logo">⚡</span>
+                <span class="title">Power Option</span>
+            </div>
+            <div class="header-right">
+                <button class="icon-btn" onclick="openSettingsModal()">⚙️</button>
+                <button class="icon-btn" onclick="openLogsModal()">📋</button>
+            </div>
+        </header>
+        
+        <div class="main-content">
+            <div class="sleeping-emoji" id="sleepingEmoji">😴</div>
+            <div class="sleeping-text" id="sleepingText">Market Closed</div>
+            <div class="quote" id="quoteText">"Sleep is the best meditation." - Dalai Lama</div>
+            
+            <div class="schedule-card">
+                <div class="schedule-title">Market Schedule</div>
+                <div class="countdown-time" id="countdownTime">--:--:--</div>
+                <div class="schedule-info">
+                    <span class="schedule-badge">Opens: 09:14</span>
+                    <span class="schedule-badge">Closes: 15:31</span>
+                </div>
+                <div class="trading-days">
+                    <span class="day-badge" data-day="0">Mon</span>
+                    <span class="day-badge" data-day="1">Tue</span>
+                    <span class="day-badge" data-day="2">Wed</span>
+                    <span class="day-badge" data-day="3">Thu</span>
+                    <span class="day-badge" data-day="4">Fri</span>
+                    <span class="day-badge" data-day="5">Sat</span>
+                    <span class="day-badge" data-day="6">Sun</span>
+                </div>
+            </div>
+        </div>
+        
+        <div id="settingsModal" class="modal-overlay">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <span>⚙️ Settings</span>
+                    <button class="modal-close" onclick="closeSettingsModal()">×</button>
+                </div>
+                <form id="settingsForm">
+                    <div class="form-group">
+                        <label>Webhook URL:</label>
+                        <input type="text" id="webhookUrl" class="settings-input">
+                    </div>
+                    <div class="form-group">
+                        <label>Tag:</label>
+                        <input type="text" id="tag" class="settings-input">
+                    </div>
+                    <div class="form-group">
+                        <label>Timeout (seconds):</label>
+                        <input type="number" id="timeout" class="settings-input">
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="icon-btn" onclick="loadSettings()">Load</button>
+                        <button type="button" class="icon-btn" onclick="saveSettings()">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div id="logsModal" class="modal-overlay">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <span>📋 Logs</span>
+                    <button class="modal-close" onclick="closeLogsModal()">×</button>
+                </div>
+                <pre id="logContent" class="log-content">Loading...</pre>
+                <button class="icon-btn" onclick="refreshLogs()" style="margin-top: 1rem;">Refresh</button>
+            </div>
+        </div>
+        
+        <footer class="app-footer">
+            Made with ❤️ by <a href="https://ecomsense.in">ecomsense.in</a>
+        </footer>
+        
+        <script>
+            const emojis = ['😴', '💤', '🥱', '😎', '☕', '🌙'];
+            const quotes = [
+                '"Sleep is the best meditation." - Dalai Lama',
+                '"The stock market is designed to transfer money from the active to the patient." - Warren Buffett',
+                '"I will short the merge." - @pannet1',
+                '"Markets in a sea of randomness." - NIFTY Trader',
+                '"When the market is closed, the profits are preserved." - Unknown Trader',
+            ];
+            
+            let emojiIndex = 0;
+            let quoteIndex = 0;
+            
+            function rotateContent() {
+                emojiIndex = (emojiIndex + 1) % emojis.length;
+                quoteIndex = (quoteIndex + 1) % quotes.length;
+                document.getElementById('sleepingEmoji').textContent = emojis[emojiIndex];
+                document.getElementById('quoteText').textContent = quotes[quoteIndex];
+            }
+            
+            setInterval(rotateContent, 8000);
+            
+            function updateTradingDays() {
+                const today = new Date().getDay();
+                document.querySelectorAll('.day-badge').forEach(badge => {
+                    const day = parseInt(badge.dataset.day);
+                    badge.classList.toggle('active', day === today);
+                });
+            }
+            
+            updateTradingDays();
+            
+            async function updateCountdown() {
+                try {
+                    const resp = await fetch('/api/logic/trading-status');
+                    const data = await resp.json();
+                    const hours = String(data.countdown_hours).padStart(2, '0');
+                    const mins = String(data.countdown_minutes).padStart(2, '0');
+                    document.getElementById('countdownTime').textContent = `${hours}:${mins}:00`;
+                } catch(e) {
+                    console.error('Countdown error:', e);
+                }
+            }
+            
+            updateCountdown();
+            setInterval(updateCountdown, 60000);
+            
+            function openSettingsModal() {
+                document.getElementById('settingsModal').style.display = 'flex';
+                loadSettings();
+            }
+            
+            function closeSettingsModal() {
+                document.getElementById('settingsModal').style.display = 'none';
+            }
+            
+            async function loadSettings() {
+                try {
+                    const resp = await fetch('/api/logic/settings');
+                    const data = await resp.json();
+                    document.getElementById('webhookUrl').value = data.webhook_url || '';
+                    document.getElementById('tag').value = data.tag || 'poweroption';
+                    document.getElementById('timeout').value = data.timeout || 30;
+                } catch(e) {
+                    console.error('Load settings error:', e);
+                }
+            }
+            
+            async function saveSettings() {
+                const payload = {
+                    webhook_url: document.getElementById('webhookUrl').value,
+                    tag: document.getElementById('tag').value,
+                    timeout: parseInt(document.getElementById('timeout').value),
+                };
+                try {
+                    await fetch('/api/logic/settings', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(payload),
+                    });
+                    closeSettingsModal();
+                } catch(e) {
+                    console.error('Save settings error:', e);
+                }
+            }
+            
+            function openLogsModal() {
+                document.getElementById('logsModal').style.display = 'flex';
+                refreshLogs();
+            }
+            
+            function closeLogsModal() {
+                document.getElementById('logsModal').style.display = 'none';
+            }
+            
+            async function refreshLogs() {
+                try {
+                    const resp = await fetch('/logs');
+                    const text = await resp.text();
+                    document.getElementById('logContent').textContent = text;
+                } catch(e) {
+                    document.getElementById('logContent').textContent = 'Error loading logs';
+                }
+            }
+        </script>
+    </body>
+</html>

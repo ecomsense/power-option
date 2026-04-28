@@ -387,7 +387,7 @@ async function processBatchOrders(tableId, modeType, qtyId, orderCode) {
     };
 
 try {
-        const res = await fetch('/order_place', {
+        const res = await fetch('/api/logic/order_place', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
@@ -449,7 +449,7 @@ async function placeSquareOrder(tableTag, qtyId, isSquareOff) {
         const orderId = cb.id;
 
         try {
-            const res = await fetch('/order_place_one', {
+            const res = await fetch('/api/logic/order_place_one', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
