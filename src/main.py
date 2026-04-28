@@ -20,7 +20,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 
-from constants import S_LOG, yml_to_obj
+from constants import S_DATA, S_LOG, yml_to_obj
 from logic_app import create_logic_router, start_logic, stop_logic
 from state import _logic_state, get_logic_state
 from webhook import send_to_webhook_async
@@ -218,6 +218,12 @@ async def trading_session_stop(app: FastAPI):
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     app.state.logic = _logic_state
+
+    from api import remove_token
+    tokpath = S_DATA + "token.txt"
+    if os.path.exists(tokpath):
+        os.remove(tokpath)
+        logger.info("Broker token invalidated on startup - forcing fresh login")
 
     global _is_lock_enabled
     if _is_lock_enabled:
