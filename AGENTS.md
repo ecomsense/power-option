@@ -47,8 +47,15 @@ Format: `cb-{table}-{type}-{strike}` e.g., `cb-main-ce-22000`, `cb-hedge-pe-2350
 ## Server Info
 - User: `trader`
 - IP: `65.20.75.117`
-- Path: `/home/trader/no_venv/power-option`
+- Path: `/home/trader/no_env/power-option`
 - Service: `fastapi_app.service` (systemd managed)
+
+## CRITICAL RULES
+### NEVER start uvicorn directly
+- ALWAYS use `systemctl restart fastapi_app` to restart the service
+- NEVER run `uvicorn main:app` or `python -m uvicorn` directly via ssh
+- If the app won't start, check `journalctl -u fastapi_app -n 20` for errors
+- Use `systemctl status fastapi_app` to verify it's running
 
 ## Key Data Structures
 
