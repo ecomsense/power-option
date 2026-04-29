@@ -146,12 +146,7 @@ cython_debug/
 *.tok
 poetry.lock
 
-node_modules/
-package.json
-package-lock.json
-postcss.config.js
-tailwind.config.js
-yarn-error.log
-yarn.lock
+# Allow scripts (normally data/** would catch it)
+/scripts
 
 AGENTS.md

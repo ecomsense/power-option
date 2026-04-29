@@ -107,6 +107,13 @@ Temporary vs Permanent fixes - use checklist above:
    - Fix: Updated restartLogic() to redirect to `/`, added saveAndRestart()
    - Commit: 46e6f23
 
+6. **Add verification scripts for pre/post checks**
+   - pre: check_server_responding.sh
+   - post: verify_trading_session.sh
+   - Fix: Added scripts/ directory with verification scripts
+   - Scripts: verify_trading_session.sh, check_logs.sh, check_server_responding.sh
+   - Commit: 07e6e02
+
 ### Always Update BUILD.md with Issues and Resolutions
 - Document issues found and how they were resolved
 - Mark fixes as Temporary or Permanent
