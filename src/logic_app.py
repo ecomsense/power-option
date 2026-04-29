@@ -425,4 +425,11 @@ def create_logic_router() -> APIRouter:
             "countdown_minutes": minutes,
         }
 
+    @router.post("/reset-all")
+    async def reset_all():
+        _logic_state.startup_data = None
+        _logic_state.reset()
+        logger.info("Session reset complete")
+        return {"status": "reset_all_done"}
+
     return router

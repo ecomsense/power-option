@@ -34,6 +34,17 @@ class LogicState:
             return False
         return True
 
+    def reset(self) -> None:
+        self.running = False
+        self.started_at = None
+        self.startup_data = None
+        self.app_data = None
+        self.ws_client = None
+        self.background_task = None
+        self.paused = False
+        self.pause_until = None
+        self.pause_reason = ""
+
 
 _logic_state = LogicState()
 

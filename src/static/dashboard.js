@@ -490,6 +490,27 @@ async function saveSettings() {
     }
 }
 
+async function saveAndRestart() {
+    var payload = {
+        webhook_url: document.getElementById("settingsWebhook").value,
+        tag: document.getElementById("settingsTag").value,
+        timeout: parseInt(document.getElementById("settingsTimeout").value),
+    };
+    try {
+        await fetch("/api/logic/settings", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+        });
+        await fetch("/api/logic/reset-all", { method: "POST" });
+        await new Promise(function(resolve) { setTimeout(resolve, 2000); });
+    } catch (e) {
+        console.error("Settings save/reset failed: " + e.message);
+    }
+    closeSettingsModal();
+    window.location.href = "/";
+}
+
 function toggleSide(type) {
     var checkboxId = type === "main" ? "main-side-toggle" : "hedge-side-toggle";
     var checkbox = document.getElementById(checkboxId);
@@ -499,8 +520,13 @@ function toggleSide(type) {
 }
 
 async function restartLogic() {
-    await fetch("/api/logic/stop", { method: "POST" });
-    await new Promise(function(r) { setTimeout(r, 500); });
-    await fetch("/api/logic/start", { method: "POST" });
-    window.location.reload();
+    try {
+        await Promise.race([
+            fetch("/api/logic/stop", { method: "POST" }),
+            new Promise(function(_, reject) { setTimeout(function() { reject(new Error("stop timeout")); }, 3000); })
+        ]);
+    } catch (e) {
+        console.error("Stop failed: " + e);
+    }
+    window.location.href = "/";
 }
