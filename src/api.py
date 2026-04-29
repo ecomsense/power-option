@@ -28,7 +28,7 @@ def login():
                     raise Exception("unable to authenticate")
                 else:
                     zera.kws = KiteTicker(zera.api_key, zera.enctoken)
-                    logging.info("Zerodha authentication successful")
+                    logging.info(f"Zerodha authentication successful, token: {zera.enctoken[:20]}...")
             except SystemExit:
                 logging.warning("Zerodha authentication failed - will retry later")
                 return None
@@ -81,10 +81,10 @@ class Helper:
         if os.path.exists(tokpath):
             try:
                 os.remove(tokpath)
-                logging.info("Token file deleted")
+                logging.info("Token file deleted - forcing new login")
             except Exception as e:
                 logging.error(f"Error deleting token: {e}")
-        logging.info("Helper session reset complete")
+        logging.info("Helper session reset complete - new token will be generated on next login")
 
     @classmethod
     def _get_history(cls, instrument_token):
