@@ -525,5 +525,6 @@ async function restartLogic() {
     } catch (e) {
         console.error("Stop error:", e);
     }
+    await new Promise(function(r) { setTimeout(r, 2000); });
     window.location.href = "/";
 }
