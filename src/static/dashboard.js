@@ -520,6 +520,7 @@ function toggleSide(type) {
 }
 
 async function restartLogic() {
+    console.log("Restart clicked");
     try {
         await Promise.race([
             fetch("/api/logic/stop", { method: "POST" }),
@@ -528,5 +529,6 @@ async function restartLogic() {
     } catch (e) {
         console.error("Stop failed: " + e);
     }
+    console.log("Redirecting to /");
     window.location.href = "/";
 }

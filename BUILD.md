@@ -101,6 +101,12 @@ Temporary vs Permanent fixes - use checklist above:
    - Fix: `sudo fuser -k 8000/tcp`
    - Resolution: Temporary - process cleanup
 
+5. **Restart not redirecting to sleep page**
+   - pre: check_server_responding.sh
+   - post: verify_trading_session.sh
+   - Fix: Updated restartLogic() to redirect to `/`, added saveAndRestart()
+   - Commit: 46e6f23
+
 ### Always Update BUILD.md with Issues and Resolutions
 - Document issues found and how they were resolved
 - Mark fixes as Temporary or Permanent
