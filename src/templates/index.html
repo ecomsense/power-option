@@ -218,24 +218,17 @@
         <footer class="app-footer">
             Made with ❤️&nbsp;by <a href="https://ecomsense.in">ecomsense.in</a>
         </footer>
-        <script src="/static/toggle.js"></script>
+<script src="/static/toggle.js"></script>
         <script src="/static/dashboard.js?v=2"></script>
         <script src="/static/dropdown.js"></script>
         <script>
-        async function restartLogic() {
-            await fetch('/api/logic/stop', {method:'POST'});
-            await new Promise(r => setTimeout(r, 500));
-            await fetch('/api/logic/start', {method:'POST'});
-            location.reload();
-        }
-        
         function openSettingsModal() {
             loadSettings();
-            document.getElementById('settingsModal').style.display = 'flex';
+            document.getElementById("settingsModal").style.display = "flex";
         }
         
         function closeSettingsModal() {
-            document.getElementById('settingsModal').style.display = 'none';
+            document.getElementById("settingsModal").style.display = "none";
         }
         
         async function loadSettings() {
@@ -260,8 +253,10 @@
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify(payload),
                 });
+                await fetch('/api/logic/reset-all', { method: 'POST' });
+                await new Promise(r => setTimeout(r, 2000));
                 closeSettingsModal();
-                restartLogic();
+                window.location.href = '/';
             } catch(e) { console.error(e); }
         }
         

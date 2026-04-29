@@ -522,7 +522,7 @@ function toggleSide(type) {
 async function restartLogic() {
         try {
           await Promise.race([
-            fetch("/api/logic/stop", { method: 'POST' }),
+            fetch('/api/logic/stop', { method: 'POST' }),
             new Promise((_, reject) => setTimeout(() => reject(new Error('stop timeout')), 3000))
           ]);
         } catch (e) {
