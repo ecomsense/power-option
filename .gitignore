@@ -153,3 +153,5 @@ postcss.config.js
 tailwind.config.js
 yarn-error.log
 yarn.lock
+
+AGENTS.md
