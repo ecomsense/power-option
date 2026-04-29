@@ -427,6 +427,8 @@ def create_logic_router() -> APIRouter:
 
     @router.post("/reset-all")
     async def reset_all():
+        from api import Helper
+        Helper.reset()
         _logic_state.startup_data = None
         _logic_state.reset()
         logger.info("Session reset complete")

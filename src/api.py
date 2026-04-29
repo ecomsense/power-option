@@ -73,6 +73,12 @@ class Helper:
         return cls.api_object
 
     @classmethod
+    def reset(cls):
+        cls.api_object = None
+        cls.baseline = {}
+        logging.info("Helper session reset complete")
+
+    @classmethod
     def _get_history(cls, instrument_token):
         try:
             broker_object = cls.api()
