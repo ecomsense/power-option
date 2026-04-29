@@ -521,14 +521,14 @@ function toggleSide(type) {
 
 async function restartLogic() {
     console.log("Restart clicked");
+    var btn = document.querySelector('.icon-btn[onclick="restartLogic()"]');
+    if (btn) btn.disabled = true;
     try {
-        await Promise.race([
-            fetch("/api/logic/stop", { method: "POST" }),
-            new Promise(function(_, reject) { setTimeout(function() { reject(new Error("stop timeout")); }, 3000); })
-        ]);
+        var resp = await fetch("/api/logic/stop", { method: "POST" });
+        console.log("Stop response:", resp.status);
     } catch (e) {
-        console.error("Stop failed: " + e);
+        console.error("Stop error:", e);
     }
-    console.log("Redirecting to /");
+    console.log("Redirecting...");
     window.location.href = "/";
 }
