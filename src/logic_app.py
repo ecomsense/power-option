@@ -144,6 +144,10 @@ def on_start(startup_data: dict, app_data: dict):
 def on_stop(app_data: dict):
     logger.info(f"[LIFECYCLE] on_stop called")
     if app_data.get("ws"):
+        try:
+            app_data["ws"].close()
+        except Exception as e:
+            logger.error(f"Error closing websocket: {e}")
         app_data["ws"] = None
 
 
@@ -428,6 +432,8 @@ def create_logic_router() -> APIRouter:
     @router.post("/reset-all")
     async def reset_all():
         from api import Helper
+        if _logic_state.app_data:
+            on_stop(_logic_state.app_data)
         Helper.reset()
         _logic_state.startup_data = None
         _logic_state.reset()

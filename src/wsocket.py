@@ -32,6 +32,14 @@ class Wsocket:
     def subscribe(self, tokens):
         self._subscribe = tokens
 
+    def close(self):
+        try:
+            if self.kws:
+                self.kws.close()
+                logging.info("WebSocket closed")
+        except Exception as e:
+            logging.error(f"Error closing WebSocket: {e}")
+
     def on_ticks(self, ws, ticks):
         try:
             new_data = {}
