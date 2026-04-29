@@ -681,6 +681,14 @@ tbody tr:hover {
     background-color: var(--bg-header);
     border-top: 1px solid var(--border-main);
 }
+.app-footer .heart {
+    display: inline-block;
+    margin: 0 0.3em;
+}
+.app-footer .heart::after {
+    content: "\2764";
+    color: #e91e63;
+}
 .app-footer a {
     color: var(--accent-blue);
     text-decoration: none;
