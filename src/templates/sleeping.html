@@ -234,74 +234,9 @@ async function updateScheduleInfo() {
                     console.error('Schedule error:', e);
                 }
             }
-                    
-                    if (data.within_schedule && data.running) {
-                        window.location.href = '/';
-                    } else if (data.within_schedule) {
-                        document.getElementById('countdownTime').textContent = 'MARKET OPEN!';
-                        document.getElementById('sleepingText').textContent = 'Market Open';
-                        document.getElementById('sleepingEmoji').textContent = '🚀';
-                    } else {
-                        const now = new Date();
-                        let nextOpen = new Date();
-                        const [h, m] = (data.start_time || '09:14').split(':').map(Number);
-                        nextOpen.setHours(h, m, 0, 0);
-                        if (now > nextOpen) nextOpen.setDate(nextOpen.getDate() + 1);
-                        while ([0, 6].includes(nextOpen.getDay())) nextOpen.setDate(nextOpen.getDate() + 1);
-                        
-                        const diff = nextOpen - now;
-                        const hours = Math.floor(diff / (1000*60*60));
-                        const mins = Math.floor((diff % (1000*60*60)) / (1000*60));
-                        const secs = Math.floor((diff % (1000*60)) / 1000);
-                        document.getElementById('countdownTime').textContent = 
-                            String(hours).padStart(2,'0') + ':' + String(mins).padStart(2,'0') + ':' + String(secs).padStart(2,'0');
-                    }
-                } catch(e) {
-                    console.error('Schedule error:', e);
-                }
-            }
-            
+
             updateScheduleInfo();
             setInterval(updateScheduleInfo, 3000);
-            
-            function openSettingsModal() {
-                document.getElementById('settingsModal').style.display = 'flex';
-                loadSettings();
-            }
-            
-            function closeSettingsModal() {
-                document.getElementById('settingsModal').style.display = 'none';
-            }
-            
-            async function loadSettings() {
-                try {
-                    const resp = await fetch('/api/logic/settings');
-                    const data = await resp.json();
-                    document.getElementById('webhookUrl').value = data.webhook_url || '';
-                    document.getElementById('tag').value = data.tag || 'poweroption';
-                    document.getElementById('timeout').value = data.timeout || 30;
-                } catch(e) {
-                    console.error('Load settings error:', e);
-                }
-            }
-            
-            async function saveSettings() {
-                const payload = {
-                    webhook_url: document.getElementById('webhookUrl').value,
-                    tag: document.getElementById('tag').value,
-                    timeout: parseInt(document.getElementById('timeout').value),
-                };
-                try {
-                    await fetch('/api/logic/settings', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify(payload),
-                    });
-                    closeSettingsModal();
-                } catch(e) {
-                    console.error('Save settings error:', e);
-                }
-            }
             
             function openLogsModal() {
                 document.getElementById('logsModal').style.display = 'flex';
