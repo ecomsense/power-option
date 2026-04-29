@@ -184,24 +184,56 @@
             
             setInterval(rotateContent, 8000);
             
-            async function updateScheduleInfo() {
+async function updateScheduleInfo() {
                 try {
-                    const resp = await fetch('/api/schedule');
-                    const data = await resp.json();
-                    console.log('Schedule data:', data);
-                    
+                    const [logicResp, schedResp] = await Promise.all([
+                        fetch('/api/logic/status'),
+                        fetch('/api/schedule')
+                    ]);
+                    const logicData = await logicResp.json();
+                    const data = await schedResp.json();
+                    console.log('Schedule data:', data, 'Logic:', logicData);
+
                     const [open, close] = (data.schedule_times || '--:-- - --:--').split(' - ');
                     document.getElementById('opensTime').textContent = 'Opens: ' + open;
                     document.getElementById('closesTime').textContent = 'Closes: ' + close;
-                    
+
                     const daysMap = {Mon:0, Tue:1, Wed:2, Thu:3, Fri:4, Sat:5, Sun:6};
                     const today = new Date().getDay();
                     const daysEl = document.getElementById('tradingDaysContainer');
                     if (data.trading_days) {
                         daysEl.innerHTML = data.trading_days.map(d => 
-                            '<span class=\"day-badge ' + (today === daysMap[d] ? 'active' : '') + '\">' + d + '</span>'
+                            '<span class="day-badge ' + (today === daysMap[d] ? 'active' : '') + '">' + d + '</span>'
                         ).join('');
                     }
+
+                    if (logicData.running && data.within_schedule) {
+                        window.location.href = '/';
+                    } else if (data.within_schedule && !logicData.running) {
+                        document.getElementById('countdownTime').textContent = 'MARKET OPEN!';
+                        document.getElementById('sleepingText').textContent = 'Market Open';
+                        document.getElementById('sleepingEmoji').textContent = '🚀';
+                        await fetch('/api/logic/start', { method: 'POST' });
+                        setTimeout(function() { window.location.href = '/'; }, 1000);
+                    } else {
+                        const now = new Date();
+                        let nextOpen = new Date();
+                        const [h, m] = (data.start_time || '09:14').split(':').map(Number);
+                        nextOpen.setHours(h, m, 0, 0);
+                        if (now > nextOpen) nextOpen.setDate(nextOpen.getDate() + 1);
+                        while ([0, 6].includes(nextOpen.getDay())) nextOpen.setDate(nextOpen.getDate() + 1);
+                        
+                        const diff = nextOpen - now;
+                        const hours = Math.floor(diff / (1000*60*60));
+                        const mins = Math.floor((diff % (1000*60*60)) / (1000*60));
+                        const secs = Math.floor((diff % (1000*60)) / 1000);
+                        document.getElementById('countdownTime').textContent = 
+                            String(hours).padStart(2,'0') + ':' + String(mins).padStart(2,'0') + ':' + String(secs).padStart(2,'0');
+                    }
+                } catch(e) {
+                    console.error('Schedule error:', e);
+                }
+            }
                     
                     if (data.within_schedule && data.running) {
                         window.location.href = '/';

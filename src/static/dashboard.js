@@ -520,15 +520,10 @@ function toggleSide(type) {
 }
 
 async function restartLogic() {
-    console.log("Restart clicked");
-    var btn = document.querySelector('.icon-btn[onclick="restartLogic()"]');
-    if (btn) btn.disabled = true;
     try {
-        var resp = await fetch("/api/logic/stop", { method: "POST" });
-        console.log("Stop response:", resp.status);
+        await fetch("/api/logic/stop", { method: "POST" });
     } catch (e) {
         console.error("Stop error:", e);
     }
-    console.log("Redirecting...");
     window.location.href = "/";
 }
