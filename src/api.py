@@ -1,3 +1,4 @@
+import os
 import pendulum as pdlm
 import sys
 
@@ -76,6 +77,13 @@ class Helper:
     def reset(cls):
         cls.api_object = None
         cls.baseline = {}
+        tokpath = S_DATA + "token.txt"
+        if os.path.exists(tokpath):
+            try:
+                os.remove(tokpath)
+                logging.info("Token file deleted")
+            except Exception as e:
+                logging.error(f"Error deleting token: {e}")
         logging.info("Helper session reset complete")
 
     @classmethod
