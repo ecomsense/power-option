@@ -491,6 +491,7 @@ async function saveSettings() {
 }
 
 async function saveAndRestart() {
+    closeSettingsModal();
     var payload = {
         webhook_url: document.getElementById("settingsWebhook").value,
         tag: document.getElementById("settingsTag").value,
@@ -507,8 +508,7 @@ async function saveAndRestart() {
     } catch (e) {
         console.error("Settings save/reset failed: " + e.message);
     }
-    closeSettingsModal();
-    window.location.href = "/";
+    restartLogic();
 }
 
 function toggleSide(type) {
@@ -520,11 +520,13 @@ function toggleSide(type) {
 }
 
 async function restartLogic() {
-    try {
-        await fetch("/api/logic/stop", { method: "POST" });
-    } catch (e) {
-        console.error("Stop error:", e);
-    }
-    await new Promise(function(r) { setTimeout(r, 2000); });
-    window.location.href = "/";
-}
+        try {
+          await Promise.race([
+            fetch("/api/logic/stop", { method: 'POST' }),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('stop timeout')), 3000))
+          ]);
+        } catch (e) {
+          console.error('Stop failed:', e);
+        }
+        window.location.href = '/';
+      }
