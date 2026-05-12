@@ -795,11 +795,20 @@ tbody tr:hover {
     align-items: center;
     justify-content: center;
 }
-.modal-content {
+#settingsModal .modal-content {
     background: var(--bg-card);
     padding: 2rem;
     border-radius: 12px;
-    width: 90%;
+    width: 250px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+#logsModal .modal-content {
+    background: var(--bg-card);
+    padding: 2rem;
+    border-radius: 12px;
+    width: 800px;
     max-height: 80vh;
     overflow-y: auto;
 }
