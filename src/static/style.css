@@ -545,7 +545,7 @@ th {
     background: var(--bg4);
     margin: 5% auto;
     padding: var(--space-10);
-    width: 80%;
+    width: 90%;
     max-height: 80%;
     overflow: auto;
     border-radius: var(--radius-md);
