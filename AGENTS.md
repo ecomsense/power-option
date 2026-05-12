@@ -134,3 +134,13 @@ Format: `cb-{table}-{type}-{strike}` e.g., `cb-main-ce-22000`
 |-------|--------|
 | nginx WebSocket 403 | Not fixed yet |
 | sys.exit(1) crash handling | Pending architecture decision |
+
+## Issues
+
+- `issue`: refactor: remove unused imports and variables
+- `pre: scripts/*.sh`: N/A
+- `commit`: refactor: remove unused imports and variables
+- `post: scripts/*.sh`: N/A
+
+**Commit:** 47e1cdb (also 3b38593 for revert of _ prefix change)
+**Revert:** git reset --hard 1eea502
