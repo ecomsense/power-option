@@ -2,15 +2,13 @@ import asyncio
 import gc
 import logging
 import os
-import signal
 import sys
 from base64 import b64decode
 from contextlib import asynccontextmanager
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
-import httpx
 import uvicorn
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
@@ -102,10 +100,10 @@ def load_page_template(name: str) -> str:
 class ScheduleConfig:
     def __init__(self):
         self.enabled = True
-        self.start_hour = 9
-        self.start_minute = 15
-        self.end_hour = 15
-        self.end_minute = 31
+        self.start_hour = 0
+        self.start_minute = 1
+        self.end_hour = 23
+        self.end_minute = 59
         self.trading_days = [0, 1, 2, 3, 4]
         self.trading_day_names = ["Mon", "Tue", "Wed", "Thu", "Fri"]
 
@@ -220,6 +218,7 @@ async def lifespan(app: FastAPI):
     app.state.logic = _logic_state
 
     from api import remove_token
+
     tokpath = S_DATA + "token.txt"
     if os.path.exists(tokpath):
         os.remove(tokpath)
@@ -254,6 +253,7 @@ async def lifespan(app: FastAPI):
         )
 
         from datetime import datetime
+
         now = datetime.now()
         if now.weekday() < 5:
             hour_min = now.hour * 60 + now.minute
@@ -262,7 +262,9 @@ async def lifespan(app: FastAPI):
             if market_start <= hour_min < market_end:
                 await trading_session_start(app)
 
-    logger.info(f"Server Started - Trading scheduled {schedule_config.start_hour:02d}:{schedule_config.start_minute:02d}-{schedule_config.end_hour:02d}:{schedule_config.end_minute:02d} Mon-Fri")
+    logger.info(
+        f"Server Started - Trading scheduled {schedule_config.start_hour:02d}:{schedule_config.start_minute:02d}-{schedule_config.end_hour:02d}:{schedule_config.end_minute:02d} Mon-Fri"
+    )
     yield
 
     if scheduler.running:
@@ -300,16 +302,22 @@ async def auth_middleware(request: Request, call_next):
 async def root(request: Request):
     if _logic_state.is_running() and schedule_config.is_within_schedule():
         from symbols import find_base
+
         symbols = find_base()
-        return templates.TemplateResponse(request=request, name="index.html", context={"symbols": symbols})
+        return templates.TemplateResponse(
+            request=request, name="index.html", context={"symbols": symbols}
+        )
     return HTMLResponse(load_page_template("sleeping"))
 
 
 @app.get("/dashboard", response_class=HTMLResponse)
 async def dashboard_page(request: Request):
     from symbols import find_base
+
     symbols = find_base()
-    return templates.TemplateResponse(request=request, name="index.html", context={"symbols": symbols})
+    return templates.TemplateResponse(
+        request=request, name="index.html", context={"symbols": symbols}
+    )
 
 
 @app.get("/sleeping", response_class=HTMLResponse)
@@ -420,10 +428,17 @@ def assemble_table_rows(side, ticks, app_data):
                 "ce_diff": ce_diff,
                 "pe_diff": pe_diff,
                 "total_diff": total_diff,
-                "ce_diff_pct": round((ce_diff / ce_m["prev"]) * 100, 2) if ce_m["prev"] else 0,
-                "pe_diff_pct": round((pe_diff / pe_m["prev"]) * 100, 2) if pe_m["prev"] else 0,
-                "total_diff_pct": round((total_diff / (ce_m["prev"] + pe_m["prev"])) * 100, 2)
-                if (ce_m["prev"] + pe_m["prev"]) else 0,
+                "ce_diff_pct": (
+                    round((ce_diff / ce_m["prev"]) * 100, 2) if ce_m["prev"] else 0
+                ),
+                "pe_diff_pct": (
+                    round((pe_diff / pe_m["prev"]) * 100, 2) if pe_m["prev"] else 0
+                ),
+                "total_diff_pct": (
+                    round((total_diff / (ce_m["prev"] + pe_m["prev"])) * 100, 2)
+                    if (ce_m["prev"] + pe_m["prev"])
+                    else 0
+                ),
             }
         )
     return rows
