@@ -1,6 +1,5 @@
 import os
 import pendulum as pdlm
-import sys
 
 from stock_brokers.zerodha.zerodha import Zerodha
 from constants import logging

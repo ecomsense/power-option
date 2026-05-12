@@ -1,5 +1,4 @@
 from os import path
-from pprint import pprint
 from traceback import print_exc
 
 from toolkit.fileutils import Fileutils

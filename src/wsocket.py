@@ -112,7 +112,7 @@ if __name__ == "__main__":
 
     dump()
 
-    symbol_settings = dict_from_yml("name", O_SETG["base"])
+    dict_from_yml("name", O_SETG["base"])
     api = Helper.api()
     ws = Wsocket(api, [25625, 11000, 16])
     ticks = {}

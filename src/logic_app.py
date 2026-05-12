@@ -1,14 +1,13 @@
-import asyncio
 import logging
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from constants import D_SYMBOL, yml_to_obj
+from constants import D_SYMBOL
 from symbols import (
     dump_basename_from_exchange,
     find_call_and_put_from_dropdown,
@@ -203,7 +202,6 @@ async def stop_logic():
 
 
 def get_status():
-    app_data = _logic_state.app_data
     return {
         "running": _logic_state.is_running(),
         "started_at": _logic_state.started_at.isoformat() if _logic_state.started_at else None,
@@ -229,16 +227,11 @@ def create_logic_router() -> APIRouter:
 
     @router.post("/order_place")
     async def place_order(payload: OrderRequest):
-        from fastapi import FastAPI
-        from fastapi import Request as FastAPIRequest
-
         app_data = _logic_state.app_data
         if not app_data:
             raise HTTPException(status_code=503, detail="Logic app not running")
 
         try:
-            from constants import logging as app_logging
-
             parts = []
             for order_id in payload.orders:
                 parts_id = order_id.split("-")
@@ -266,8 +259,6 @@ def create_logic_router() -> APIRouter:
             raise HTTPException(status_code=503, detail="Logic app not running")
 
         try:
-            from constants import logging as app_logging
-
             order_id = payload.get("trading_symbol")
             quantity = payload.get("quantity")
             order_type = payload.get("order_type")

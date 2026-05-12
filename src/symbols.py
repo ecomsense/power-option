@@ -253,12 +253,6 @@ def find_call_and_put_from_dropdown(
 
 
 if __name__ == "__main__":
-    from pprint import pprint
-
-    from api import Helper
-    from constants import D_SYMBOL
-    from wsocket import Wsocket
-
     """
     # we need to accepts arguments from the dependant dropdown
     df_ce, df_pe = find_call_and_put_from_dropdown(

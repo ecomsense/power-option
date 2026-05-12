@@ -18,14 +18,12 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 
-from constants import S_DATA, S_LOG, yml_to_obj
+from constants import S_DATA, S_LOG
 from logic_app import create_logic_router, start_logic, stop_logic
-from state import _logic_state, get_logic_state
-from webhook import send_to_webhook_async
+from state import _logic_state
 
 log_dir = Path(__file__).parent.parent / "data"
 log_dir.mkdir(exist_ok=True)
-log_file = log_dir / "log.txt"
 
 logger = logging.getLogger(__name__)
 
@@ -200,14 +198,14 @@ def get_memory_usage() -> dict:
     }
 
 
-async def trading_session_start(app: FastAPI):
+async def trading_session_start(_app: FastAPI):
     if _logic_state.is_running():
         logging.info("Trading session already running")
         return
     await start_logic()
 
 
-async def trading_session_stop(app: FastAPI):
+async def trading_session_stop(_app: FastAPI):
     if not _logic_state.is_running():
         return
     await stop_logic()
