@@ -25,25 +25,10 @@ from state import _logic_state
 log_dir = Path(__file__).parent.parent / "data"
 log_dir.mkdir(exist_ok=True)
 
-# Configure logging: DEBUG to console (journalctl), ERROR/WARNING to file
-logging.basicConfig(
-    level=logging.DEBUG,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    handlers=[
-        logging.StreamHandler(),  # Goes to journalctl via systemd
-        logging.FileHandler(S_LOG, mode="a"),
-    ],
-)
-# Set file handler to only ERROR and WARNING
-for handler in logging.root.handlers:
-    if isinstance(handler, logging.FileHandler):
-        handler.setLevel(logging.WARNING)
-
 logger = logging.getLogger(__name__)
 
-# Also configure APScheduler to be more verbose
-apscheduler_logger = logging.getLogger("apscheduler")
-apscheduler_logger.setLevel(logging.DEBUG)
+# Reduce APScheduler logging spam (only show warnings and errors)
+logging.getLogger("apscheduler").setLevel(logging.WARNING)
 
 LOCK_FILE = Path(__file__).parent.parent / "data" / "app.pid"
 
