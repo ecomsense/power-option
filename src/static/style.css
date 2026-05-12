@@ -281,6 +281,11 @@ a {
     height: 100%;
 }
 
+.chart-blur {
+    filter: blur(4px);
+    opacity: 0.5;
+}
+
 .tables-wrapper {
     display: flex;
     flex: 1;

@@ -249,6 +249,13 @@ async function updateSubscription(side) {
         return;
     }
 
+    // Blur chart and reset values before update
+    var chartContainer = document.getElementById("chart-container");
+    if (chartContainer) chartContainer.classList.add("chart-blur");
+    var now = Math.floor(Date.now() / 1000);
+    if (mainLine) mainLine.setData([{ time: now, value: 0 }]);
+    if (currentLine) currentLine.setData([{ time: now, value: 0 }]);
+
     var payload = {
         side: side,
         basename: symbol,
@@ -267,9 +274,13 @@ async function updateSubscription(side) {
         var result = await response.json();
         if (result.status === "success") {
             resetCheckAllForSide(side, true);
+            // Remove blur after successful update
+            if (chartContainer) chartContainer.classList.remove("chart-blur");
         }
     } catch (error) {
         console.error("Subscription update failed:", error);
+        // Remove blur on error too
+        if (chartContainer) chartContainer.classList.remove("chart-blur");
     }
 }
 
