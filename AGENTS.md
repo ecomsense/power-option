@@ -144,3 +144,11 @@ Format: `cb-{table}-{type}-{strike}` e.g., `cb-main-ce-22000`
 
 **Commit:** 47e1cdb (also 3b38593 for revert of _ prefix change)
 **Revert:** git reset --hard 1eea502
+
+- `issue`: config: reduce APScheduler log spam to WARNING only
+- `pre: scripts/*.sh`: N/A
+- `commit`: config: reduce APScheduler log spam to WARNING only
+- `post: scripts/*.sh`: N/A
+
+**Commit:** 92ab450
+**Revert:** git revert 92ab450
