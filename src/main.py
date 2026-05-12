@@ -101,10 +101,10 @@ def load_page_template(name: str) -> str:
 class ScheduleConfig:
     def __init__(self):
         self.enabled = True
-        self.start_hour = 0
-        self.start_minute = 1
-        self.end_hour = 23
-        self.end_minute = 59
+        self.start_hour = 8
+        self.start_minute = 0
+        self.end_hour = 21
+        self.end_minute = 0
         self.trading_days = [0, 1, 2, 3, 4]
         self.trading_day_names = ["Mon", "Tue", "Wed", "Thu", "Fri"]
 
