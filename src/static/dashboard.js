@@ -32,6 +32,10 @@ document.addEventListener("DOMContentLoaded", function() {
             height: chartElement.clientHeight,
             layout: { background: { color: colors.background }, textColor: colors.text },
             grid: { vertLines: { color: colors.grid }, horzLines: { color: colors.grid } },
+            timeScale: {
+                timeVisible: true,
+                secondsVisible: true,
+            },
         });
         mainLine = chart.addLineSeries({ color: "#9c27b0", title: "Baseline" });
         currentLine = chart.addLineSeries({ color: "#ff9800", title: "Total Diff" });
