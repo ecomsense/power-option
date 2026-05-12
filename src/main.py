@@ -198,14 +198,14 @@ def get_memory_usage() -> dict:
     }
 
 
-async def trading_session_start(_app: FastAPI):
+async def trading_session_start(app: FastAPI):
     if _logic_state.is_running():
         logging.info("Trading session already running")
         return
     await start_logic()
 
 
-async def trading_session_stop(_app: FastAPI):
+async def trading_session_stop(app: FastAPI):
     if not _logic_state.is_running():
         return
     await stop_logic()
