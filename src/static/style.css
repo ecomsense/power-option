@@ -799,7 +799,8 @@ tbody tr:hover {
     background: var(--bg-card);
     padding: 2rem;
     border-radius: 12px;
-    width: 250px;
+    width: 400px;
+    max-width: 100%;
     max-height: 80vh;
     overflow-y: auto;
 }
@@ -808,7 +809,8 @@ tbody tr:hover {
     background: var(--bg-card);
     padding: 2rem;
     border-radius: 12px;
-    width: 800px;
+    width: 950px;
+    max-width: 100%;
     max-height: 80vh;
     overflow-y: auto;
 }
